@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>LIFT — Workout Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Vars ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0b0e;--s1:#111116;--s2:#18181f;--s3:#222229;
+  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.12);
+  --a:#c8ff3c;--a2:#99cc00;
+  --t:#eeeef2;--ts:#8888a0;--td:#44444f;
+  --err:#ff4f5a;--ok:#2ed573;
+  --r:10px;--r2:14px;
+  --nav:64px;
+}
+html{background:var(--bg)}
+body{
+  background:var(--bg);color:var(--t);
+  font-family:'Barlow',-apple-system,sans-serif;font-size:16px;
+  min-height:100svh;overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;
+}
+input,select,button,textarea{font-family:inherit}
+::-webkit-scrollbar{width:0;height:0}
+.hidden{display:none!important}
+
+/* ── App shell ── */
+#app{max-width:480px;margin:0 auto;min-height:100svh;position:relative}
+.view{min-height:100svh}
+
+/* ── Auth ── */
+#v-auth{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100svh;padding:24px 20px;
+}
+.auth-inner{width:100%;max-width:380px}
+.auth-brand{margin-bottom:36px}
+.auth-logo{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:80px;line-height:.9;color:var(--a);letter-spacing:2px;
+  display:block;
+}
+.auth-tagline{
+  font-size:11px;font-weight:600;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ts);margin-top:6px;
+}
+.auth-tabs{
+  display:flex;background:var(--s2);border-radius:var(--r);
+  padding:3px;margin-bottom:24px;border:1px solid var(--bd);
+}
+.auth-tab{
+  flex:1;padding:9px;text-align:center;background:none;border:none;
+  color:var(--ts);font-size:14px;font-weight:600;border-radius:8px;
+  cursor:pointer;transition:all .15s;
+}
+.auth-tab.active{background:var(--s3);color:var(--t)}
+
+/* ── Form fields ── */
+.field{margin-bottom:16px}
+.field label{
+  display:block;margin-bottom:6px;font-size:11px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--ts);
+}
+.input{
+  width:100%;background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r);color:var(--t);font-size:16px;
+  padding:12px 14px;transition:border-color .15s;
+  -webkit-appearance:none;appearance:none;
+}
+.input:focus{outline:none;border-color:var(--a)}
+.input::placeholder{color:var(--td)}
+select.input{cursor:pointer}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ── Buttons ── */
+.btn{
+  display:block;width:100%;padding:14px;text-align:center;
+  background:var(--a);color:#000;border:none;border-radius:var(--r);
+  font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;
+  letter-spacing:.5px;cursor:pointer;transition:opacity .15s,transform .1s;
+}
+.btn:active{transform:scale(.98);opacity:.88}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{
+  background:transparent;color:var(--ts);
+  border:1px solid var(--bd2);font-size:15px;
+  font-family:'Barlow',sans-serif;font-weight:600;
+}
+.btn-ghost:active{background:var(--s2)}
+
+/* ── Header ── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--bd);
+  position:sticky;top:0;z-index:50;background:var(--bg);
+}
+.header-logo{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:26px;color:var(--a);letter-spacing:2px;
+}
+.header-right{display:flex;align-items:center;gap:10px}
+.header-user{font-size:13px;color:var(--ts);font-weight:500}
+.header-out{
+  background:none;border:1px solid var(--bd);color:var(--ts);
+  border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;letter-spacing:.03em;
+}
+.header-out:active{background:var(--s2)}
+
+/* ── Main layout ── */
+.main-wrap{min-height:100svh;display:flex;flex-direction:column}
+.tab-pane{flex:1;overflow-y:auto;padding:20px 20px calc(var(--nav) + 24px)}
+
+/* ── Bottom nav ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;height:var(--nav);
+  display:flex;align-items:center;
+  background:var(--s1);border-top:1px solid var(--bd);
+  z-index:100;padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-btn{
+  flex:1;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;
+  background:none;border:none;color:var(--td);
+  font-size:10px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;cursor:pointer;transition:color .15s;
+}
+.nav-btn.active{color:var(--a)}
+.nav-btn svg{width:20px;height:20px;flex-shrink:0}
+.nav-center{
+  flex:1;display:flex;align-items:center;justify-content:center;height:100%;
+  background:none;border:none;cursor:pointer;padding:0;
+}
+.nav-circle{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--a);display:flex;align-items:center;justify-content:center;
+  transition:transform .15s,opacity .15s;
+}
+.nav-circle:active{transform:scale(.92)}
+.nav-circle svg{width:24px;height:24px;color:#000}
+
+/* ── Stats cards ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.stat-card{
+  background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r2);padding:16px 14px;
+}
+.stat-num{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:48px;line-height:1;color:var(--t);
+  font-variant-numeric:tabular-nums;
+}
+.stat-num.accent{color:var(--a)}
+.stat-lbl{
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--ts);margin-top:5px;
+}
+.stat-wide{
+  background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r2);padding:16px;margin-bottom:10px;
+}
+.stat-wide-lbl{
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--ts);margin-bottom:6px;
+}
+.stat-wide-val{font-size:18px;font-weight:500}
+.stat-big{
+  display:flex;align-items:baseline;gap:5px;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:38px;
+}
+.stat-unit{font-size:14px;color:var(--ts);font-family:'Barlow',sans-serif;font-weight:400}
+
+/* ── Section ── */
+.sec-head{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:12px;margin-top:20px;
+}
+.sec-title{
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--ts);
+}
+
+/* ── Workout item ── */
+.wo-item{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--bd);
+}
+.wo-dot{width:6px;height:6px;border-radius:50%;background:var(--a);flex-shrink:0}
+.wo-name{font-weight:500;font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wo-meta{font-size:13px;color:var(--ts)}
+.wo-date{font-size:12px;color:var(--td);white-space:nowrap;flex-shrink:0}
+
+/* ── Exercise entry ── */
+.ex-entry{
+  background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r2);padding:14px;margin-bottom:12px;
+  position:relative;
+}
+.ex-num{
+  font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;color:var(--a);margin-bottom:12px;
+}
+.ex-del{
+  position:absolute;top:12px;right:12px;
+  background:none;border:none;color:var(--td);
+  font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;
+  transition:color .15s;
+}
+.ex-del:active{color:var(--err)}
+
+/* ── Day group (history) ── */
+.day-group{margin-bottom:24px}
+.day-lbl{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.12em;color:var(--ts);padding-bottom:10px;
+  border-bottom:1px solid var(--bd);margin-bottom:0;
+}
+
+/* ── Filter card ── */
+.filter-card{
+  background:var(--s2);border:1px solid var(--bd);
+  border-radius:var(--r2);padding:14px;margin-bottom:16px;
+}
+
+/* ── Skeleton ── */
+.skel{
+  background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);
+  background-size:200% 100%;border-radius:6px;
+  animation:shimmer 1.4s ease-in-out infinite;
+}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+/* ── Toast ── */
+#toast{
+  position:fixed;bottom:calc(var(--nav) + 12px);
+  left:50%;transform:translateX(-50%) translateY(12px);
+  background:var(--s3);border:1px solid var(--bd2);
+  color:var(--t);padding:10px 20px;border-radius:100px;
+  font-size:14px;font-weight:500;opacity:0;pointer-events:none;
+  transition:opacity .2s,transform .2s;
+  max-width:calc(100vw - 40px);text-align:center;z-index:999;
+  white-space:nowrap;
+}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:var(--err);color:var(--err)}
+#toast.ok{border-color:var(--ok);color:var(--ok)}
+
+/* ── Loading overlay ── */
+#loader{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:999;
+  transition:opacity .3s;
+}
+#loader.fade{opacity:0;pointer-events:none}
+.loader-logo{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:64px;color:var(--a);letter-spacing:2px;
+  animation:pulse 1s ease-in-out infinite;
+}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="loader"><div class="loader-logo">LIFT</div></div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<div id="app">
+
+<!-- ═══ AUTH ═══ -->
+<div id="v-auth" class="view hidden">
+  <div class="auth-inner">
+    <div class="auth-brand">
+      <span class="auth-logo">LIFT</span>
+      <div class="auth-tagline">Workout Tracker</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="setAuthTab('login')">เข้าสู่ระบบ</button>
+      <button class="auth-tab" id="tab-reg" onclick="setAuthTab('reg')">สมัครสมาชิก</button>
+    </div>
+
+    <!-- Login -->
+    <form id="form-login" onsubmit="doLogin(event)">
+      <div class="field">
+        <label>ชื่อผู้ใช้</label>
+        <input id="l-user" class="input" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="username">
+      </div>
+      <div class="field" style="margin-bottom:24px">
+        <label>รหัสผ่าน</label>
+        <input id="l-pass" class="input" type="password" autocomplete="current-password" placeholder="••••••">
+      </div>
+      <button id="btn-login" class="btn" type="submit">เข้าสู่ระบบ</button>
+    </form>
+
+    <!-- Register -->
+    <form id="form-reg" class="hidden" onsubmit="doRegister(event)">
+      <div class="field">
+        <label>ชื่อที่แสดง</label>
+        <input id="r-name" class="input" type="text" autocapitalize="words" placeholder="ชื่อของคุณ">
+      </div>
+      <div class="field">
+        <label>ชื่อผู้ใช้</label>
+        <input id="r-user" class="input" type="text" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="username (ภาษาอังกฤษ)">
+      </div>
+      <div class="field">
+        <label>รหัสผ่าน (อย่างน้อย 6 ตัว)</label>
+        <input id="r-pass" class="input" type="password" autocomplete="new-password" placeholder="••••••">
+      </div>
+      <div class="field" style="margin-bottom:24px">
+        <label>ยืนยันรหัสผ่าน</label>
+        <input id="r-cfm" class="input" type="password" autocomplete="new-password" placeholder="••••••">
+      </div>
+      <button id="btn-reg" class="btn" type="submit">สมัครสมาชิก</button>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div id="v-main" class="view hidden">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-logo">LIFT</div>
+    <div class="header-right">
+      <span class="header-user" id="u-name"></span>
+      <button class="header-out" onclick="doLogout()">ออก</button>
+    </div>
+  </header>
+
+  <!-- Dashboard tab -->
+  <div id="tab-dash" class="tab-pane">
+    <div id="stats-wrap"></div>
+    <div class="sec-head" style="margin-top:8px">
+      <div class="sec-title">ล่าสุด</div>
+    </div>
+    <div id="recent-list"></div>
+  </div>
+
+  <!-- Log tab -->
+  <div id="tab-log" class="tab-pane hidden">
+    <div class="sec-head" style="margin-top:0">
+      <div class="sec-title">บันทึก Workout</div>
+    </div>
+    <div class="field" style="margin-bottom:20px">
+      <label>วันที่</label>
+      <input id="log-date" class="input" type="date">
+    </div>
+    <div id="log-items"></div>
+    <button onclick="addEntry()" class="btn btn-ghost" style="margin-bottom:14px">+ เพิ่มท่า</button>
+    <button id="btn-save" onclick="saveWorkout()" class="btn">บันทึก Workout</button>
+  </div>
+
+  <!-- History tab -->
+  <div id="tab-hist" class="tab-pane hidden">
+    <div class="filter-card">
+      <div class="sec-title" style="margin-bottom:12px">กรอง</div>
+      <div class="row2" style="margin-bottom:10px">
+        <div>
+          <div class="field" style="margin-bottom:0">
+            <label>จากวันที่</label>
+            <input id="f-from" class="input" type="date" onchange="applyFilter()">
+          </div>
+        </div>
+        <div>
+          <div class="field" style="margin-bottom:0">
+            <label>ถึงวันที่</label>
+            <input id="f-to" class="input" type="date" onchange="applyFilter()">
+          </div>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>ท่าออกกำลังกาย</label>
+        <select id="f-ex" class="input" onchange="applyFilter()">
+          <option value="">ทั้งหมด</option>
+        </select>
+      </div>
+    </div>
+    <div id="hist-list"></div>
+  </div>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="dash" onclick="setTab('dash')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+      </svg>
+      หน้าหลัก
+    </button>
+    <button class="nav-center" data-tab="log" onclick="setTab('log')">
+      <div class="nav-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </div>
+    </button>
+    <button class="nav-btn" data-tab="hist" onclick="setTab('hist')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,15"/>
+      </svg>
+      ประวัติ
+    </button>
+  </nav>
+</div><!-- /v-main -->
+</div><!-- /app -->
+
+<script>
+// ════════════════════════════════════════
+//  ⚙️  แก้ URL นี้หลัง Deploy Apps Script
+// ════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxe8iwgIu0KQzMc6iPybcWMxSKFIomY27X2U7UgkiW1Ce1hwzmYTjR16GXrsoVTjbKbng/exec';
+// ════════════════════════════════════════
+
+// ── State ────────────────────────────────
+const S = {
+  token: localStorage.getItem('lt'),
+  user:  JSON.parse(localStorage.getItem('lu') || 'null'),
+  exercises: [],
+  exOpts: '',     // cached <optgroup> HTML
+  tab: 'dash',
+  histFilters: {},
+};
+
+// ── API ──────────────────────────────────
+async function api(action, data = {}) {
+  try {
+    const body = { action, ...data };
+    if (S.token) body.token = S.token;
+    const r = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(body),
+    });
+    const json = await r.json();
+    if (json.code === 401) doLogout();
+    return json;
+  } catch {
+    return { success: false, message: 'เชื่อมต่อไม่ได้ ลองใหม่อีกครั้ง' };
+  }
+}
+
+// ── Toast ─────────────────────────────────
+let _tt;
+function toast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + (type === 'err' ? 'err' : type === 'ok' ? 'ok' : '');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.className = 'toast', 3200);
+}
+
+// ── Init ──────────────────────────────────
+async function init() {
+  // Check URL is configured
+  if (SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    document.getElementById('loader').innerHTML =
+      '<div style="padding:30px;text-align:center;max-width:320px">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:40px;color:var(--a);margin-bottom:20px">LIFT</div>' +
+      '<div style="color:var(--err);font-weight:600;margin-bottom:10px">⚠️ ยังไม่ได้ตั้งค่า</div>' +
+      '<div style="color:var(--ts);font-size:14px;line-height:1.7">แก้ <code style="color:var(--t);background:var(--s2);padding:2px 6px;border-radius:4px">SCRIPT_URL</code> ใน <code style="color:var(--t);background:var(--s2);padding:2px 6px;border-radius:4px">index.html</code> ให้เป็น URL ของ Apps Script ที่ Deploy แล้ว</div></div>';
+    return;
+  }
+  if (S.token && S.user) {
+    await showMain();
+  } else {
+    hideSplash();
+    showAuth();
+  }
+}
+
+function hideSplash() {
+  const l = document.getElementById('loader');
+  l.classList.add('fade');
+  setTimeout(() => l.style.display = 'none', 300);
+}
+
+// ── Auth ──────────────────────────────────
+function showAuth() {
+  document.getElementById('v-auth').classList.remove('hidden');
+  document.getElementById('v-main').classList.add('hidden');
+}
+
+function setAuthTab(t) {
+  document.getElementById('tab-login').classList.toggle('active', t === 'login');
+  document.getElementById('tab-reg').classList.toggle('active', t === 'reg');
+  document.getElementById('form-login').classList.toggle('hidden', t !== 'login');
+  document.getElementById('form-reg').classList.toggle('hidden', t !== 'reg');
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-login');
+  const username = document.getElementById('l-user').value.trim();
+  const password = document.getElementById('l-pass').value;
+  if (!username || !password) return toast('กรอกข้อมูลให้ครบ', 'err');
+  btn.disabled = true; btn.textContent = 'กำลังเข้า...';
+  const r = await api('login', { username, password });
+  btn.disabled = false; btn.textContent = 'เข้าสู่ระบบ';
+  if (r.success) {
+    S.token = r.data.token;
+    S.user  = { displayName: r.data.displayName };
+    localStorage.setItem('lt', S.token);
+    localStorage.setItem('lu', JSON.stringify(S.user));
+    await showMain();
+  } else {
+    toast(r.message || 'เข้าสู่ระบบไม่สำเร็จ', 'err');
+  }
+}
+
+async function doRegister(e) {
+  e.preventDefault();
+  const username = document.getElementById('r-user').value.trim();
+  const password = document.getElementById('r-pass').value;
+  const confirm  = document.getElementById('r-cfm').value;
+  const displayName = document.getElementById('r-name').value.trim();
+  if (!username || !password) return toast('กรอกข้อมูลให้ครบ', 'err');
+  if (password !== confirm) return toast('รหัสผ่านไม่ตรงกัน', 'err');
+  const btn = document.getElementById('btn-reg');
+  btn.disabled = true; btn.textContent = 'กำลังสมัคร...';
+  const r = await api('register', { username, password, displayName });
+  btn.disabled = false; btn.textContent = 'สมัครสมาชิก';
+  if (r.success) {
+    toast('สมัครสำเร็จ เข้าสู่ระบบได้เลย', 'ok');
+    setAuthTab('login');
+    document.getElementById('l-user').value = username;
+    document.getElementById('l-pass').focus();
+  } else {
+    toast(r.message || 'สมัครไม่สำเร็จ', 'err');
+  }
+}
+
+function doLogout() {
+  S.token = null; S.user = null; S.exercises = []; S.exOpts = '';
+  localStorage.removeItem('lt'); localStorage.removeItem('lu');
+  showAuth();
+}
+
+// ── Main ──────────────────────────────────
+async function showMain() {
+  document.getElementById('v-auth').classList.add('hidden');
+  document.getElementById('v-main').classList.remove('hidden');
+  document.getElementById('u-name').textContent = S.user?.displayName || '';
+  hideSplash();
+  loadExercises(); // background
+  setTab('dash');
+}
+
+// ── Tab routing ───────────────────────────
+function setTab(tab) {
+  S.tab = tab;
+  ['dash','log','hist'].forEach(t => {
+    document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab);
+  });
+  document.querySelectorAll('[data-tab]').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  if (tab === 'dash') loadDash();
+  if (tab === 'log')  initLog();
+  if (tab === 'hist') loadHist();
+}
+
+// ── Dashboard ─────────────────────────────
+async function loadDash() {
+  document.getElementById('stats-wrap').innerHTML = skelStats();
+  document.getElementById('recent-list').innerHTML = skelRecent(4);
+
+  const [sr, wr] = await Promise.all([
+    api('getStats'),
+    api('getWorkouts', { filters: {} })
+  ]);
+
+  if (sr.success) renderStats(sr.data);
+  if (wr.success) renderRecent(wr.data.slice(0, 10));
+}
+
+function skelStats() {
+  return `<div class="stats-grid">
+    <div class="stat-card"><div class="skel" style="height:48px;width:64px;margin-bottom:8px"></div><div class="skel" style="height:10px;width:80px"></div></div>
+    <div class="stat-card"><div class="skel" style="height:48px;width:64px;margin-bottom:8px"></div><div class="skel" style="height:10px;width:80px"></div></div>
+  </div>
+  <div class="stat-wide"><div class="skel" style="height:10px;width:80px;margin-bottom:8px"></div><div class="skel" style="height:20px;width:140px"></div></div>
+  <div class="stat-wide"><div class="skel" style="height:10px;width:80px;margin-bottom:8px"></div><div class="skel" style="height:36px;width:120px"></div></div>`;
+}
+
+function skelRecent(n) {
+  return Array(n).fill(0).map(() =>
+    `<div class="wo-item">
+      <div class="skel" style="width:6px;height:6px;border-radius:50%;flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div class="skel" style="height:15px;width:110px;margin-bottom:5px"></div>
+        <div class="skel" style="height:12px;width:80px"></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderStats(d) {
+  document.getElementById('stats-wrap').innerHTML = `
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-num accent">${d.weekSessions}</div>
+        <div class="stat-lbl">สัปดาห์นี้</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${d.totalSessions}</div>
+        <div class="stat-lbl">ทั้งหมด (ครั้ง)</div>
+      </div>
+    </div>
+    <div class="stat-wide">
+      <div class="stat-wide-lbl">ท่าที่ชอบ</div>
+      <div class="stat-wide-val">${d.favoriteExercise}</div>
+    </div>
+    <div class="stat-wide">
+      <div class="stat-wide-lbl">น้ำหนักรวมที่ยก</div>
+      <div class="stat-big">
+        <span>${d.totalWeight.toLocaleString()}</span>
+        <span class="stat-unit">kg</span>
+      </div>
+    </div>`;
+}
+
+function renderRecent(list) {
+  const el = document.getElementById('recent-list');
+  if (!list.length) {
+    el.innerHTML = '<p style="color:var(--ts);text-align:center;padding:32px 0;font-size:14px">ยังไม่มีข้อมูล<br>กด <strong style="color:var(--a)">+</strong> เพื่อเริ่มบันทึก</p>';
+    return;
+  }
+  el.innerHTML = list.map(w => `
+    <div class="wo-item">
+      <div class="wo-dot"></div>
+      <div style="flex:1;min-width:0">
+        <div class="wo-name">${esc(w.exerciseName)}</div>
+        <div class="wo-meta">${metaStr(w)}</div>
+      </div>
+      <div class="wo-date">${relDate(w.date)}</div>
+    </div>`).join('');
+}
+
+// ── Log Workout ───────────────────────────
+function initLog() {
+  document.getElementById('log-date').value = todayStr();
+  document.getElementById('log-items').innerHTML = '';
+  appendEntry();
+}
+
+function appendEntry() {
+  const container = document.getElementById('log-items');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'ex-entry';
+  div.innerHTML = entryHTML(idx + 1, idx > 0);
+  container.appendChild(div);
+  populateSelect(div.querySelector('.ex-select'));
+  if (idx > 0) div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function addEntry() { appendEntry(); }
+
+function delEntry(btn) {
+  btn.closest('.ex-entry').remove();
+  document.querySelectorAll('.ex-num').forEach((el, i) => {
+    el.textContent = 'EXERCISE ' + (i + 1);
+  });
+}
+
+function entryHTML(num, canDel) {
+  return `
+    <div class="ex-num">EXERCISE ${num}</div>
+    ${canDel ? `<button type="button" class="ex-del" onclick="delEntry(this)">×</button>` : ''}
+    <div class="field">
+      <label>ท่าออกกำลังกาย</label>
+      <select class="input ex-select" onchange="onExSel(this)">
+        <option value="">— เลือกท่า —</option>
+      </select>
+      <input type="text" class="input custom-ex" style="display:none;margin-top:8px"
+        placeholder="พิมพ์ชื่อท่า...">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Sets</label>
+        <input class="input" type="number" name="sets" min="1" value="3" inputmode="numeric">
+      </div>
+      <div class="field">
+        <label>Reps</label>
+        <input class="input" type="number" name="reps" min="1" value="10" inputmode="numeric">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>น้ำหนัก (kg)</label>
+        <input class="input" type="number" name="weight" min="0" step="0.5" inputmode="decimal" placeholder="0">
+      </div>
+      <div class="field">
+        <label>เวลา (นาที)</label>
+        <input class="input" type="number" name="duration" min="0" inputmode="numeric" placeholder="—">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>หมายเหตุ</label>
+      <input class="input" type="text" name="notes" placeholder="—">
+    </div>`;
+}
+
+function onExSel(sel) {
+  const entry = sel.closest('.ex-entry');
+  const cust = entry.querySelector('.custom-ex');
+  const isCust = sel.value === '__custom';
+  cust.style.display = isCust ? 'block' : 'none';
+  if (isCust) cust.focus();
+}
+
+function populateSelect(sel) {
+  if (!sel) return;
+  const v = sel.value;
+  sel.innerHTML = `<option value="">— เลือกท่า —</option>${S.exOpts}<option value="__custom">อื่นๆ (พิมพ์เอง)</option>`;
+  if (v) sel.value = v;
+}
+
+async function saveWorkout() {
+  const date = document.getElementById('log-date').value;
+  if (!date) return toast('กรุณาเลือกวันที่', 'err');
+
+  const entries = [...document.querySelectorAll('.ex-entry')];
+  const workouts = [];
+
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    const sel = entry.querySelector('.ex-select');
+    const cust = entry.querySelector('.custom-ex');
+    const exName = sel.value === '__custom'
+      ? (cust.value.trim())
+      : sel.value;
+
+    if (!exName) return toast(`กรุณาเลือกท่าข้อ ${i + 1}`, 'err');
+
+    workouts.push({
+      date,
+      exerciseName: exName,
+      sets:     entry.querySelector('[name=sets]').value     || 0,
+      reps:     entry.querySelector('[name=reps]').value     || 0,
+      weight:   entry.querySelector('[name=weight]').value   || 0,
+      duration: entry.querySelector('[name=duration]').value || 0,
+      notes:    entry.querySelector('[name=notes]').value    || '',
+    });
+  }
+
+  const btn = document.getElementById('btn-save');
+  btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
+  const r = await api('addWorkouts', { workouts });
+  btn.disabled = false; btn.textContent = 'บันทึก Workout';
+
+  if (r.success) {
+    toast('บันทึกสำเร็จ 💪', 'ok');
+    initLog();
+  } else {
+    toast(r.message || 'บันทึกไม่สำเร็จ', 'err');
+  }
+}
+
+// ── Exercises ─────────────────────────────
+async function loadExercises() {
+  const r = await api('getExercises');
+  if (!r.success) return;
+  S.exercises = r.data;
+
+  // Build grouped options HTML
+  const groups = r.data.reduce((g, e) => {
+    (g[e.category] = g[e.category] || []).push(e);
+    return g;
+  }, {});
+  S.exOpts = Object.entries(groups)
+    .map(([cat, exs]) =>
+      `<optgroup label="${esc(cat)}">${exs.map(e => `<option value="${esc(e.name)}">${esc(e.name)}</option>`).join('')}</optgroup>`)
+    .join('');
+
+  // Populate any open selects
+  document.querySelectorAll('.ex-select').forEach(populateSelect);
+
+  // Populate history filter
+  const fEx = document.getElementById('f-ex');
+  fEx.innerHTML = `<option value="">ทั้งหมด</option>` +
+    r.data.map(e => `<option value="${esc(e.name)}">${esc(e.name)}</option>`).join('');
+}
+
+// ── History ───────────────────────────────
+async function loadHist() {
+  document.getElementById('hist-list').innerHTML = skelRecent(5);
+  const r = await api('getWorkouts', { filters: S.histFilters });
+  if (r.success) renderHist(r.data);
+  else document.getElementById('hist-list').innerHTML =
+    `<p style="color:var(--ts);text-align:center;padding:32px 0;font-size:14px">${r.message}</p>`;
+}
+
+function applyFilter() {
+  S.histFilters = {
+    from: document.getElementById('f-from').value,
+    to:   document.getElementById('f-to').value,
+    exercise: document.getElementById('f-ex').value,
+  };
+  loadHist();
+}
+
+function renderHist(list) {
+  const el = document.getElementById('hist-list');
+  if (!list.length) {
+    el.innerHTML = '<p style="color:var(--ts);text-align:center;padding:40px 0;font-size:14px">ไม่มีข้อมูลในช่วงนี้</p>';
+    return;
+  }
+  const groups = {};
+  list.forEach(w => {
+    if (!groups[w.date]) groups[w.date] = [];
+    groups[w.date].push(w);
+  });
+  el.innerHTML = Object.entries(groups)
+    .sort((a, b) => b[0].localeCompare(a[0]))
+    .map(([date, items]) => `
+      <div class="day-group">
+        <div class="day-lbl">${formatDate(date)}</div>
+        ${items.map(w => `
+          <div class="wo-item">
+            <div class="wo-dot"></div>
+            <div style="flex:1;min-width:0">
+              <div class="wo-name">${esc(w.exerciseName)}</div>
+              <div class="wo-meta">${metaStr(w)}</div>
+            </div>
+          </div>`).join('')}
+      </div>`).join('');
+}
+
+// ── Helpers ───────────────────────────────
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function metaStr(w) {
+  const p = [];
+  if (w.sets && w.reps)  p.push(`${w.sets}×${w.reps}`);
+  if (Number(w.weight))  p.push(`${w.weight} kg`);
+  if (Number(w.duration))p.push(`${w.duration} นาที`);
+  return p.join(' · ') || '—';
+}
+
+function relDate(d) {
+  const diff = Math.floor((Date.now() - new Date(d + 'T00:00:00')) / 864e5);
+  if (diff === 0) return 'วันนี้';
+  if (diff === 1) return 'เมื่อวาน';
+  return `${diff} วันก่อน`;
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  const days = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return `${days[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear() + 543}`;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Start ─────────────────────────────────
+init();
+</script>
+</body>
+</html>
