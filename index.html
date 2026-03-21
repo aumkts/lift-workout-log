@@ -8,24 +8,30 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>LIFT — Workout Tracker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── Reset & Vars ── */
+/* ═══ Reset & Variables ═══ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0b0b0e;--s1:#111116;--s2:#18181f;--s3:#222229;
-  --bd:rgba(255,255,255,.07);--bd2:rgba(255,255,255,.12);
-  --a:#c8ff3c;--a2:#99cc00;
-  --t:#eeeef2;--ts:#8888a0;--td:#44444f;
-  --err:#ff4f5a;--ok:#2ed573;
-  --r:10px;--r2:14px;--nav:64px;
+  --bg:#09090d;--s1:#0f0f14;--s2:#161620;--s3:#1e1e2a;--s4:#252532;
+  --bd:rgba(255,255,255,.06);--bd2:rgba(255,255,255,.11);--bd3:rgba(255,255,255,.18);
+  --a:#c8ff3c;--a2:#a3d400;--a3:rgba(200,255,60,.12);
+  --t:#eeeeF4;--ts:#7a7a96;--td:#3a3a50;
+  --err:#ff4f5a;--err2:rgba(255,79,90,.12);
+  --ok:#3de87a;--ok2:rgba(61,232,122,.12);
+  --blue:#4f9eff;
+  --r:10px;--r2:14px;--r3:18px;--nav:66px;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
 }
-html{background:var(--bg)}
+html{background:var(--bg);scroll-behavior:smooth}
 body{
   background:var(--bg);color:var(--t);
   font-family:'Barlow',-apple-system,sans-serif;font-size:16px;
   min-height:100svh;overflow-x:hidden;
-  -webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;
+  -webkit-overflow-scrolling:touch;
 }
 input,select,button,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:0;height:0}
@@ -33,158 +39,360 @@ input,select,button,textarea{font-family:inherit}
 #app{max-width:480px;margin:0 auto;min-height:100svh;position:relative}
 .view{min-height:100svh}
 
-/* ── Auth ── */
-#v-auth{display:flex;align-items:center;justify-content:center;min-height:100svh;padding:24px 20px}
-.auth-inner{width:100%;max-width:380px}
-.auth-brand{margin-bottom:36px}
-.auth-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:80px;line-height:.9;color:var(--a);letter-spacing:2px;display:block}
-.auth-tagline{font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ts);margin-top:6px}
-.auth-tabs{display:flex;background:var(--s2);border-radius:var(--r);padding:3px;margin-bottom:24px;border:1px solid var(--bd)}
-.auth-tab{flex:1;padding:9px;text-align:center;background:none;border:none;color:var(--ts);font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;transition:all .15s}
-.auth-tab.active{background:var(--s3);color:var(--t)}
+/* ═══ Auth ═══ */
+#v-auth{display:flex;align-items:center;justify-content:center;min-height:100svh;padding:28px 22px}
+.auth-inner{width:100%;max-width:360px;animation:slideUp .5s var(--ease)}
+.auth-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:82px;line-height:.88;
+  color:var(--a);letter-spacing:3px;display:block;
+  filter:drop-shadow(0 0 24px rgba(200,255,60,.3))}
+.auth-tagline{font-size:10px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--ts);margin-top:8px}
+.auth-brand{margin-bottom:40px}
+.auth-tabs{display:flex;background:var(--s2);border-radius:var(--r);padding:4px;margin-bottom:24px;border:1px solid var(--bd);gap:4px}
+.auth-tab{flex:1;padding:10px;text-align:center;background:none;border:none;color:var(--ts);font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;transition:all .2s var(--ease)}
+.auth-tab.active{background:var(--s3);color:var(--t);box-shadow:0 2px 8px rgba(0,0,0,.3)}
 
-/* ── Form fields ── */
-.field{margin-bottom:16px}
-.field label{display:block;margin-bottom:6px;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--ts)}
-.input{width:100%;background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);color:var(--t);font-size:16px;padding:12px 14px;transition:border-color .15s;-webkit-appearance:none;appearance:none}
-.input:focus{outline:none;border-color:var(--a)}
+/* ═══ Form ═══ */
+.field{margin-bottom:15px}
+.field label{display:block;margin-bottom:6px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ts)}
+.input{
+  width:100%;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);
+  color:var(--t);font-size:16px;padding:12px 14px;
+  transition:border-color .18s var(--ease),background .18s,box-shadow .18s;
+  -webkit-appearance:none;appearance:none;outline:none;
+}
+.input:focus{border-color:var(--a);background:var(--s3);box-shadow:0 0 0 3px rgba(200,255,60,.1)}
 .input::placeholder{color:var(--td)}
 select.input{cursor:pointer}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 
-/* ── Buttons ── */
-.btn{display:block;width:100%;padding:14px;text-align:center;background:var(--a);color:#000;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:opacity .15s,transform .1s}
-.btn:active{transform:scale(.98);opacity:.88}
-.btn:disabled{opacity:.4;cursor:not-allowed}
-.btn-ghost{background:transparent;color:var(--ts);border:1px solid var(--bd2);font-size:15px;font-family:'Barlow',sans-serif;font-weight:600}
+/* ═══ Buttons ═══ */
+.btn{
+  display:flex;align-items:center;justify-content:center;width:100%;
+  padding:14px;text-align:center;
+  background:var(--a);color:#000;border:none;border-radius:var(--r);
+  font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.5px;
+  cursor:pointer;transition:all .18s var(--ease);
+  position:relative;overflow:hidden;
+}
+.btn:active{transform:scale(.97);opacity:.9}
+.btn::after{content:'';position:absolute;inset:0;background:rgba(0,0,0,.08);opacity:0;transition:opacity .15s}
+.btn:active::after{opacity:1}
+.btn:disabled{opacity:.38;cursor:not-allowed;transform:none}
+.btn-ghost{background:transparent;color:var(--ts);border:1px solid var(--bd2);font-size:14px;font-family:'Barlow',sans-serif;font-weight:600;letter-spacing:0}
 .btn-ghost:active{background:var(--s2)}
-.btn-sm{display:inline-flex;align-items:center;justify-content:center;width:auto;padding:8px 16px;font-size:13px;font-family:'Barlow',sans-serif;font-weight:600;border-radius:8px;white-space:nowrap}
+.btn-sm{display:inline-flex;align-items:center;justify-content:center;width:auto;padding:7px 14px;font-size:13px;border-radius:8px;white-space:nowrap;font-family:'Barlow',sans-serif;font-weight:600;letter-spacing:0}
+.btn-danger{background:var(--err);color:#fff}
+.btn-danger:active{background:#d93f49}
+.icon-btn{
+  background:none;border:1px solid var(--bd);border-radius:6px;padding:5px 9px;
+  color:var(--ts);cursor:pointer;font-size:12px;font-weight:600;
+  transition:all .15s var(--ease);white-space:nowrap;flex-shrink:0;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.icon-btn:active{background:var(--s3);transform:scale(.96)}
+.icon-btn.del{border-color:rgba(255,79,90,.25);color:var(--err)}
+.icon-btn.del:active{background:var(--err2)}
 
-/* ── Header ── */
-.header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:50;background:var(--bg)}
-.header-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:26px;color:var(--a);letter-spacing:2px}
+/* ═══ Header ═══ */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 20px;border-bottom:1px solid var(--bd);
+  position:sticky;top:0;z-index:50;
+  background:rgba(9,9,13,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.header-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:27px;color:var(--a);letter-spacing:3px}
 .header-right{display:flex;align-items:center;gap:10px}
 .header-user{font-size:13px;color:var(--ts);font-weight:500;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-out{background:none;border:1px solid var(--bd);color:var(--ts);border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s}
-.header-out:active{background:var(--s2)}
+.header-out{
+  background:none;border:1px solid var(--bd2);color:var(--ts);border-radius:7px;
+  padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.header-out:active{background:var(--s2);color:var(--t)}
 
-/* ── Layout ── */
+/* ═══ Layout ═══ */
 .main-wrap{min-height:100svh;display:flex;flex-direction:column}
-.tab-pane{flex:1;overflow-y:auto;padding:20px 20px calc(var(--nav) + 24px)}
+.tab-pane{
+  flex:1;overflow-y:auto;padding:20px 18px calc(var(--nav) + 28px);
+  opacity:1;transform:translateY(0);
+  transition:opacity .22s var(--ease),transform .22s var(--ease);
+}
+.tab-pane.entering{animation:tabIn .25s var(--ease) both}
 
-/* ── Bottom nav ── */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav);display:flex;align-items:center;background:var(--s1);border-top:1px solid var(--bd);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
-.nav-btn{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:none;border:none;color:var(--td);font-size:9px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:color .15s}
+/* ═══ Nav ═══ */
+.bottom-nav{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:480px;height:var(--nav);
+  display:flex;align-items:center;
+  background:rgba(15,15,20,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--bd);z-index:100;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.nav-btn{
+  flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;background:none;border:none;color:var(--td);font-size:9px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+  transition:color .2s var(--ease);position:relative;
+}
 .nav-btn.active{color:var(--a)}
-.nav-btn svg{width:20px;height:20px;flex-shrink:0}
+.nav-btn.active::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:28px;height:2px;background:var(--a);border-radius:0 0 2px 2px;
+}
+.nav-btn svg{width:20px;height:20px;flex-shrink:0;transition:transform .2s var(--spring)}
+.nav-btn.active svg{transform:scale(1.1)}
 .nav-center{flex:1;display:flex;align-items:center;justify-content:center;height:100%;background:none;border:none;cursor:pointer;padding:0}
-.nav-circle{width:48px;height:48px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .15s}
-.nav-circle:active{transform:scale(.92)}
+.nav-circle{
+  width:50px;height:50px;border-radius:50%;background:var(--a);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(200,255,60,.35);
+  transition:transform .2s var(--spring),box-shadow .2s;
+}
+.nav-circle:active{transform:scale(.9);box-shadow:0 0 10px rgba(200,255,60,.2)}
+.nav-circle.active-tab{background:var(--a2);box-shadow:0 0 28px rgba(200,255,60,.5)}
 .nav-circle svg{width:24px;height:24px;color:#000}
 
-/* ── Stats cards ── */
+/* ═══ Cards ═══ */
+.card{
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);
+  transition:border-color .18s;
+}
+.card:hover{border-color:var(--bd2)}
+
+/* ═══ Stats ═══ */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.stat-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px 14px}
-.stat-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:48px;line-height:1;color:var(--t);font-variant-numeric:tabular-nums}
+.stat-card{
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px 14px;
+  transition:transform .2s var(--spring),border-color .18s;
+}
+.stat-card:active{transform:scale(.98)}
+.stat-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:48px;line-height:1;color:var(--t);font-variant-numeric:tabular-nums;transition:color .3s}
 .stat-num.accent{color:var(--a)}
-.stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ts);margin-top:5px}
+.stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ts);margin-top:5px}
 .stat-wide{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;margin-bottom:10px}
-.stat-wide-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--ts);margin-bottom:6px}
-.stat-wide-val{font-size:18px;font-weight:500}
-.stat-big{display:flex;align-items:baseline;gap:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:38px}
-.stat-unit{font-size:14px;color:var(--ts);font-family:'Barlow',sans-serif;font-weight:400}
+.stat-wide-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ts);margin-bottom:6px}
+.stat-wide-val{font-size:17px;font-weight:500}
+.stat-big{display:flex;align-items:baseline;gap:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:38px;line-height:1}
+.stat-unit{font-size:13px;color:var(--ts);font-family:'Barlow',sans-serif;font-weight:400}
+.trend-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:700;margin-left:8px}
+.trend-up{background:var(--ok2);color:var(--ok)}
+.trend-down{background:var(--err2);color:var(--err)}
 
-/* ── Section ── */
+/* ═══ Section ═══ */
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;margin-top:20px}
-.sec-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:var(--ts)}
+.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ts)}
 
-/* ── Workout item ── */
-.wo-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd)}
-.wo-dot{width:6px;height:6px;border-radius:50%;background:var(--a);flex-shrink:0}
+/* ═══ Workout items ═══ */
+.wo-item{
+  display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--bd);
+  transition:background .15s;cursor:default;
+}
+.wo-item:last-child{border-bottom:none}
+.wo-dot{width:7px;height:7px;border-radius:50%;background:var(--a);flex-shrink:0;transition:transform .2s var(--spring)}
+.wo-item:active .wo-dot{transform:scale(1.5)}
 .wo-name{font-weight:500;font-size:15px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.wo-meta{font-size:13px;color:var(--ts)}
-.wo-date{font-size:12px;color:var(--td);white-space:nowrap;flex-shrink:0}
+.wo-meta{font-size:12px;color:var(--ts)}
+.wo-date{font-size:11px;color:var(--td);white-space:nowrap;flex-shrink:0}
+.wo-del-btn{
+  flex-shrink:0;width:30px;height:30px;border-radius:8px;background:none;border:1px solid transparent;
+  color:var(--td);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s var(--ease);
+}
+.wo-del-btn:active{background:var(--err2);color:var(--err);border-color:rgba(255,79,90,.2);transform:scale(.9)}
 
-/* ── Exercise entry ── */
-.ex-entry{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:14px;margin-bottom:12px;position:relative}
-.ex-num{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--a);margin-bottom:12px}
-.ex-del{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--td);font-size:20px;line-height:1;cursor:pointer;padding:2px 6px;transition:color .15s}
-.ex-del:active{color:var(--err)}
+/* ═══ Exercise entry ═══ */
+.ex-entry{
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:15px;margin-bottom:12px;
+  position:relative;animation:slideUp .22s var(--ease);
+  transition:border-color .18s;
+}
+.ex-entry:focus-within{border-color:rgba(200,255,60,.2)}
+.ex-num{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--a);margin-bottom:12px}
+.ex-del{
+  position:absolute;top:12px;right:12px;background:none;border:none;color:var(--td);
+  font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;transition:color .15s,transform .15s;
+}
+.ex-del:active{color:var(--err);transform:scale(.85)}
 
-/* ── Day group ── */
-.day-group{margin-bottom:24px}
-.day-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ts);padding-bottom:10px;border-bottom:1px solid var(--bd)}
+/* ═══ Day group ═══ */
+.day-group{margin-bottom:22px}
+.day-lbl{
+  font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ts);
+  padding-bottom:10px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.day-del-btn{
+  background:none;border:none;color:var(--td);font-size:12px;font-weight:600;cursor:pointer;
+  padding:2px 6px;border-radius:5px;transition:all .15s;display:flex;align-items:center;gap:4px;
+}
+.day-del-btn:active{background:var(--err2);color:var(--err)}
 
-/* ── Filter card ── */
+/* ═══ Filter card ═══ */
 .filter-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:14px;margin-bottom:16px}
 
-/* ── Skeleton ── */
-.skel{background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:200% 100%;border-radius:6px;animation:shimmer 1.4s ease-in-out infinite}
+/* ═══ Chip / Pill ═══ */
+.chip-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{
+  flex-shrink:0;padding:7px 14px;border-radius:100px;
+  background:var(--s2);border:1px solid var(--bd);color:var(--ts);
+  font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .2s var(--ease);white-space:nowrap;
+}
+.chip:active{transform:scale(.95)}
+.chip.active{background:var(--a);border-color:var(--a);color:#000;box-shadow:0 2px 12px rgba(200,255,60,.25)}
+
+/* ═══ Skeleton ═══ */
+.skel{
+  background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);
+  background-size:200% 100%;border-radius:6px;
+  animation:shimmer 1.6s ease-in-out infinite;
+}
 @keyframes shimmer{to{background-position:-200% 0}}
 
-/* ── Toast ── */
-#toast{position:fixed;bottom:calc(var(--nav) + 12px);left:50%;transform:translateX(-50%) translateY(12px);background:var(--s3);border:1px solid var(--bd2);color:var(--t);padding:10px 20px;border-radius:100px;font-size:14px;font-weight:500;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:calc(100vw - 40px);text-align:center;z-index:999;white-space:nowrap}
+/* ═══ Toast ═══ */
+#toast{
+  position:fixed;bottom:calc(var(--nav) + 14px);left:50%;
+  transform:translateX(-50%) translateY(16px);
+  background:var(--s3);border:1px solid var(--bd2);color:var(--t);
+  padding:10px 20px;border-radius:100px;font-size:13px;font-weight:600;
+  opacity:0;pointer-events:none;
+  transition:opacity .22s var(--ease),transform .22s var(--spring);
+  max-width:calc(100vw - 40px);text-align:center;z-index:999;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#toast.err{border-color:var(--err);color:var(--err)}
-#toast.ok{border-color:var(--ok);color:var(--ok)}
+#toast.err{border-color:var(--err);color:var(--err);background:rgba(255,79,90,.1)}
+#toast.ok{border-color:var(--ok);color:var(--ok);background:rgba(61,232,122,.1)}
 
-/* ── Loader ── */
-#loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999;transition:opacity .3s}
+/* ═══ Loader ═══ */
+#loader{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:9999;
+  transition:opacity .4s var(--ease);
+}
 #loader.fade{opacity:0;pointer-events:none}
-.loader-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:64px;color:var(--a);letter-spacing:2px;animation:pulse 1s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.loader-inner{text-align:center}
+.loader-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:72px;color:var(--a);letter-spacing:3px;animation:logoPulse 1.2s ease-in-out infinite;display:block;filter:drop-shadow(0 0 28px rgba(200,255,60,.4))}
+.loader-bar{width:80px;height:2px;background:var(--s3);border-radius:1px;margin:16px auto 0;overflow:hidden}
+.loader-bar-fill{height:100%;background:var(--a);border-radius:1px;animation:barLoad 1.2s ease-in-out infinite}
+@keyframes logoPulse{0%,100%{opacity:1;filter:drop-shadow(0 0 28px rgba(200,255,60,.4))}50%{opacity:.45;filter:drop-shadow(0 0 10px rgba(200,255,60,.15))}}
+@keyframes barLoad{0%{width:0%;transform:translateX(0)}50%{width:100%;transform:translateX(0)}100%{width:100%;transform:translateX(100%)}}
 
-/* ── Progress tab ── */
-.chip-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
-.chip-row::-webkit-scrollbar{display:none}
-.chip{flex-shrink:0;padding:7px 14px;border-radius:100px;background:var(--s2);border:1px solid var(--bd);color:var(--ts);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap}
-.chip.active{background:var(--a);border-color:var(--a);color:#000}
-.chart-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;margin-bottom:14px;overflow:hidden}
-.chart-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ts);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
-.metric-tabs{display:flex;gap:0;background:var(--s3);border-radius:8px;padding:3px;margin-bottom:16px}
-.metric-tab{flex:1;text-align:center;padding:7px 4px;border-radius:6px;font-size:12px;font-weight:600;color:var(--ts);cursor:pointer;background:none;border:none;transition:all .15s}
-.metric-tab.active{background:var(--s2);color:var(--t)}
+/* ═══ Progress tab ═══ */
+.metric-tabs{display:flex;gap:0;background:var(--s3);border-radius:9px;padding:3px;margin-bottom:14px}
+.metric-tab{
+  flex:1;text-align:center;padding:8px 4px;border-radius:7px;
+  font-size:12px;font-weight:600;color:var(--ts);cursor:pointer;background:none;border:none;
+  transition:all .2s var(--ease);
+}
+.metric-tab.active{background:var(--s2);color:var(--t);box-shadow:0 2px 6px rgba(0,0,0,.3)}
 .prog-kpi-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
-.prog-kpi{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:12px 10px;text-align:center}
-.prog-kpi-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:24px;color:var(--a);display:block;margin-bottom:3px;line-height:1}
-.prog-kpi-lbl{font-size:9px;color:var(--ts);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
-.no-data{text-align:center;padding:36px 0;font-size:14px;color:var(--ts);line-height:2}
+.prog-kpi{
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:13px 10px;
+  text-align:center;transition:border-color .18s,transform .2s var(--spring);
+}
+.prog-kpi:active{transform:scale(.96)}
+.prog-kpi-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:26px;color:var(--a);display:block;margin-bottom:3px;line-height:1}
+.prog-kpi-lbl{font-size:9px;color:var(--ts);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.no-data{text-align:center;padding:40px 0;font-size:13px;color:var(--ts);line-height:2.2}
+.chart-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;margin-bottom:14px;overflow:hidden}
+.chart-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ts);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.chart-label span{font-size:10px;color:var(--a);font-weight:600}
 
-/* ── Settings tab ── */
+/* ═══ Settings ═══ */
 .settings-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:14px;overflow:hidden}
-.settings-hd{padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
-.settings-hd-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ts)}
+.settings-hd{padding:13px 15px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
+.settings-hd-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ts)}
 .profile-row{display:flex;align-items:center;gap:14px;padding:18px 16px}
-.avatar{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:#000;flex-shrink:0}
-.profile-info{flex:1;min-width:0}
+.avatar{
+  width:52px;height:52px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--a),var(--a2));
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:#000;
+  box-shadow:0 0 16px rgba(200,255,60,.25);
+}
 .profile-name{font-size:18px;font-weight:600;margin-bottom:2px}
 .profile-meta{font-size:12px;color:var(--ts)}
-.badge{display:inline-block;padding:3px 9px;border-radius:100px;font-size:11px;font-weight:600;background:var(--s3);color:var(--ts);border:1px solid var(--bd)}
-.badge.bp{background:rgba(136,136,160,.12);color:var(--ts);border-color:rgba(136,136,160,.2)}
-.badge.custom{background:rgba(200,255,60,.1);color:var(--a);border-color:rgba(200,255,60,.2)}
-.ex-mgmt-item{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--bd)}
+.badge{display:inline-block;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:600}
+.badge.bp{background:var(--s3);color:var(--ts);border:1px solid var(--bd)}
+.badge.custom{background:var(--a3);color:var(--a);border:1px solid rgba(200,255,60,.2)}
+.ex-mgmt-item{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd);transition:background .15s}
 .ex-mgmt-item:last-child{border-bottom:none}
+.ex-mgmt-item:active{background:var(--s3)}
 .ex-mgmt-name{flex:1;font-size:14px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.icon-btn{background:none;border:1px solid var(--bd);border-radius:6px;padding:5px 8px;color:var(--ts);cursor:pointer;font-size:12px;transition:all .15s;white-space:nowrap;flex-shrink:0}
-.icon-btn:active{background:var(--s3)}
-.icon-btn.del{border-color:rgba(255,79,90,.3);color:var(--err)}
-.icon-btn.del:active{background:rgba(255,79,90,.12)}
 .add-ex-form-wrap{background:var(--s3);border-top:1px solid var(--bd);padding:14px}
-.bp-sel{background:var(--s2);border:1px solid var(--bd);color:var(--t);font-size:12px;border-radius:6px;padding:4px 8px;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:110px}
+.bp-sel{
+  background:var(--s3);border:1px solid var(--bd);color:var(--t);
+  font-size:12px;border-radius:7px;padding:5px 10px;cursor:pointer;
+  -webkit-appearance:none;appearance:none;max-width:110px;transition:border-color .15s;
+}
+.bp-sel:focus{outline:none;border-color:var(--a)}
 .search-wrap{position:relative}
-.search-wrap .si{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--ts);pointer-events:none}
-.sinput{padding-left:36px!important}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--ts);pointer-events:none}
+.sinput{padding-left:38px!important}
+
+/* ═══ Date range quick ═══ */
+.quick-ranges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.qr-btn{
+  padding:5px 12px;border-radius:100px;background:var(--s3);border:1px solid var(--bd);
+  color:var(--ts);font-size:11px;font-weight:600;cursor:pointer;
+  transition:all .18s var(--ease);white-space:nowrap;
+}
+.qr-btn.active{background:var(--a);border-color:var(--a);color:#000}
+.qr-btn:active{transform:scale(.93)}
+
+/* ═══ Modal / Confirm ═══ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;
+  display:flex;align-items:flex-end;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .22s var(--ease);
+  padding:0 12px 12px;
+}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal-sheet{
+  background:var(--s2);border:1px solid var(--bd2);border-radius:20px;
+  padding:20px 18px;width:100%;max-width:440px;
+  transform:translateY(20px);transition:transform .28s var(--spring);
+}
+.modal-overlay.show .modal-sheet{transform:translateY(0)}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:8px}
+.modal-body{font-size:13px;color:var(--ts);margin-bottom:20px;line-height:1.6}
+.modal-actions{display:flex;gap:10px}
+.modal-actions .btn{font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;padding:12px}
+
+/* ═══ Animations ═══ */
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tabIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes countUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
 
-<div id="loader"><div class="loader-logo">LIFT</div></div>
+<div id="loader">
+  <div class="loader-inner">
+    <span class="loader-logo">LIFT</span>
+    <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  </div>
+</div>
 <div id="toast"></div>
+
+<!-- Confirm Modal -->
+<div id="confirm-modal" class="modal-overlay" onclick="closeConfirm(event)">
+  <div class="modal-sheet">
+    <div class="modal-title" id="confirm-title">ยืนยัน?</div>
+    <div class="modal-body" id="confirm-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">ยกเลิก</button>
+      <button class="btn btn-danger" id="confirm-ok">ลบ</button>
+    </div>
+  </div>
+</div>
 
 <div id="app">
 
-<!-- ═══ AUTH ═══ -->
+<!-- ════ AUTH ════ -->
 <div id="v-auth" class="view hidden">
   <div class="auth-inner">
     <div class="auth-brand">
@@ -210,7 +418,7 @@ select.input{cursor:pointer}
   </div>
 </div>
 
-<!-- ═══ MAIN ═══ -->
+<!-- ════ MAIN ════ -->
 <div id="v-main" class="view hidden">
   <header class="header">
     <div class="header-logo">LIFT</div>
@@ -223,28 +431,36 @@ select.input{cursor:pointer}
   <!-- ── Dashboard ── -->
   <div id="tab-dash" class="tab-pane">
     <div id="stats-wrap"></div>
-    <div class="sec-head" style="margin-top:8px"><div class="sec-title">ล่าสุด</div></div>
+
+    <!-- Weekly chart -->
+    <div class="sec-head" style="margin-top:4px"><div class="sec-title">สัปดาห์นี้</div></div>
+    <div class="chart-card" id="weekly-chart-wrap">
+      <div id="weekly-chart"><div style="display:flex;gap:6px;align-items:flex-end;height:64px">${Array(7).fill('<div class="skel" style="flex:1;border-radius:4px 4px 0 0"></div>').join('')}</div></div>
+    </div>
+
+    <div class="sec-head" style="margin-top:4px"><div class="sec-title">ล่าสุด</div></div>
     <div id="recent-list"></div>
   </div>
 
   <!-- ── Progress ── -->
   <div id="tab-prog" class="tab-pane hidden">
-    <div class="sec-head" style="margin-top:0"><div class="sec-title">ความก้าวหน้า</div></div>
+    <div class="sec-head" style="margin-top:0"><div class="sec-title">Progress</div></div>
 
-    <!-- Period chips -->
+    <!-- Date range presets -->
     <div style="margin-bottom:14px">
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--ts);margin-bottom:8px">ช่วงเวลา</div>
       <div class="chip-row" id="period-chips">
-        <button class="chip active" data-period="30" onclick="setProgPeriod('30')">30 วัน</button>
-        <button class="chip" data-period="90" onclick="setProgPeriod('90')">90 วัน</button>
+        <button class="chip active" data-period="7" onclick="setProgPeriod('7')">7 วัน</button>
+        <button class="chip" data-period="30" onclick="setProgPeriod('30')">30 วัน</button>
+        <button class="chip" data-period="90" onclick="setProgPeriod('90')">3 เดือน</button>
         <button class="chip" data-period="180" onclick="setProgPeriod('180')">6 เดือน</button>
         <button class="chip" data-period="all" onclick="setProgPeriod('all')">ทั้งหมด</button>
       </div>
     </div>
 
-    <!-- Filters -->
+    <!-- Custom date range -->
     <div class="filter-card" style="margin-bottom:14px">
-      <div class="row2" style="margin-bottom:10px">
+      <div class="row2" style="margin-bottom:12px">
         <div class="field" style="margin-bottom:0">
           <label>Body Part</label>
           <select id="prog-bp" class="input" onchange="onProgBPChange()">
@@ -258,11 +474,11 @@ select.input{cursor:pointer}
           </select>
         </div>
       </div>
-      <!-- Metric tabs -->
       <div class="metric-tabs" id="metric-tabs">
-        <button class="metric-tab active" data-metric="weight" onclick="setProgMetric('weight')">น้ำหนัก (kg)</button>
+        <button class="metric-tab active" data-metric="weight" onclick="setProgMetric('weight')">น้ำหนัก</button>
         <button class="metric-tab" data-metric="volume" onclick="setProgMetric('volume')">Volume</button>
         <button class="metric-tab" data-metric="reps" onclick="setProgMetric('reps')">Reps</button>
+        <button class="metric-tab" data-metric="sessions" onclick="setProgMetric('sessions')">Sessions</button>
       </div>
     </div>
 
@@ -271,8 +487,17 @@ select.input{cursor:pointer}
 
     <!-- Chart -->
     <div class="chart-card" id="prog-chart-wrap">
-      <div class="chart-label" id="prog-chart-label">กราฟ</div>
+      <div class="chart-label">
+        <span id="prog-chart-label">กราฟ</span>
+        <span id="prog-chart-range"></span>
+      </div>
       <div id="prog-chart"></div>
+    </div>
+
+    <!-- Top exercises table -->
+    <div class="chart-card" id="top-ex-wrap" style="display:none">
+      <div class="chart-label"><span>Top ท่าออกกำลังกาย</span></div>
+      <div id="top-ex-list"></div>
     </div>
   </div>
 
@@ -284,8 +509,11 @@ select.input{cursor:pointer}
       <input id="log-date" class="input" type="date">
     </div>
     <div id="log-items"></div>
-    <button onclick="addEntry()" class="btn btn-ghost" style="margin-bottom:14px">+ เพิ่มท่า</button>
-    <button id="btn-save" onclick="saveWorkout()" class="btn">บันทึก Workout</button>
+    <button onclick="addEntry()" class="btn btn-ghost" style="margin-bottom:12px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="margin-right:6px"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      เพิ่มท่า
+    </button>
+    <button id="btn-save" onclick="saveWorkout()" class="btn">บันทึก Workout 💪</button>
   </div>
 
   <!-- ── History ── -->
@@ -299,15 +527,11 @@ select.input{cursor:pointer}
       <div class="row2">
         <div class="field" style="margin-bottom:0">
           <label>Body Part</label>
-          <select id="f-bp" class="input" onchange="onHistBPChange()">
-            <option value="">ทั้งหมด</option>
-          </select>
+          <select id="f-bp" class="input" onchange="onHistBPChange()"><option value="">ทั้งหมด</option></select>
         </div>
         <div class="field" style="margin-bottom:0">
           <label>ท่าออกกำลังกาย</label>
-          <select id="f-ex" class="input" onchange="applyHistFilter()">
-            <option value="">ทั้งหมด</option>
-          </select>
+          <select id="f-ex" class="input" onchange="applyHistFilter()"><option value="">ทั้งหมด</option></select>
         </div>
       </div>
     </div>
@@ -318,7 +542,7 @@ select.input{cursor:pointer}
   <div id="tab-settings" class="tab-pane hidden">
     <div class="sec-head" style="margin-top:0"><div class="sec-title">ตั้งค่า</div></div>
 
-    <!-- Profile card -->
+    <!-- Profile -->
     <div class="settings-card">
       <div class="settings-hd">
         <div class="settings-hd-title">โปรไฟล์</div>
@@ -331,7 +555,6 @@ select.input{cursor:pointer}
           <div class="profile-meta" id="profile-username-display"></div>
         </div>
       </div>
-      <!-- Edit form (hidden by default) -->
       <div id="profile-edit-form" class="hidden" style="padding:0 16px 16px">
         <div class="field" style="margin-bottom:10px">
           <label>ชื่อที่แสดง</label>
@@ -343,7 +566,7 @@ select.input{cursor:pointer}
         </div>
         <div class="row2">
           <button class="btn btn-ghost" onclick="toggleEditProfile()">ยกเลิก</button>
-          <button class="btn btn-sm" onclick="saveProfile()" style="font-size:16px">บันทึก</button>
+          <button class="btn" style="font-size:16px;font-family:'Barlow',sans-serif;font-weight:600;letter-spacing:0" onclick="saveProfile()">บันทึก</button>
         </div>
       </div>
     </div>
@@ -354,7 +577,6 @@ select.input{cursor:pointer}
         <div class="settings-hd-title">จัดการท่าออกกำลังกาย</div>
         <button class="btn btn-ghost btn-sm" onclick="toggleAddExForm()">+ เพิ่มท่า</button>
       </div>
-      <!-- Add form -->
       <div id="add-ex-form" class="hidden add-ex-form-wrap">
         <div class="row2" style="margin-bottom:10px">
           <div class="field" style="margin-bottom:0">
@@ -363,34 +585,30 @@ select.input{cursor:pointer}
           </div>
           <div class="field" style="margin-bottom:0">
             <label>Body Part</label>
-            <select id="new-ex-bp" class="input">
-              <option value="">— เลือก —</option>
-            </select>
+            <select id="new-ex-bp" class="input"><option value="">— เลือก —</option></select>
           </div>
         </div>
-        <button class="btn" style="height:42px;padding:0;font-size:16px" onclick="addExercise()">เพิ่มท่า</button>
+        <button class="btn" style="height:42px;padding:0;font-size:16px;font-family:'Barlow',sans-serif;font-weight:600;letter-spacing:0" onclick="addExercise()">เพิ่มท่า</button>
       </div>
       <!-- Search -->
       <div style="padding:10px 14px 6px">
         <div class="search-wrap">
-          <svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input class="input sinput" type="text" placeholder="ค้นหาท่า..." oninput="renderExList(this.value)" style="padding:10px 14px 10px 36px;font-size:14px">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="input sinput" type="text" placeholder="ค้นหาท่า..." oninput="renderExList(this.value)" style="font-size:14px;padding:10px 14px 10px 38px">
         </div>
       </div>
-      <!-- List -->
-      <div id="ex-list" style="max-height:400px;overflow-y:auto"></div>
+      <div id="ex-list" style="max-height:420px;overflow-y:auto"></div>
     </div>
 
-    <!-- App info -->
-    <div style="text-align:center;padding:10px 0 4px;font-size:12px;color:var(--td)">LIFT v2.0 — Workout Tracker</div>
+    <div style="text-align:center;padding:10px 0 4px;font-size:12px;color:var(--td)">LIFT v3.0 — Workout Tracker</div>
   </div>
 
-  <!-- Bottom nav -->
+  <!-- Bottom Nav -->
   <nav class="bottom-nav">
     <button class="nav-btn active" data-tab="dash" onclick="setTab('dash')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        <rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/>
+        <rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>
       </svg>หน้าหลัก
     </button>
     <button class="nav-btn" data-tab="prog" onclick="setTab('prog')">
@@ -398,8 +616,8 @@ select.input{cursor:pointer}
         <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
       </svg>Progress
     </button>
-    <button class="nav-center" data-tab="log" onclick="setTab('log')">
-      <div class="nav-circle">
+    <button class="nav-center" id="nav-log-btn" data-tab="log" onclick="setTab('log')">
+      <div class="nav-circle" id="nav-circle">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
         </svg>
@@ -417,34 +635,37 @@ select.input{cursor:pointer}
       </svg>ตั้งค่า
     </button>
   </nav>
-</div><!-- /v-main -->
-</div><!-- /app -->
+</div>
+</div>
 
 <script>
-// ════════════════════════════════════════
-//  ⚙️  แก้ URL นี้หลัง Deploy Apps Script
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
+// ⚙️  แก้ URL นี้หลัง Deploy Apps Script
+// ══════════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxe8iwgIu0KQzMc6iPybcWMxSKFIomY27X2U7UgkiW1Ce1hwzmYTjR16GXrsoVTjbKbng/exec';
-// ════════════════════════════════════════
+// ══════════════════════════════════════════
 
 const BODY_PARTS = ['อก','หลัง','ไหล่','แขน','ขา','Core','Cardio','Full Body','อื่นๆ'];
+const DAYS_TH = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
-// ── State ─────────────────────────────────
+// ── State ──────────────────────────────────
 const S = {
   token: localStorage.getItem('lt'),
   user:  JSON.parse(localStorage.getItem('lu') || 'null'),
   exercises: [],
   exOpts: '',
   tab: 'dash',
-  histFilters: {},
-  progFilters: { period: '30', bodyPart: '', exercise: '', metric: 'weight' },
+  progFilters: { period: '7', bodyPart: '', exercise: '', metric: 'weight' },
+  _progCache: null,
+  _histData: [],
 };
 
-// ── LocalStorage helpers ──────────────────
-function getBPMap()           { return JSON.parse(localStorage.getItem('lt_bp')  || '{}'); }
-function saveBPMap(m)         { localStorage.setItem('lt_bp',  JSON.stringify(m)); }
-function getCustomEx()        { return JSON.parse(localStorage.getItem('lt_cex') || '[]'); }
-function saveCustomEx(a)      { localStorage.setItem('lt_cex', JSON.stringify(a)); }
+// ── LocalStorage ───────────────────────────
+const getBPMap    = () => JSON.parse(localStorage.getItem('lt_bp')  || '{}');
+const saveBPMap   = m => localStorage.setItem('lt_bp',  JSON.stringify(m));
+const getCustomEx = () => JSON.parse(localStorage.getItem('lt_cex') || '[]');
+const saveCustomEx= a => localStorage.setItem('lt_cex', JSON.stringify(a));
 
 function getAllExercises() {
   const custom = getCustomEx();
@@ -460,13 +681,12 @@ function getExBP(name) {
   return ce ? (ce.category || 'อื่นๆ') : 'อื่นๆ';
 }
 function getDistinctBPs() {
-  const all  = getAllExercises();
-  const bpM  = getBPMap();
-  const bps  = new Set(all.map(e => bpM[e.name] || e.category || 'อื่นๆ'));
+  const all = getAllExercises(), bpM = getBPMap();
+  const bps = new Set(all.map(e => bpM[e.name] || e.category || 'อื่นๆ'));
   return [...bps].filter(Boolean).sort();
 }
 
-// ── API ───────────────────────────────────
+// ── API ────────────────────────────────────
 async function api(action, data = {}) {
   try {
     const body = { action, ...data };
@@ -484,37 +704,50 @@ async function api(action, data = {}) {
   }
 }
 
-// ── Toast ─────────────────────────────────
+// ── Toast ──────────────────────────────────
 let _tt;
 function toast(msg, type = '') {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.className = 'show ' + (type === 'err' ? 'err' : type === 'ok' ? 'ok' : '');
+  el.className = 'show' + (type === 'err' ? ' err' : type === 'ok' ? ' ok' : '');
   clearTimeout(_tt);
-  _tt = setTimeout(() => el.className = '', 3200);
+  _tt = setTimeout(() => (el.className = ''), 3000);
 }
 
-// ── Init ──────────────────────────────────
+// ── Confirm Modal ──────────────────────────
+function showConfirm(title, body, onOk, okLabel = 'ลบ') {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-body').textContent  = body;
+  const btn = document.getElementById('confirm-ok');
+  btn.textContent = okLabel;
+  btn.onclick = () => { closeConfirm(); onOk(); };
+  document.getElementById('confirm-modal').classList.add('show');
+}
+function closeConfirm(e) {
+  if (e && e.target !== document.getElementById('confirm-modal')) return;
+  document.getElementById('confirm-modal').classList.remove('show');
+}
+
+// ── Init ───────────────────────────────────
 async function init() {
   if (SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
     document.getElementById('loader').innerHTML =
-      '<div style="padding:30px;text-align:center;max-width:320px">' +
-      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:40px;color:var(--a);margin-bottom:20px">LIFT</div>' +
+      '<div style="padding:30px;text-align:center;max-width:320px;animation:slideUp .4s ease">' +
+      '<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:52px;color:var(--a);margin-bottom:16px;filter:drop-shadow(0 0 20px rgba(200,255,60,.3))">LIFT</div>' +
       '<div style="color:var(--err);font-weight:600;margin-bottom:10px">⚠️ ยังไม่ได้ตั้งค่า</div>' +
-      '<div style="color:var(--ts);font-size:14px;line-height:1.7">แก้ <code style="color:var(--t);background:var(--s2);padding:2px 6px;border-radius:4px">SCRIPT_URL</code> ให้เป็น URL ของ Apps Script</div></div>';
+      '<div style="color:var(--ts);font-size:14px;line-height:1.7">แก้ <code style="color:var(--t);background:var(--s2);padding:2px 6px;border-radius:4px">SCRIPT_URL</code></div></div>';
     return;
   }
   if (S.token && S.user) await showMain();
   else { hideSplash(); showAuth(); }
 }
-
 function hideSplash() {
   const l = document.getElementById('loader');
   l.classList.add('fade');
-  setTimeout(() => l.style.display = 'none', 300);
+  setTimeout(() => (l.style.display = 'none'), 400);
 }
 
-// ── Auth ──────────────────────────────────
+// ── Auth ───────────────────────────────────
 function showAuth() {
   document.getElementById('v-auth').classList.remove('hidden');
   document.getElementById('v-main').classList.add('hidden');
@@ -549,12 +782,12 @@ async function doRegister(e) {
   const confirm     = document.getElementById('r-cfm').value;
   const displayName = document.getElementById('r-name').value.trim();
   if (!username || !password) return toast('กรอกข้อมูลให้ครบ', 'err');
-  if (password !== confirm) return toast('รหัสผ่านไม่ตรงกัน', 'err');
+  if (password !== confirm)   return toast('รหัสผ่านไม่ตรงกัน', 'err');
   const btn = document.getElementById('btn-reg');
   btn.disabled = true; btn.textContent = 'กำลังสมัคร...';
   const r = await api('register', { username, password, displayName });
   btn.disabled = false; btn.textContent = 'สมัครสมาชิก';
-  if (r.success) { toast('สมัครสำเร็จ เข้าสู่ระบบได้เลย', 'ok'); setAuthTab('login'); document.getElementById('l-user').value = username; document.getElementById('l-pass').focus(); }
+  if (r.success) { toast('สมัครสำเร็จ เข้าสู่ระบบได้เลย', 'ok'); setAuthTab('login'); document.getElementById('l-user').value = username; }
   else toast(r.message || 'สมัครไม่สำเร็จ', 'err');
 }
 function doLogout() {
@@ -563,7 +796,7 @@ function doLogout() {
   showAuth();
 }
 
-// ── Main ──────────────────────────────────
+// ── Main ───────────────────────────────────
 async function showMain() {
   document.getElementById('v-auth').classList.add('hidden');
   document.getElementById('v-main').classList.remove('hidden');
@@ -573,12 +806,18 @@ async function showMain() {
   setTab('dash');
 }
 
-// ── Tab routing ───────────────────────────
+// ── Tab routing ────────────────────────────
 const ALL_TABS = ['dash','prog','log','hist','settings'];
 function setTab(tab) {
   S.tab = tab;
-  ALL_TABS.forEach(t => document.getElementById('tab-' + t).classList.toggle('hidden', t !== tab));
+  ALL_TABS.forEach(t => {
+    const el = document.getElementById('tab-' + t);
+    if (t === tab) { el.classList.remove('hidden'); el.classList.add('entering'); setTimeout(() => el.classList.remove('entering'), 300); }
+    else el.classList.add('hidden');
+  });
   document.querySelectorAll('[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  const circle = document.getElementById('nav-circle');
+  if (circle) circle.classList.toggle('active-tab', tab === 'log');
   if (tab === 'dash')     loadDash();
   if (tab === 'prog')     loadProg();
   if (tab === 'log')      initLog();
@@ -586,41 +825,98 @@ function setTab(tab) {
   if (tab === 'settings') loadSettings();
 }
 
-// ── Dashboard ─────────────────────────────
+// ═══════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════
 async function loadDash() {
-  document.getElementById('stats-wrap').innerHTML   = skelStats();
-  document.getElementById('recent-list').innerHTML  = skelRecent(4);
+  document.getElementById('stats-wrap').innerHTML = skelStats();
+  document.getElementById('recent-list').innerHTML = skelRecent(4);
   const [sr, wr] = await Promise.all([api('getStats'), api('getWorkouts', { filters: {} })]);
   if (sr.success) renderStats(sr.data);
-  if (wr.success) renderRecent(wr.data.slice(0, 10));
+  if (wr.success) {
+    const workouts = wr.data || [];
+    renderWeeklyChart(workouts);
+    renderRecent(workouts.slice(0, 12));
+  }
 }
 
 function skelStats() {
   return `<div class="stats-grid">
-    <div class="stat-card"><div class="skel" style="height:48px;width:64px;margin-bottom:8px"></div><div class="skel" style="height:10px;width:80px"></div></div>
-    <div class="stat-card"><div class="skel" style="height:48px;width:64px;margin-bottom:8px"></div><div class="skel" style="height:10px;width:80px"></div></div>
+    <div class="stat-card"><div class="skel" style="height:48px;width:56px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:10px;width:72px"></div></div>
+    <div class="stat-card"><div class="skel" style="height:48px;width:56px;margin-bottom:8px;border-radius:8px"></div><div class="skel" style="height:10px;width:72px"></div></div>
   </div>
-  <div class="stat-wide"><div class="skel" style="height:10px;width:80px;margin-bottom:8px"></div><div class="skel" style="height:20px;width:140px"></div></div>
-  <div class="stat-wide"><div class="skel" style="height:10px;width:80px;margin-bottom:8px"></div><div class="skel" style="height:36px;width:120px"></div></div>`;
+  <div class="stat-wide"><div class="skel" style="height:10px;width:80px;margin-bottom:8px"></div><div class="skel" style="height:18px;width:130px"></div></div>
+  <div class="stat-wide"><div class="skel" style="height:10px;width:80px;margin-bottom:8px"></div><div class="skel" style="height:36px;width:110px"></div></div>`;
 }
 function skelRecent(n) {
   return Array(n).fill(0).map(() => `<div class="wo-item">
-    <div class="skel" style="width:6px;height:6px;border-radius:50%;flex-shrink:0"></div>
-    <div style="flex:1;min-width:0"><div class="skel" style="height:15px;width:110px;margin-bottom:5px"></div><div class="skel" style="height:12px;width:80px"></div></div>
+    <div class="skel" style="width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>
+    <div style="flex:1;min-width:0"><div class="skel" style="height:15px;width:100px;margin-bottom:6px;border-radius:5px"></div><div class="skel" style="height:11px;width:70px;border-radius:5px"></div></div>
+    <div class="skel" style="height:11px;width:40px;border-radius:5px"></div>
   </div>`).join('');
 }
+
 function renderStats(d) {
   document.getElementById('stats-wrap').innerHTML = `
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num accent">${d.weekSessions}</div><div class="stat-lbl">สัปดาห์นี้</div></div>
-      <div class="stat-card"><div class="stat-num">${d.totalSessions}</div><div class="stat-lbl">ทั้งหมด (ครั้ง)</div></div>
+      <div class="stat-card" style="animation:countUp .4s ease">
+        <div class="stat-num accent">${d.weekSessions}</div>
+        <div class="stat-lbl">สัปดาห์นี้</div>
+      </div>
+      <div class="stat-card" style="animation:countUp .4s .07s ease both">
+        <div class="stat-num">${d.totalSessions}</div>
+        <div class="stat-lbl">ทั้งหมด (ครั้ง)</div>
+      </div>
     </div>
-    <div class="stat-wide"><div class="stat-wide-lbl">ท่าที่ชอบ</div><div class="stat-wide-val">${esc(d.favoriteExercise)}</div></div>
-    <div class="stat-wide"><div class="stat-wide-lbl">น้ำหนักรวมที่ยก</div><div class="stat-big"><span>${d.totalWeight.toLocaleString()}</span><span class="stat-unit">kg</span></div></div>`;
+    <div class="stat-wide" style="animation:countUp .4s .12s ease both">
+      <div class="stat-wide-lbl">ท่าที่ชอบ</div>
+      <div class="stat-wide-val">${esc(d.favoriteExercise || '—')}</div>
+    </div>
+    <div class="stat-wide" style="animation:countUp .4s .18s ease both">
+      <div class="stat-wide-lbl">น้ำหนักรวมที่ยก</div>
+      <div class="stat-big">
+        <span>${d.totalWeight.toLocaleString()}</span>
+        <span class="stat-unit">kg</span>
+      </div>
+    </div>`;
 }
+
+function renderWeeklyChart(workouts) {
+  // Build last 7 days bar chart
+  const days = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    days.push({ date: d.toISOString().slice(0, 10), label: DAYS_TH[d.getDay()], count: 0 });
+  }
+  workouts.forEach(w => {
+    const d = days.find(x => x.date === w.date);
+    if (d) d.count++;
+  });
+  const max = Math.max(...days.map(d => d.count), 1);
+  const W = 360, barW = 30, gap = (W - days.length * barW) / (days.length + 1);
+  const H = 80, PB = 24;
+  const bars = days.map((d, i) => {
+    const x = gap + i * (barW + gap);
+    const bh = d.count ? Math.max(6, ((d.count / max) * (H - PB - 8))) : 3;
+    const y = H - PB - bh;
+    const isToday = d.date === today.toISOString().slice(0, 10);
+    const fill = d.count ? (isToday ? '#c8ff3c' : 'rgba(200,255,60,.55)') : 'rgba(255,255,255,.06)';
+    return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="5" fill="${fill}" style="transition:all .3s ease ${i * 0.05}s"/>
+      <text x="${(x + barW / 2).toFixed(1)}" y="${H - 6}" text-anchor="middle" fill="${isToday ? '#c8ff3c' : '#7a7a96'}" font-size="10" font-weight="${isToday ? '700' : '500'}" font-family="Barlow,sans-serif">${d.label}</text>
+      ${d.count ? `<text x="${(x + barW / 2).toFixed(1)}" y="${(y - 5).toFixed(1)}" text-anchor="middle" fill="${isToday ? '#c8ff3c' : 'rgba(200,255,60,.7)'}" font-size="10" font-weight="600" font-family="Barlow Condensed,sans-serif">${d.count}</text>` : ''}`;
+  }).join('');
+  document.getElementById('weekly-chart').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${bars}</svg>`;
+}
+
 function renderRecent(list) {
   const el = document.getElementById('recent-list');
-  if (!list.length) { el.innerHTML = '<p style="color:var(--ts);text-align:center;padding:32px 0;font-size:14px">ยังไม่มีข้อมูล<br>กด <strong style="color:var(--a)">+</strong> เพื่อเริ่มบันทึก</p>'; return; }
+  if (!list.length) {
+    el.innerHTML = `<div style="text-align:center;padding:36px 0;color:var(--ts);font-size:14px;line-height:2.2">ยังไม่มีข้อมูล<br>กด <strong style="color:var(--a);font-size:20px">+</strong> เพื่อเริ่มบันทึก</div>`;
+    return;
+  }
   el.innerHTML = list.map(w => `
     <div class="wo-item">
       <div class="wo-dot"></div>
@@ -632,14 +928,16 @@ function renderRecent(list) {
     </div>`).join('');
 }
 
-// ── Progress ──────────────────────────────
+// ═══════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════
 async function loadProg() {
   populateProgFilters();
   await renderProgContent();
 }
-
 function setProgPeriod(p) {
   S.progFilters.period = p;
+  S._progCache = null;
   document.querySelectorAll('#period-chips .chip').forEach(c => c.classList.toggle('active', c.dataset.period === p));
   renderProgContent();
 }
@@ -651,6 +949,7 @@ function setProgMetric(m) {
 function onProgBPChange() {
   S.progFilters.bodyPart = document.getElementById('prog-bp').value;
   S.progFilters.exercise = '';
+  S._progCache = null;
   populateProgExSelect();
   renderProgContent();
 }
@@ -660,13 +959,15 @@ function onProgExChange() {
 }
 
 function populateProgFilters() {
-  // Body part select
   const bpSel = document.getElementById('prog-bp');
   const curBP = bpSel.value;
-  bpSel.innerHTML = `<option value="">ทั้งหมด</option>` + getDistinctBPs().map(b => `<option value="${esc(b)}" ${b === curBP ? 'selected' : ''}>${esc(b)}</option>`).join('');
+  bpSel.innerHTML = `<option value="">ทั้งหมด</option>` +
+    getDistinctBPs().map(b => `<option value="${esc(b)}" ${b === curBP ? 'selected' : ''}>${esc(b)}</option>`).join('');
   populateProgExSelect();
-  // Restore metric tab
-  document.querySelectorAll('#metric-tabs .metric-tab').forEach(c => c.classList.toggle('active', c.dataset.metric === S.progFilters.metric));
+  document.querySelectorAll('#metric-tabs .metric-tab').forEach(c =>
+    c.classList.toggle('active', c.dataset.metric === S.progFilters.metric));
+  document.querySelectorAll('#period-chips .chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.period === S.progFilters.period));
 }
 
 function populateProgExSelect() {
@@ -674,81 +975,126 @@ function populateProgExSelect() {
   const bp  = S.progFilters.bodyPart;
   const all = getAllExercises();
   const filtered = bp ? all.filter(e => getExBP(e.name) === bp) : all;
-  sel.innerHTML = `<option value="">ทั้งหมด</option>` + filtered.map(e => `<option value="${esc(e.name)}" ${e.name === S.progFilters.exercise ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
+  sel.innerHTML = `<option value="">ทั้งหมด</option>` +
+    filtered.map(e => `<option value="${esc(e.name)}" ${e.name === S.progFilters.exercise ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
 }
 
 function getPeriodDates() {
   const p = S.progFilters.period;
   if (p === 'all') return { from: '', to: '' };
-  const to   = new Date();
-  const from = new Date();
+  const to = new Date(), from = new Date();
   from.setDate(to.getDate() - parseInt(p));
   return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
 }
 
 async function renderProgContent() {
-  // Show skeleton
-  document.getElementById('prog-kpi').innerHTML = `
-    <div class="prog-kpi"><div class="skel" style="height:24px;width:50px;margin:0 auto 6px"></div><div class="skel" style="height:9px;width:40px;margin:0 auto"></div></div>
-    <div class="prog-kpi"><div class="skel" style="height:24px;width:50px;margin:0 auto 6px"></div><div class="skel" style="height:9px;width:40px;margin:0 auto"></div></div>
-    <div class="prog-kpi"><div class="skel" style="height:24px;width:50px;margin:0 auto 6px"></div><div class="skel" style="height:9px;width:40px;margin:0 auto"></div></div>`;
-  document.getElementById('prog-chart').innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:120px"><div class="skel" style="width:80%;height:80px"></div></div>`;
+  // Skeleton
+  document.getElementById('prog-kpi').innerHTML = [0,1,2].map(() =>
+    `<div class="prog-kpi"><div class="skel" style="height:26px;width:52px;margin:0 auto 6px;border-radius:6px"></div><div class="skel" style="height:9px;width:40px;margin:0 auto;border-radius:4px"></div></div>`).join('');
+  document.getElementById('prog-chart').innerHTML =
+    `<div style="display:flex;align-items:flex-end;gap:4px;height:130px;padding:0 4px">${Array(12).fill('<div class="skel" style="flex:1;border-radius:4px 4px 0 0"></div>').join('')}</div>`;
 
   const { from, to } = getPeriodDates();
   const apiFilters = { from, to };
   if (S.progFilters.exercise) apiFilters.exercise = S.progFilters.exercise;
 
-  const r = await api('getWorkouts', { filters: apiFilters });
-  if (!r.success) {
-    document.getElementById('prog-chart').innerHTML = `<div class="no-data">${esc(r.message)}</div>`;
-    document.getElementById('prog-kpi').innerHTML = '';
-    return;
+  // Update range label
+  document.getElementById('prog-chart-range').textContent = from
+    ? `${formatDate(from)} – ${formatDate(to)}`
+    : 'ทั้งหมด';
+
+  let workouts;
+  if (S._progCache && S._progCache.period === S.progFilters.period && S._progCache.exercise === (S.progFilters.exercise || '')) {
+    workouts = S._progCache.data;
+  } else {
+    const r = await api('getWorkouts', { filters: apiFilters });
+    if (!r.success) {
+      document.getElementById('prog-chart').innerHTML = `<div class="no-data">${esc(r.message)}</div>`;
+      document.getElementById('prog-kpi').innerHTML = '';
+      return;
+    }
+    workouts = r.data || [];
+    S._progCache = { period: S.progFilters.period, exercise: S.progFilters.exercise || '', data: workouts };
   }
 
-  let workouts = r.data || [];
-
-  // Filter by body part client-side if needed
   if (S.progFilters.bodyPart && !S.progFilters.exercise) {
     workouts = workouts.filter(w => getExBP(w.exerciseName) === S.progFilters.bodyPart);
   }
 
-  const exName   = S.progFilters.exercise;
-  const metric   = S.progFilters.metric;
-  const bp       = S.progFilters.bodyPart;
+  const { metric, exercise: exName, bodyPart: bp } = S.progFilters;
 
   if (exName) {
-    // Line chart: single exercise over time
-    const data   = buildLineData(workouts, metric);
-    const kpis   = calcKPIs(workouts, metric);
+    // Line chart: single exercise
+    const data = buildLineData(workouts, metric);
+    const kpis = calcKPIs(workouts, metric);
     renderKPIs(kpis, metric);
-    const label  = `${esc(exName)} — ${metricLabel(metric)}`;
-    document.getElementById('prog-chart-label').textContent = label;
+    document.getElementById('prog-chart-label').textContent = `${exName} — ${metricLabel(metric)}`;
+    document.getElementById('top-ex-wrap').style.display = 'none';
     document.getElementById('prog-chart').innerHTML = data.length
-      ? svgLineChart(data)
-      : `<div class="no-data">ยังไม่มีข้อมูลในช่วงนี้</div>`;
-  } else if (bp) {
-    // Bar chart: top exercises in body part
+      ? svgLineChart(data, metric) : `<div class="no-data">ยังไม่มีข้อมูลในช่วงนี้ 📭</div>`;
+  } else if (metric === 'sessions') {
+    // Sessions bar chart by exercise
     const grouped = {};
     workouts.forEach(w => { grouped[w.exerciseName] = (grouped[w.exerciseName] || 0) + 1; });
-    const barData = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 8)
+    const barData = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 10)
       .map(([label, value]) => ({ label, value }));
     renderKPIsOverview(workouts);
-    document.getElementById('prog-chart-label').textContent = `${esc(bp)} — ครั้งที่ฝึก`;
+    document.getElementById('prog-chart-label').textContent = bp ? `${bp} — Sessions` : 'Sessions ต่อท่า';
+    document.getElementById('top-ex-wrap').style.display = 'none';
     document.getElementById('prog-chart').innerHTML = barData.length
-      ? svgBarChart(barData)
-      : `<div class="no-data">ยังไม่มีข้อมูลในช่วงนี้</div>`;
-  } else {
-    // Bar chart: sessions per body part
+      ? svgBarChart(barData) : `<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
+  } else if (bp) {
+    // Bar chart: top exercises in BP
     const grouped = {};
-    workouts.forEach(w => { const b = getExBP(w.exerciseName); grouped[b] = (grouped[b] || 0) + 1; });
+    workouts.forEach(w => { grouped[w.exerciseName] = (grouped[w.exerciseName] || 0) + calcMetricVal(w, metric); });
+    const barData = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 8)
+      .map(([label, value]) => ({ label, value: Math.round(value * 10) / 10 }));
+    renderKPIsOverview(workouts);
+    document.getElementById('prog-chart-label').textContent = `${bp} — ${metricLabel(metric)}`;
+    document.getElementById('top-ex-wrap').style.display = 'none';
+    document.getElementById('prog-chart').innerHTML = barData.length
+      ? svgBarChart(barData) : `<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
+  } else {
+    // Overview: bar chart by body part + top exercises
+    const grouped = {};
+    workouts.forEach(w => {
+      const b = getExBP(w.exerciseName);
+      grouped[b] = (grouped[b] || 0) + 1;
+    });
     const barData = Object.entries(grouped).sort((a, b) => b[1] - a[1])
       .map(([label, value]) => ({ label, value }));
     renderKPIsOverview(workouts);
-    document.getElementById('prog-chart-label').textContent = 'ครั้งที่ฝึกแต่ละ Body Part';
+    document.getElementById('prog-chart-label').textContent = 'Sessions ต่อ Body Part';
     document.getElementById('prog-chart').innerHTML = barData.length
-      ? svgBarChart(barData)
-      : `<div class="no-data">ยังไม่มีข้อมูล<br>เริ่มบันทึก Workout เพื่อดูสถิติ</div>`;
+      ? svgBarChart(barData) : `<div class="no-data">ยังไม่มีข้อมูล<br>เริ่มบันทึก Workout เพื่อดูสถิติ 🏋️</div>`;
+    // Top exercises table
+    renderTopExercises(workouts);
   }
+}
+
+function calcMetricVal(w, metric) {
+  if (metric === 'weight') return Number(w.weight) || 0;
+  if (metric === 'volume') return (Number(w.sets)||0)*(Number(w.reps)||0)*(Number(w.weight)||0);
+  if (metric === 'reps')   return Number(w.reps) || 0;
+  return 1;
+}
+
+function renderTopExercises(workouts) {
+  const grouped = {};
+  workouts.forEach(w => { grouped[w.exerciseName] = (grouped[w.exerciseName] || 0) + 1; });
+  const top = Object.entries(grouped).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  if (!top.length) { document.getElementById('top-ex-wrap').style.display = 'none'; return; }
+  const maxCount = top[0][1];
+  document.getElementById('top-ex-wrap').style.display = 'block';
+  document.getElementById('top-ex-list').innerHTML = top.map(([name, count], i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:${i < top.length-1 ? '1px solid var(--bd)' : 'none'}">
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--td);width:18px;flex-shrink:0">${i+1}</span>
+      <span style="flex:1;font-size:14px;font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(name)}</span>
+      <div style="width:80px;height:4px;background:var(--s3);border-radius:2px;overflow:hidden;flex-shrink:0">
+        <div style="height:100%;width:${(count/maxCount*100).toFixed(0)}%;background:var(--a);border-radius:2px;transition:width .5s var(--ease)"></div>
+      </div>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;color:var(--a);width:28px;text-align:right;flex-shrink:0">${count}</span>
+    </div>`).join('');
 }
 
 function buildLineData(workouts, metric) {
@@ -757,15 +1103,14 @@ function buildLineData(workouts, metric) {
     if (!grouped[w.date]) grouped[w.date] = [];
     grouped[w.date].push(w);
   });
-  return Object.entries(grouped)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, ws]) => {
-      let v = 0;
-      if (metric === 'weight') v = Math.max(...ws.map(w => Number(w.weight) || 0));
-      if (metric === 'volume') v = ws.reduce((s, w) => s + (Number(w.sets)||0)*(Number(w.reps)||0)*(Number(w.weight)||0), 0);
-      if (metric === 'reps')   v = Math.max(...ws.map(w => Number(w.reps) || 0));
-      return { date, v };
-    }).filter(d => d.v > 0);
+  return Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([date, ws]) => {
+    let v = 0;
+    if (metric === 'weight') v = Math.max(...ws.map(w => Number(w.weight) || 0));
+    if (metric === 'volume') v = ws.reduce((s, w) => s + (Number(w.sets)||0)*(Number(w.reps)||0)*(Number(w.weight)||0), 0);
+    if (metric === 'reps')   v = Math.max(...ws.map(w => Number(w.reps) || 0));
+    if (metric === 'sessions') v = ws.length;
+    return { date, v };
+  }).filter(d => d.v > 0);
 }
 
 function calcKPIs(workouts, metric) {
@@ -773,17 +1118,14 @@ function calcKPIs(workouts, metric) {
   const sessions = [...new Set(workouts.map(w => w.date))].length;
   let pr = 0, total = 0, cnt = 0;
   workouts.forEach(w => {
-    let v = 0;
-    if (metric === 'weight') v = Number(w.weight) || 0;
-    if (metric === 'volume') v = (Number(w.sets)||0)*(Number(w.reps)||0)*(Number(w.weight)||0);
-    if (metric === 'reps')   v = Number(w.reps) || 0;
+    const v = calcMetricVal(w, metric);
     if (v > pr) pr = v;
     total += v; cnt++;
   });
-  return { pr, sessions, avg: cnt ? (total / cnt) : 0 };
+  return { pr, sessions, avg: cnt ? total / cnt : 0 };
 }
 function renderKPIs({ pr, sessions, avg }, metric) {
-  const unit = metric === 'weight' ? ' kg' : metric === 'reps' ? ' reps' : '';
+  const unit = metric === 'weight' ? ' kg' : metric === 'reps' ? '' : '';
   document.getElementById('prog-kpi').innerHTML = `
     <div class="prog-kpi"><span class="prog-kpi-val">${fmt(pr)}${unit}</span><div class="prog-kpi-lbl">PR</div></div>
     <div class="prog-kpi"><span class="prog-kpi-val">${sessions}</span><div class="prog-kpi-lbl">Sessions</div></div>
@@ -796,14 +1138,14 @@ function renderKPIsOverview(workouts) {
   document.getElementById('prog-kpi').innerHTML = `
     <div class="prog-kpi"><span class="prog-kpi-val">${sessions}</span><div class="prog-kpi-lbl">Sessions</div></div>
     <div class="prog-kpi"><span class="prog-kpi-val">${exCount}</span><div class="prog-kpi-lbl">ท่าที่ฝึก</div></div>
-    <div class="prog-kpi"><span class="prog-kpi-val">${vol >= 1000 ? (vol/1000).toFixed(1)+'k' : vol}</span><div class="prog-kpi-lbl">Volume</div></div>`;
+    <div class="prog-kpi"><span class="prog-kpi-val">${vol >= 1000 ? (vol/1000).toFixed(1)+'k' : Math.round(vol)}</span><div class="prog-kpi-lbl">Volume</div></div>`;
 }
-function fmt(n) { return Number.isFinite(n) ? (Math.round(n * 10) / 10) : 0; }
-function metricLabel(m) { return m === 'weight' ? 'น้ำหนัก (kg)' : m === 'volume' ? 'Volume' : 'Reps'; }
+const fmt = n => Number.isFinite(n) ? (Math.round(n * 10) / 10) : 0;
+const metricLabel = m => ({ weight:'น้ำหนัก (kg)', volume:'Volume', reps:'Reps', sessions:'Sessions' }[m] || m);
 
-// ── SVG Charts ────────────────────────────
-function svgLineChart(data) {
-  const W = 360, H = 170, PL = 44, PR = 12, PT = 12, PB = 32;
+// ═══ SVG Charts ════════════════════════════
+function svgLineChart(data, metric) {
+  const W = 360, H = 180, PL = 46, PR = 14, PT = 14, PB = 36;
   const cW = W - PL - PR, cH = H - PT - PB;
   const vals = data.map(d => d.v);
   const minV = Math.min(...vals), maxV = Math.max(...vals);
@@ -811,38 +1153,37 @@ function svgLineChart(data) {
   const xs   = i => PL + (i / Math.max(data.length - 1, 1)) * cW;
   const ys   = v => PT + cH - ((v - minV) / vR) * cH;
 
-  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-
-  // Y grid
-  const yLines = [0, 0.33, 0.67, 1].map(t => {
+  // Y grid lines
+  const yLines = [0, .33, .67, 1].map(t => {
     const v = minV + vR * t, y = ys(v).toFixed(1);
+    const label = metric === 'volume' && v >= 1000 ? (v/1000).toFixed(1)+'k' : Math.round(v);
     return `<line x1="${PL}" y1="${y}" x2="${W - PR}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
-            <text x="${PL - 5}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" fill="#8888a0" font-size="10" font-family="Barlow,sans-serif">${Math.round(v)}</text>`;
+      <text x="${PL - 5}" y="${(parseFloat(y) + 4).toFixed(1)}" text-anchor="end" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${label}</text>`;
   }).join('');
 
-  // X labels (max 5)
+  // X labels
   const step = Math.max(1, Math.ceil(data.length / 5));
   const indices = [...new Set([0, ...data.map((_, i) => i).filter(i => i % step === 0), data.length - 1])];
   const xLabels = indices.map(i => {
     const dt = new Date(data[i].date + 'T00:00:00');
-    return `<text x="${xs(i).toFixed(1)}" y="${H - 5}" text-anchor="middle" fill="#8888a0" font-size="10" font-family="Barlow,sans-serif">${dt.getDate()} ${months[dt.getMonth()]}</text>`;
+    return `<text x="${xs(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}</text>`;
   }).join('');
 
-  const pts    = data.map((d, i) => `${xs(i).toFixed(1)},${ys(d.v).toFixed(1)}`).join(' ');
-  const areaPts = `${PL},${(PT + cH).toFixed(1)} ${pts} ${(W - PR).toFixed(1)},${(PT + cH).toFixed(1)}`;
-  const dotR   = data.length <= 12 ? 4 : data.length <= 25 ? 3 : 2;
-  const dots   = data.map((d, i) => `<circle cx="${xs(i).toFixed(1)}" cy="${ys(d.v).toFixed(1)}" r="${dotR}" fill="#c8ff3c" stroke="#0b0b0e" stroke-width="1.5"/>`).join('');
+  const pts      = data.map((d, i) => `${xs(i).toFixed(1)},${ys(d.v).toFixed(1)}`).join(' ');
+  const areaPts  = `${PL},${(PT + cH).toFixed(1)} ${pts} ${(W - PR).toFixed(1)},${(PT + cH).toFixed(1)}`;
+  const dotR     = data.length <= 12 ? 4.5 : data.length <= 25 ? 3 : 2;
+  const dots     = data.map((d, i) => `<circle cx="${xs(i).toFixed(1)}" cy="${ys(d.v).toFixed(1)}" r="${dotR}" fill="#c8ff3c" stroke="#09090d" stroke-width="2"/>`).join('');
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
     <defs>
       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#c8ff3c" stop-opacity="0.2"/>
+        <stop offset="0%" stop-color="#c8ff3c" stop-opacity="0.18"/>
         <stop offset="100%" stop-color="#c8ff3c" stop-opacity="0"/>
       </linearGradient>
     </defs>
     ${yLines}
     <polygon points="${areaPts}" fill="url(#ag)"/>
-    <polyline points="${pts}" fill="none" stroke="#c8ff3c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+    <polyline points="${pts}" fill="none" stroke="#c8ff3c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}
     ${xLabels}
   </svg>`;
@@ -850,24 +1191,26 @@ function svgLineChart(data) {
 
 function svgBarChart(data) {
   if (!data.length) return '<div class="no-data">ไม่มีข้อมูล</div>';
-  const maxV  = Math.max(...data.map(d => d.value));
-  const rowH  = 32, gap = 6;
-  const W     = 360, PL = 70, PR = 36;
-  const bW    = W - PL - PR;
-  const H     = data.length * (rowH + gap) + 4;
-  const bars  = data.map((d, i) => {
-    const y  = i * (rowH + gap) + 4;
+  const maxV = Math.max(...data.map(d => d.value));
+  const rowH = 32, gap = 7;
+  const W = 360, PL = 72, PR = 44;
+  const bW = W - PL - PR;
+  const H  = data.length * (rowH + gap) + gap;
+  const bars = data.map((d, i) => {
+    const y  = gap + i * (rowH + gap);
     const bw = (d.value / maxV) * bW;
-    const lbl = d.label.length > 8 ? d.label.slice(0, 8) + '…' : d.label;
+    const lbl = d.label.length > 9 ? d.label.slice(0, 9) + '…' : d.label;
     return `
-      <text x="${PL - 7}" y="${(y + rowH * 0.65).toFixed(1)}" text-anchor="end" fill="#eeeef2" font-size="13" font-weight="500" font-family="Barlow,sans-serif">${esc(lbl)}</text>
-      <rect x="${PL}" y="${y + 6}" width="${bw.toFixed(1)}" height="${rowH - 12}" rx="4" fill="#c8ff3c" opacity="0.85"/>
-      <text x="${PL + bw + 6}" y="${(y + rowH * 0.65).toFixed(1)}" fill="#8888a0" font-size="12" font-family="Barlow,sans-serif">${d.value}</text>`;
+      <text x="${PL - 8}" y="${(y + rowH * 0.66).toFixed(1)}" text-anchor="end" fill="#eeeef4" font-size="12" font-weight="500" font-family="Barlow,sans-serif">${esc(lbl)}</text>
+      <rect x="${PL}" y="${y + 7}" width="${Math.max(bw, 4).toFixed(1)}" height="${rowH - 14}" rx="5" fill="rgba(200,255,60,.75)"/>
+      <text x="${(PL + Math.max(bw, 4) + 7).toFixed(1)}" y="${(y + rowH * 0.66).toFixed(1)}" fill="#7a7a96" font-size="12" font-weight="600" font-family="Barlow Condensed,sans-serif">${d.value}</text>`;
   }).join('');
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${bars}</svg>`;
 }
 
-// ── Log Workout ───────────────────────────
+// ═══════════════════════════════════════════
+// LOG WORKOUT
+// ═══════════════════════════════════════════
 function initLog() {
   document.getElementById('log-date').value = todayStr();
   document.getElementById('log-items').innerHTML = '';
@@ -886,7 +1229,7 @@ function appendEntry() {
 function addEntry() { appendEntry(); }
 function delEntry(btn) {
   btn.closest('.ex-entry').remove();
-  document.querySelectorAll('.ex-num').forEach((el, i) => { el.textContent = 'EXERCISE ' + (i + 1); });
+  document.querySelectorAll('.ex-num').forEach((el, i) => (el.textContent = 'EXERCISE ' + (i + 1)));
 }
 function entryHTML(num, canDel) {
   return `
@@ -920,7 +1263,7 @@ function populateSelect(sel) {
   if (v) sel.value = v;
 }
 async function saveWorkout() {
-  const date    = document.getElementById('log-date').value;
+  const date = document.getElementById('log-date').value;
   if (!date) return toast('กรุณาเลือกวันที่', 'err');
   const entries = [...document.querySelectorAll('.ex-entry')];
   const workouts = [];
@@ -942,58 +1285,61 @@ async function saveWorkout() {
   const btn = document.getElementById('btn-save');
   btn.disabled = true; btn.textContent = 'กำลังบันทึก...';
   const r = await api('addWorkouts', { workouts });
-  btn.disabled = false; btn.textContent = 'บันทึก Workout';
-  if (r.success) { toast('บันทึกสำเร็จ 💪', 'ok'); initLog(); }
-  else toast(r.message || 'บันทึกไม่สำเร็จ', 'err');
+  btn.disabled = false; btn.textContent = 'บันทึก Workout 💪';
+  if (r.success) {
+    S._progCache = null;
+    toast('บันทึกสำเร็จ 💪', 'ok');
+    initLog();
+  } else toast(r.message || 'บันทึกไม่สำเร็จ', 'err');
 }
 
-// ── Exercises ─────────────────────────────
+// ═══════════════════════════════════════════
+// EXERCISES
+// ═══════════════════════════════════════════
 async function loadExercises() {
   const r = await api('getExercises');
   if (!r.success) return;
   S.exercises = r.data;
-
-  const bpMap   = getBPMap();
-  const customEx = getCustomEx();
-
-  // Merge custom
-  const allEx = getAllExercises();
-
-  // Build optgroups
+  rebuildExOpts();
+}
+function rebuildExOpts() {
+  const bpMap  = getBPMap();
+  const allEx  = getAllExercises();
   const groups = allEx.reduce((g, e) => {
     const bp = bpMap[e.name] || e.category || 'อื่นๆ';
     (g[bp] = g[bp] || []).push(e);
     return g;
   }, {});
   S.exOpts = Object.entries(groups)
-    .map(([cat, exs]) =>
-      `<optgroup label="${esc(cat)}">${exs.map(e => `<option value="${esc(e.name)}">${esc(e.name)}</option>`).join('')}</optgroup>`)
+    .map(([cat, exs]) => `<optgroup label="${esc(cat)}">${exs.map(e => `<option value="${esc(e.name)}">${esc(e.name)}</option>`).join('')}</optgroup>`)
     .join('');
-
   document.querySelectorAll('.ex-select').forEach(populateSelect);
 }
 
-// ── History ───────────────────────────────
+// ═══════════════════════════════════════════
+// HISTORY
+// ═══════════════════════════════════════════
 function populateHistFilters() {
   const bpSel = document.getElementById('f-bp');
   const curBP = bpSel.value;
-  bpSel.innerHTML = `<option value="">ทั้งหมด</option>` + getDistinctBPs().map(b => `<option value="${esc(b)}" ${b === curBP ? 'selected' : ''}>${esc(b)}</option>`).join('');
+  bpSel.innerHTML = `<option value="">ทั้งหมด</option>` +
+    getDistinctBPs().map(b => `<option value="${esc(b)}" ${b === curBP ? 'selected' : ''}>${esc(b)}</option>`).join('');
   updateHistExSelect(curBP);
 }
 function onHistBPChange() {
-  const bp = document.getElementById('f-bp').value;
-  updateHistExSelect(bp);
+  updateHistExSelect(document.getElementById('f-bp').value);
   applyHistFilter();
 }
 function updateHistExSelect(bp) {
   const sel = document.getElementById('f-ex');
   const cur = sel.value;
-  const all = getAllExercises();
-  const filtered = bp ? all.filter(e => getExBP(e.name) === bp) : all;
-  sel.innerHTML = `<option value="">ทั้งหมด</option>` + filtered.map(e => `<option value="${esc(e.name)}" ${e.name === cur ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
+  const filtered = bp ? getAllExercises().filter(e => getExBP(e.name) === bp) : getAllExercises();
+  sel.innerHTML = `<option value="">ทั้งหมด</option>` +
+    filtered.map(e => `<option value="${esc(e.name)}" ${e.name === cur ? 'selected' : ''}>${esc(e.name)}</option>`).join('');
 }
+
 async function loadHist() {
-  document.getElementById('hist-list').innerHTML = skelRecent(5);
+  document.getElementById('hist-list').innerHTML = skelRecent(6);
   const bp = document.getElementById('f-bp')?.value || '';
   const apiFilters = {
     from: document.getElementById('f-from').value,
@@ -1006,40 +1352,93 @@ async function loadHist() {
     if (bp) data = data.filter(w => getExBP(w.exerciseName) === bp);
     const ex2 = document.getElementById('f-ex').value;
     if (bp && ex2) data = data.filter(w => w.exerciseName === ex2);
+    S._histData = data;
     renderHist(data);
   } else {
-    document.getElementById('hist-list').innerHTML = `<p style="color:var(--ts);text-align:center;padding:32px 0;font-size:14px">${esc(r.message)}</p>`;
+    document.getElementById('hist-list').innerHTML =
+      `<p style="color:var(--ts);text-align:center;padding:32px 0;font-size:14px">${esc(r.message)}</p>`;
   }
 }
 function applyHistFilter() { loadHist(); }
+
 function renderHist(list) {
   const el = document.getElementById('hist-list');
-  if (!list.length) { el.innerHTML = '<p style="color:var(--ts);text-align:center;padding:40px 0;font-size:14px">ไม่มีข้อมูลในช่วงนี้</p>'; return; }
+  if (!list.length) { el.innerHTML = '<p style="color:var(--ts);text-align:center;padding:40px 0;font-size:14px;line-height:2.2">ไม่มีข้อมูลในช่วงนี้</p>'; return; }
   const groups = {};
-  list.forEach(w => { if (!groups[w.date]) groups[w.date] = []; groups[w.date].push(w); });
-  el.innerHTML = Object.entries(groups)
-    .sort((a, b) => b[0].localeCompare(a[0]))
-    .map(([date, items]) => `
-      <div class="day-group">
-        <div class="day-lbl">${formatDate(date)}</div>
-        ${items.map(w => `
-          <div class="wo-item">
-            <div class="wo-dot"></div>
-            <div style="flex:1;min-width:0">
-              <div class="wo-name">${esc(w.exerciseName)}</div>
-              <div class="wo-meta">${metaStr(w)}</div>
-            </div>
-            <span class="badge bp" style="flex-shrink:0">${esc(getExBP(w.exerciseName))}</span>
-          </div>`).join('')}
-      </div>`).join('');
+  list.forEach((w, idx) => { if (!groups[w.date]) groups[w.date] = []; groups[w.date].push({ ...w, _idx: idx }); });
+  el.innerHTML = Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0])).map(([date, items]) => `
+    <div class="day-group">
+      <div class="day-lbl">
+        <span>${formatDate(date)}</span>
+        <button class="day-del-btn" onclick="confirmDeleteDay('${esc(date)}')">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M10,11v6"/><path d="M14,11v6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+          ลบทั้งวัน
+        </button>
+      </div>
+      ${items.map(w => `
+        <div class="wo-item" id="wo-${w._idx}">
+          <div class="wo-dot"></div>
+          <div style="flex:1;min-width:0">
+            <div class="wo-name">${esc(w.exerciseName)}</div>
+            <div class="wo-meta">${metaStr(w)}</div>
+          </div>
+          <span class="badge bp" style="flex-shrink:0;margin-right:6px">${esc(getExBP(w.exerciseName))}</span>
+          <button class="wo-del-btn" onclick="confirmDeleteWorkout(${w._idx})" title="ลบ">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
+          </button>
+        </div>`).join('')}
+    </div>`).join('');
 }
 
-// ── Settings ──────────────────────────────
+// ─── Delete workout ───────────────────────
+function confirmDeleteWorkout(idx) {
+  const w = S._histData[idx];
+  if (!w) return;
+  showConfirm(
+    'ลบการออกกำลังกาย?',
+    `"${w.exerciseName}" เมื่อวันที่ ${formatDate(w.date)} จะถูกลบถาวร`,
+    () => deleteWorkout(w, idx)
+  );
+}
+async function deleteWorkout(w, idx) {
+  const r = await api('deleteWorkout', { date: w.date, exerciseName: w.exerciseName, rowIndex: w.rowIndex || w.id || '' });
+  if (r.success) {
+    S._histData.splice(idx, 1);
+    S._progCache = null;
+    toast('ลบเรียบร้อย', 'ok');
+    renderHist(S._histData);
+  } else {
+    toast(r.message || 'ลบไม่สำเร็จ (ตรวจสอบ Apps Script)', 'err');
+  }
+}
+
+function confirmDeleteDay(date) {
+  const items = S._histData.filter(w => w.date === date);
+  showConfirm(
+    'ลบทั้งวัน?',
+    `ลบ ${items.length} รายการของวันที่ ${formatDate(date)} ทั้งหมด`,
+    () => deleteDay(date)
+  );
+}
+async function deleteDay(date) {
+  const r = await api('deleteWorkoutsByDate', { date });
+  if (r.success) {
+    S._histData = S._histData.filter(w => w.date !== date);
+    S._progCache = null;
+    toast(`ลบวันที่ ${formatDate(date)} แล้ว`, 'ok');
+    renderHist(S._histData);
+  } else {
+    toast(r.message || 'ลบไม่สำเร็จ (ตรวจสอบ Apps Script)', 'err');
+  }
+}
+
+// ═══════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════
 function loadSettings() {
   const user = S.user || {};
   const name = user.displayName || '—';
-  const initial = name.charAt(0).toUpperCase();
-  document.getElementById('profile-avatar').textContent  = initial || '?';
+  document.getElementById('profile-avatar').textContent     = name.charAt(0).toUpperCase() || '?';
   document.getElementById('profile-name-display').textContent = name;
   document.getElementById('profile-username-display').textContent = user.username ? `@${user.username}` : '';
   document.getElementById('edit-display-name').value = user.displayName || '';
@@ -1047,37 +1446,29 @@ function loadSettings() {
   populateAddExBPSelect();
 }
 function populateAddExBPSelect() {
-  const sel = document.getElementById('new-ex-bp');
-  sel.innerHTML = `<option value="">— เลือก —</option>` + BODY_PARTS.map(b => `<option value="${b}">${b}</option>`).join('');
+  document.getElementById('new-ex-bp').innerHTML =
+    `<option value="">— เลือก —</option>` + BODY_PARTS.map(b => `<option value="${b}">${b}</option>`).join('');
 }
 function toggleEditProfile() {
   const form = document.getElementById('profile-edit-form');
   const btn  = document.getElementById('btn-edit-profile');
-  const show = form.classList.toggle('hidden');
-  btn.textContent = show ? 'แก้ไข' : 'ยกเลิก';
-  if (!show) document.getElementById('edit-display-name').focus();
+  form.classList.toggle('hidden');
+  btn.textContent = form.classList.contains('hidden') ? 'แก้ไข' : 'ยกเลิก';
+  if (!form.classList.contains('hidden')) document.getElementById('edit-display-name').focus();
 }
 async function saveProfile() {
   const newName = document.getElementById('edit-display-name').value.trim();
   const newPass = document.getElementById('edit-password').value;
   if (!newName) return toast('กรุณากรอกชื่อ', 'err');
-
-  // Update locally
   S.user = { ...S.user, displayName: newName };
   localStorage.setItem('lu', JSON.stringify(S.user));
-  document.getElementById('u-name').textContent       = newName;
+  document.getElementById('u-name').textContent              = newName;
   document.getElementById('profile-name-display').textContent = newName;
-  document.getElementById('profile-avatar').textContent = newName.charAt(0).toUpperCase();
-
-  // Try API (silently fail if endpoint doesn't exist)
+  document.getElementById('profile-avatar').textContent      = newName.charAt(0).toUpperCase();
   const payload = { displayName: newName };
   if (newPass) payload.password = newPass;
-  const r = await api('updateProfile', payload);
-  if (r.success || r.message?.includes('not found') || r.message?.includes('invalid action')) {
-    toast('บันทึกโปรไฟล์สำเร็จ', 'ok');
-  } else if (!r.success) {
-    toast(r.message || 'บันทึกสำเร็จ (เฉพาะเครื่องนี้)', 'ok');
-  }
+  await api('updateProfile', payload);
+  toast('บันทึกโปรไฟล์สำเร็จ', 'ok');
   document.getElementById('edit-password').value = '';
   toggleEditProfile();
 }
@@ -1092,96 +1483,85 @@ function addExercise() {
   const bp   = document.getElementById('new-ex-bp').value;
   if (!name) return toast('กรุณากรอกชื่อท่า', 'err');
   if (!bp)   return toast('กรุณาเลือก Body Part', 'err');
-  const existing = getAllExercises().find(e => e.name.toLowerCase() === name.toLowerCase());
-  if (existing) return toast('ท่านี้มีอยู่แล้ว', 'err');
+  const exists = getAllExercises().find(e => e.name.toLowerCase() === name.toLowerCase());
+  if (exists)  return toast('ท่านี้มีอยู่แล้ว', 'err');
   const custom = getCustomEx();
   custom.push({ name, category: bp });
   saveCustomEx(custom);
-  // also set in BP map for consistency
   const bpMap = getBPMap();
   bpMap[name] = bp;
   saveBPMap(bpMap);
-  // Reload exercises
-  const allEx = getAllExercises();
-  const groups = allEx.reduce((g, e) => {
-    const b = getExBP(e.name);
-    (g[b] = g[b] || []).push(e);
-    return g;
-  }, {});
-  S.exOpts = Object.entries(groups)
-    .map(([cat, exs]) => `<optgroup label="${esc(cat)}">${exs.map(e => `<option value="${esc(e.name)}">${esc(e.name)}</option>`).join('')}</optgroup>`)
-    .join('');
-  document.querySelectorAll('.ex-select').forEach(populateSelect);
+  rebuildExOpts();
   document.getElementById('new-ex-name').value = '';
   document.getElementById('new-ex-bp').value   = '';
   toggleAddExForm();
   renderExList('');
-  toast(`เพิ่ม "${name}" สำเร็จ`, 'ok');
+  toast(`เพิ่ม "${name}" สำเร็จ ✓`, 'ok');
+}
+
+function confirmDeleteEx(name) {
+  showConfirm(
+    'ลบท่าออกกำลังกาย?',
+    `"${name}" จะถูกลบออกจากรายการ (ประวัติการออกกำลังกายจะยังคงอยู่)`,
+    () => deleteEx(name)
+  );
 }
 function deleteEx(name) {
-  if (!confirm(`ลบท่า "${name}" ออกจากรายการ?`)) return;
   const custom = getCustomEx().filter(e => e.name !== name);
   saveCustomEx(custom);
   const bpMap = getBPMap();
   delete bpMap[name];
   saveBPMap(bpMap);
-  renderExList(document.querySelector('#ex-list').previousElementSibling?.value || '');
+  rebuildExOpts();
+  renderExList('');
   toast('ลบเรียบร้อย', 'ok');
 }
+
 function updateExBP(name, bp) {
-  const bpMap  = getBPMap();
-  bpMap[name]  = bp;
+  const bpMap = getBPMap();
+  bpMap[name] = bp;
   saveBPMap(bpMap);
-  // Update category in custom exercises if it's custom
   const custom = getCustomEx();
-  const ci     = custom.findIndex(e => e.name === name);
+  const ci = custom.findIndex(e => e.name === name);
   if (ci >= 0) { custom[ci].category = bp; saveCustomEx(custom); }
-  // Rebuild exOpts
-  const allEx  = getAllExercises();
-  const groups = allEx.reduce((g, e) => {
-    const b = getExBP(e.name);
-    (g[b] = g[b] || []).push(e);
-    return g;
-  }, {});
-  S.exOpts = Object.entries(groups)
-    .map(([cat, exs]) => `<optgroup label="${esc(cat)}">${exs.map(e => `<option value="${esc(e.name)}">${esc(e.name)}</option>`).join('')}</optgroup>`)
-    .join('');
+  rebuildExOpts();
   toast(`อัปเดต "${name}" → ${bp}`, 'ok');
 }
+
+let _exSearchT;
 function renderExList(query) {
-  const q        = (query || '').toLowerCase();
-  const bpMap    = getBPMap();
+  clearTimeout(_exSearchT);
+  _exSearchT = setTimeout(() => _renderExList(query), 80);
+}
+function _renderExList(query) {
+  const q         = (query || '').toLowerCase();
+  const bpMap     = getBPMap();
   const customSet = new Set(getCustomEx().map(e => e.name));
-  const all      = getAllExercises();
-  const filtered = q ? all.filter(e => e.name.toLowerCase().includes(q)) : all;
-
-  const bpOptions = BODY_PARTS.map(b => `<option value="${b}">${b}</option>`).join('');
-  const getDistinctOptions = (name) => {
-    const cur = bpMap[name] || all.find(e => e.name === name)?.category || 'อื่นๆ';
-    return BODY_PARTS.map(b => `<option value="${b}" ${b === cur ? 'selected' : ''}>${b}</option>`).join('');
-  };
-
+  const all       = getAllExercises();
+  const filtered  = q ? all.filter(e => e.name.toLowerCase().includes(q)) : all;
   if (!filtered.length) {
-    document.getElementById('ex-list').innerHTML = `<div style="padding:20px;text-align:center;color:var(--ts);font-size:13px">ไม่พบท่า</div>`;
+    document.getElementById('ex-list').innerHTML = `<div style="padding:20px;text-align:center;color:var(--ts);font-size:13px">ไม่พบท่า "${query}"</div>`;
     return;
   }
   document.getElementById('ex-list').innerHTML = filtered.map(e => {
     const isCustom = customSet.has(e.name);
-    const bp       = bpMap[e.name] || e.category || 'อื่นๆ';
+    const curBP    = bpMap[e.name] || e.category || 'อื่นๆ';
+    const bpOpts   = BODY_PARTS.map(b => `<option value="${b}" ${b === curBP ? 'selected' : ''}>${b}</option>`).join('');
+    const safeName = e.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
     return `<div class="ex-mgmt-item">
-      <div class="ex-mgmt-name">${esc(e.name)}</div>
+      <div class="ex-mgmt-name">${esc(e.name)}${isCustom ? ' <span class="badge custom" style="font-size:9px">custom</span>' : ''}</div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <select class="bp-sel" onchange="updateExBP('${esc(e.name).replace(/'/g, "\\'")}', this.value)">
-          ${getDistinctOptions(e.name)}
-        </select>
-        ${isCustom ? `<button class="icon-btn del" onclick="deleteEx('${esc(e.name).replace(/'/g, "\\'")}')">✕</button>` : ''}
+        <select class="bp-sel" onchange="updateExBP('${safeName}',this.value)">${bpOpts}</select>
+        ${isCustom ? `<button class="icon-btn del" onclick="confirmDeleteEx('${safeName}')">✕</button>` : ''}
       </div>
     </div>`;
   }).join('');
 }
 
-// ── Helpers ───────────────────────────────
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const todayStr = () => new Date().toISOString().slice(0, 10);
 function metaStr(w) {
   const p = [];
   if (w.sets && w.reps)   p.push(`${w.sets}×${w.reps}`);
@@ -1193,20 +1573,19 @@ function relDate(d) {
   const diff = Math.floor((Date.now() - new Date(d + 'T00:00:00')) / 864e5);
   if (diff === 0) return 'วันนี้';
   if (diff === 1) return 'เมื่อวาน';
-  return `${diff} วันก่อน`;
+  if (diff < 7)   return `${diff} วันก่อน`;
+  return formatDate(d);
 }
 function formatDate(d) {
   if (!d) return '';
   const dt = new Date(d + 'T00:00:00');
-  const days   = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
-  const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
-  return `${days[dt.getDay()]} ${dt.getDate()} ${months[dt.getMonth()]} ${dt.getFullYear() + 543}`;
+  return `${DAYS_TH[dt.getDay()]} ${dt.getDate()} ${MONTHS_TH[dt.getMonth()]} ${dt.getFullYear() + 543}`;
 }
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Start ─────────────────────────────────
+// ── Boot ───────────────────────────────────
 init();
 </script>
 </body>
