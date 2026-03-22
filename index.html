@@ -249,8 +249,6 @@ select.input{cursor:pointer}
       <div class="chart-label"><span>กิจกรรม</span></div>
       <div id="dash-chart"><div style="height:90px;display:flex;align-items:flex-end;gap:3px">${Array(30).fill('<div class="skel" style="flex:1;height:55%;border-radius:2px 2px 0 0"></div>').join('')}</div></div>
     </div>
-    <div class="sec-head" style="margin-top:4px"><div class="sec-title">ล่าสุด</div></div>
-    <div id="recent-list"></div>
   </div>
   <!-- PROGRESS -->
   <div id="tab-prog" class="tab-pane hidden">
@@ -567,12 +565,11 @@ function setTab(tab){
 // ═══════════════ DASHBOARD ═══════════════════════
 async function loadDash(){
   document.getElementById('stats-wrap').innerHTML=skelStats();
-  document.getElementById('recent-list').innerHTML=skelRecent(4);
   const from30=new Date();from30.setDate(from30.getDate()-29);
   const fromStr=from30.toISOString().slice(0,10);
   const[sr,wr]=await Promise.all([api('getStats'),api('getWorkouts',{filters:{from:fromStr}})]);
   if(sr.success)renderStats(sr.data);
-  if(wr.success){const ws=normWO(wr.data);renderDashChart(ws);renderRecent(ws.slice(0,12));}
+  if(wr.success){const ws=normWO(wr.data);renderDashChart(ws);}
 }
 
 function skelStats(){return`<div class="stats-grid"><div class="stat-card"><div class="skel" style="height:46px;width:54px;margin-bottom:8px;border-radius:7px"></div><div class="skel" style="height:10px;width:68px"></div></div><div class="stat-card"><div class="skel" style="height:46px;width:54px;margin-bottom:8px;border-radius:7px"></div><div class="skel" style="height:10px;width:68px"></div></div></div><div class="stat-wide"><div class="skel" style="height:10px;width:76px;margin-bottom:7px"></div><div class="skel" style="height:17px;width:120px"></div></div><div class="stat-wide"><div class="skel" style="height:10px;width:76px;margin-bottom:7px"></div><div class="skel" style="height:34px;width:100px"></div></div>`;}
@@ -651,10 +648,11 @@ async function renderProg(){
   document.getElementById('prog-kpi').innerHTML=[0,1,2].map(()=>`<div class="prog-kpi"><div class="skel" style="height:24px;width:48px;margin:0 auto 5px;border-radius:5px"></div><div class="skel" style="height:8px;width:36px;margin:0 auto;border-radius:4px"></div></div>`).join('');
   document.getElementById('prog-chart').innerHTML=`<div style="height:130px;display:flex;align-items:flex-end;gap:3px">${Array(12).fill('<div class="skel" style="flex:1;border-radius:3px 3px 0 0"></div>').join('')}</div>`;
   const{from,to}=getPeriodRange();
-  const apiFilters={from,to};if(S.pf.ex)apiFilters.exercise=S.pf.ex;
+  const apiFilters={from,to};
+  // Don't pre-filter by exercise on API — fetch all for period so we can do multi-ex compare
   document.getElementById('prog-chart-range').textContent=from?`${from.slice(5).replace('-','/')} – ${to.slice(5).replace('-','/')}`:'ทั้งหมด';
   let workouts;
-  const ck=S.pf.period+'|'+(S.pf.ex||'');
+  const ck=S.pf.period;
   if(S._pc?.key===ck){workouts=S._pc.data;}
   else{
     const r=await api('getWorkouts',{filters:apiFilters});
@@ -662,51 +660,90 @@ async function renderProg(){
     workouts=normWO(r.data);S._pc={key:ck,data:workouts};
   }
   const{bp,ex:exName,metric}=S.pf;
-  let filt=bp&&!exName?workouts.filter(w=>getExCat(w.exerciseName)===bp):workouts;
+  let filt=workouts;
+  if(bp&&!exName) filt=workouts.filter(w=>getExCat(w.exerciseName)===bp);
+  if(exName)      filt=workouts.filter(w=>w.exerciseName===exName);
+
   if(exName){
+    // ── Single exercise: line chart + trend line ──
     const ld=buildLineData(filt,metric);
     renderKPIs(calcKPIs(filt,metric),metric);
     document.getElementById('prog-chart-label').textContent=`${exName} — ${metricLbl(metric)}`;
     document.getElementById('top-ex-card').style.display='none';
-    document.getElementById('prog-chart').innerHTML=ld.length?svgLine(ld,metric):`<div class="no-data">ยังไม่มีข้อมูลในช่วงนี้ 📭</div>`;
-  }else if(metric==='sessions'){
-    const grp={};filt.forEach(w=>{grp[w.exerciseName]=(grp[w.exerciseName]||0)+1;});
-    const bar=Object.entries(grp).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([l,v])=>({l,v}));
-    renderKPIsOv(filt);document.getElementById('prog-chart-label').textContent=bp?`${bp} — Sessions`:'Sessions ต่อท่า';
-    document.getElementById('top-ex-card').style.display='none';
-    document.getElementById('prog-chart').innerHTML=bar.length?svgBar(bar):`<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
-  }else if(bp){
-    const grp={};filt.forEach(w=>{grp[w.exerciseName]=(grp[w.exerciseName]||0)+metricVal(w,metric);});
-    const bar=Object.entries(grp).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([l,v])=>({l,v:Math.round(v*10)/10}));
-    renderKPIsOv(filt);document.getElementById('prog-chart-label').textContent=`${bp} — ${metricLbl(metric)}`;
-    document.getElementById('top-ex-card').style.display='none';
-    document.getElementById('prog-chart').innerHTML=bar.length?svgBar(bar):`<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
-  }else{
-    const grp={};filt.forEach(w=>{const b=getExCat(w.exerciseName);grp[b]=(grp[b]||0)+1;});
-    const bar=Object.entries(grp).sort((a,b)=>b[1]-a[1]).map(([l,v])=>({l,v}));
-    renderKPIsOv(filt);document.getElementById('prog-chart-label').textContent='Sessions ต่อ Body Part';
-    document.getElementById('prog-chart').innerHTML=bar.length?svgBar(bar):`<div class="no-data">ยังไม่มีข้อมูล 🏋️</div>`;
+    document.getElementById('prog-chart').innerHTML=ld.length
+      ?svgLine(ld,metric,true)
+      :`<div class="no-data">ยังไม่มีข้อมูลในช่วงนี้ 📭</div>`;
+  } else if(bp){
+    // ── Body part: top-5 exercises as overlaid lines ──
+    const exInBP=[...new Set(filt.map(w=>w.exerciseName))];
+    if(metric==='sessions'){
+      // sessions mode: show bar of sessions per exercise
+      const grp={};filt.forEach(w=>{const d=w.date;if(!grp[w.exerciseName])grp[w.exerciseName]=new Set();grp[w.exerciseName].add(d);});
+      const bar=Object.entries(grp).sort((a,b)=>b[1].size-a[1].size).slice(0,10).map(([l,s])=>({l,v:s.size}));
+      renderKPIsOv(filt);document.getElementById('prog-chart-label').textContent=`${bp} — Sessions`;
+      document.getElementById('top-ex-card').style.display='none';
+      document.getElementById('prog-chart').innerHTML=bar.length?svgBar(bar):`<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
+    } else {
+      // trend mode: multi-line chart, top 5 exercises
+      const top5=Object.entries(
+        filt.reduce((g,w)=>{g[w.exerciseName]=(g[w.exerciseName]||0)+1;return g;},{}))
+        .sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n])=>n);
+      const series=top5.map(n=>({name:n,data:buildLineData(filt.filter(w=>w.exerciseName===n),metric)})).filter(s=>s.data.length);
+      const kpiEx=series[0]?.name||'';
+      renderKPIs(kpiEx?calcKPIs(filt.filter(w=>w.exerciseName===kpiEx),metric):{pr:0,sessions:0,avg:0},metric);
+      document.getElementById('prog-chart-label').textContent=`${bp} — ${metricLbl(metric)} (Top ${series.length} ท่า)`;
+      document.getElementById('top-ex-card').style.display='none';
+      document.getElementById('prog-chart').innerHTML=series.length
+        ?svgMultiLine(series,metric)
+        :`<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
+    }
+  } else {
+    // ── Overview: trend line of total sessions per day ──
+    if(metric==='sessions'){
+      const ld=buildLineData(filt,'sessions');
+      renderKPIsOv(filt);
+      document.getElementById('prog-chart-label').textContent='Sessions ต่อวัน';
+      document.getElementById('prog-chart').innerHTML=ld.length
+        ?svgLine(ld,'sessions',false)
+        :`<div class="no-data">ยังไม่มีข้อมูล 🏋️</div>`;
+    } else {
+      // metric overview: trend of daily aggregated value (all exercises combined)
+      const ld=buildLineData(filt,metric);
+      renderKPIsOv(filt);
+      document.getElementById('prog-chart-label').textContent=`${metricLbl(metric)} รายวัน`;
+      document.getElementById('prog-chart').innerHTML=ld.length
+        ?svgLine(ld,metric,false)
+        :`<div class="no-data">ยังไม่มีข้อมูล 🏋️</div>`;
+    }
     renderTopEx(filt);
   }
 }
-function metricVal(w,m){if(m==='weight')return Number(w.weight)||0;if(m==='volume')return(Number(w.sets)||0)*(Number(w.reps)||0)*(Number(w.weight)||0);if(m==='reps')return Number(w.reps)||0;return 1;}
+function metricVal(w,m){if(m==='weight')return Number(w.weight)||0;if(m==='volume')return(Number(w.reps)||0)*(Number(w.weight)||0);if(m==='reps')return Number(w.reps)||0;return 1;}
+
+// buildLineData: aggregate raw set-rows into daily values
+// weight  = max weight that day
+// volume  = sum of (reps × weight) all sets that day
+// reps    = max reps in a single set that day
+// sessions= number of distinct sets (rows) that day
 function buildLineData(ws,m){
   const grp={};ws.forEach(w=>{if(!grp[w.date])grp[w.date]=[];grp[w.date].push(w);});
   return Object.entries(grp).sort(([a],[b])=>a.localeCompare(b)).map(([date,items])=>{
     let v=0;
-    if(m==='weight')v=Math.max(...items.map(w=>Number(w.weight)||0));
-    if(m==='volume')v=items.reduce((s,w)=>s+(Number(w.sets)||0)*(Number(w.reps)||0)*(Number(w.weight)||0),0);
-    if(m==='reps')v=Math.max(...items.map(w=>Number(w.reps)||0));
+    if(m==='weight') v=Math.max(...items.map(w=>Number(w.weight)||0));
+    if(m==='volume') v=items.reduce((s,w)=>s+(Number(w.reps)||0)*(Number(w.weight)||0),0);
+    if(m==='reps')   v=Math.max(...items.map(w=>Number(w.reps)||0));
     if(m==='sessions')v=items.length;
     return{date,v};
   }).filter(d=>d.v>0);
 }
+
+// calcKPIs now derives from daily aggregates (not raw rows)
 function calcKPIs(ws,m){
-  if(!ws.length)return{pr:0,sessions:0,avg:0};
-  const sessions=[...new Set(ws.map(w=>w.date))].length;
-  let pr=0,total=0,cnt=0;
-  ws.forEach(w=>{const v=metricVal(w,m);if(v>pr)pr=v;total+=v;cnt++;});
-  return{pr,sessions,avg:cnt?total/cnt:0};
+  const daily=buildLineData(ws,m);
+  if(!daily.length)return{pr:0,sessions:daily.length,avg:0};
+  const pr=Math.max(...daily.map(d=>d.v));
+  const avg=daily.reduce((s,d)=>s+d.v,0)/daily.length;
+  return{pr,sessions:daily.length,avg};
 }
 function renderKPIs({pr,sessions,avg},m){
   const u=m==='weight'?' kg':'';
@@ -735,9 +772,9 @@ function renderTopEx(ws){
 const fmt=n=>Number.isFinite(n)?Math.round(n*10)/10:0;
 const metricLbl=m=>({weight:'น้ำหนัก (kg)',volume:'Volume',reps:'Reps',sessions:'Sessions'}[m]||m);
 
-// ── SVG Charts ────────────────────────────────────
-function svgLine(data,metric){
-  const W=360,H=180,PL=46,PR=14,PT=12,PB=34,cW=W-PL-PR,cH=H-PT-PB;
+// ── SVG Line Chart (with optional trend line) ─────
+function svgLine(data,metric,showTrend=false){
+  const W=360,H=190,PL=46,PR=14,PT=12,PB=36,cW=W-PL-PR,cH=H-PT-PB;
   const vals=data.map(d=>d.v),minV=Math.min(...vals),maxV=Math.max(...vals),vR=maxV-minV||1;
   const xs=i=>PL+(i/Math.max(data.length-1,1))*cW;
   const ys=v=>PT+cH-((v-minV)/vR)*cH;
@@ -751,13 +788,74 @@ function svgLine(data,metric){
   const xLabels=idxs.map(i=>{const dt=new Date(data[i].date+'T00:00:00');return`<text x="${xs(i).toFixed(1)}" y="${H-5}" text-anchor="middle" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}</text>`;}).join('');
   const pts=data.map((d,i)=>`${xs(i).toFixed(1)},${ys(d.v).toFixed(1)}`).join(' ');
   const areaPts=`${PL},${(PT+cH).toFixed(1)} ${pts} ${(W-PR).toFixed(1)},${(PT+cH).toFixed(1)}`;
-  const dotR=data.length<=12?4.5:data.length<=25?3:2;
+  const dotR=data.length<=14?4.5:data.length<=30?3.5:2.5;
   const dots=data.map((d,i)=>`<circle cx="${xs(i).toFixed(1)}" cy="${ys(d.v).toFixed(1)}" r="${dotR}" fill="#c8ff3c" stroke="#09090d" stroke-width="2"/>`).join('');
+  // Linear regression trend line
+  let trendSvg='';
+  if(showTrend&&data.length>=3){
+    const n=data.length,sumX=n*(n-1)/2,sumX2=n*(n-1)*(2*n-1)/6;
+    const sumY=data.reduce((s,d)=>s+d.v,0);
+    const sumXY=data.reduce((s,d,i)=>s+i*d.v,0);
+    const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
+    const intercept=(sumY-slope*sumX)/n;
+    const ty0=intercept,ty1=slope*(n-1)+intercept;
+    // clamp to data range for display
+    const ty0c=Math.max(minV,Math.min(maxV,ty0)),ty1c=Math.max(minV,Math.min(maxV,ty1));
+    trendSvg=`<line x1="${xs(0).toFixed(1)}" y1="${ys(ty0c).toFixed(1)}" x2="${xs(n-1).toFixed(1)}" y2="${ys(ty1c).toFixed(1)}" stroke="rgba(200,255,60,.35)" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    // trend badge
+    const pct=ty0>0?((ty1-ty0)/ty0*100):0;
+    if(Math.abs(pct)>0.5){
+      const up=pct>0;
+      trendSvg+=`<text x="${W-PR-2}" y="${PT-2}" text-anchor="end" fill="${up?'#c8ff3c':'#ff4f5a'}" font-size="10" font-weight="700" font-family="Barlow,sans-serif">${up?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%</text>`;
+    }
+  }
   return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
     <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c8ff3c" stop-opacity="0.15"/><stop offset="100%" stop-color="#c8ff3c" stop-opacity="0"/></linearGradient></defs>
     ${yLines}<polygon points="${areaPts}" fill="url(#ag)"/>
     <polyline points="${pts}" fill="none" stroke="#c8ff3c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-    ${dots}${xLabels}</svg>`;
+    ${trendSvg}${dots}${xLabels}</svg>`;
+}
+
+// ── Multi-line chart (top exercises in a body part) ─
+const MULTI_COLORS=['#c8ff3c','#38bdf8','#fb923c','#a78bfa','#f472b6'];
+function svgMultiLine(series,metric){
+  if(!series.length)return'<div class="no-data">ไม่มีข้อมูล</div>';
+  // collect all dates across series, sort
+  const allDates=[...new Set(series.flatMap(s=>s.data.map(d=>d.date)))].sort();
+  if(allDates.length<2)return`<svg viewBox="0 0 360 40" style="width:100%"><text x="180" y="24" text-anchor="middle" fill="#7a7a96" font-size="12" font-family="Barlow,sans-serif">ต้องมีอย่างน้อย 2 วัน</text></svg>`;
+  const allVals=series.flatMap(s=>s.data.map(d=>d.v));
+  const minV=Math.min(...allVals),maxV=Math.max(...allVals),vR=maxV-minV||1;
+  const n=allDates.length;
+  const W=360,H=200,PL=46,PR=14,PT=12,PB=44,cW=W-PL-PR,cH=H-PT-PB;
+  const xs=i=>PL+(i/(n-1))*cW;
+  const ys=v=>PT+cH-((v-minV)/vR)*cH;
+  const yLines=[0,.5,1].map(t=>{
+    const v=minV+vR*t,y=ys(v).toFixed(1);
+    const lbl=metric==='volume'&&v>=1000?(v/1000).toFixed(1)+'k':Math.round(v);
+    return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/><text x="${PL-4}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${lbl}</text>`;
+  }).join('');
+  const step=Math.max(1,Math.ceil(n/4));
+  const idxs=[...new Set([0,...allDates.map((_,i)=>i).filter(i=>i%step===0),n-1])];
+  const xLabels=idxs.map(i=>{const dt=new Date(allDates[i]+'T00:00:00');return`<text x="${xs(i).toFixed(1)}" y="${H-PB+14}" text-anchor="middle" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}</text>`;}).join('');
+  const lines=series.map((s,si)=>{
+    const color=MULTI_COLORS[si%MULTI_COLORS.length];
+    // build points — only where date exists in this series
+    const dateMap=Object.fromEntries(s.data.map(d=>[d.date,d.v]));
+    const validPts=allDates.map((dt,i)=>dateMap[dt]!=null?{i,v:dateMap[dt]}:null).filter(Boolean);
+    if(!validPts.length)return'';
+    const pts=validPts.map(p=>`${xs(p.i).toFixed(1)},${ys(p.v).toFixed(1)}`).join(' ');
+    const dots=validPts.map(p=>`<circle cx="${xs(p.i).toFixed(1)}" cy="${ys(p.v).toFixed(1)}" r="3" fill="${color}" stroke="#09090d" stroke-width="1.5"/>`).join('');
+    return`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>${dots}`;
+  }).join('');
+  // Legend
+  const legend=series.map((s,si)=>{
+    const color=MULTI_COLORS[si%MULTI_COLORS.length];
+    const lbl=s.name.length>12?s.name.slice(0,12)+'…':s.name;
+    const lx=PL+(si%3)*(cW/3),ly=H-PB+26+(Math.floor(si/3)*14);
+    return`<circle cx="${lx+5}" cy="${ly-4}" r="4" fill="${color}"/><text x="${lx+13}" y="${ly}" fill="#eeeef4" font-size="10" font-family="Barlow,sans-serif">${esc(lbl)}</text>`;
+  }).join('');
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
+    ${yLines}${lines}${xLabels}${legend}</svg>`;
 }
 function svgBar(data){
   if(!data.length)return'<div class="no-data">ไม่มีข้อมูล</div>';
