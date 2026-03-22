@@ -9,6 +9,10 @@
 <title>LIFT</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<!-- Firebase SDK (compat v10) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -27,7 +31,6 @@ input,select,button,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:0;height:0}
 .hidden{display:none!important}
 #app{max-width:480px;margin:0 auto;min-height:100svh}
-/* AUTH */
 #v-auth{display:flex;align-items:center;justify-content:center;min-height:100svh;padding:28px 22px}
 .auth-inner{width:100%;max-width:360px;animation:slideUp .4s var(--ease)}
 .auth-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:82px;line-height:.88;color:var(--a);letter-spacing:3px;display:block;filter:drop-shadow(0 0 24px rgba(200,255,60,.3))}
@@ -36,7 +39,6 @@ input,select,button,textarea{font-family:inherit}
 .auth-tabs{display:flex;background:var(--s2);border-radius:var(--r);padding:4px;margin-bottom:24px;border:1px solid var(--bd);gap:4px}
 .auth-tab{flex:1;padding:10px;text-align:center;background:none;border:none;color:var(--ts);font-size:14px;font-weight:600;border-radius:8px;cursor:pointer;transition:all .2s var(--ease)}
 .auth-tab.active{background:var(--s3);color:var(--t);box-shadow:0 2px 8px rgba(0,0,0,.3)}
-/* FORM */
 .field{margin-bottom:14px}
 .field label{display:block;margin-bottom:5px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ts)}
 .input{width:100%;background:var(--s2);border:1px solid var(--bd2);border-radius:var(--r);color:var(--t);font-size:16px;padding:12px 14px;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;appearance:none;outline:none}
@@ -44,7 +46,6 @@ input,select,button,textarea{font-family:inherit}
 .input::placeholder{color:var(--td)}
 select.input{cursor:pointer}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-/* BUTTONS */
 .btn{display:flex;align-items:center;justify-content:center;width:100%;padding:14px;background:var(--a);color:#000;border:none;border-radius:var(--r);font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:transform .15s,opacity .15s}
 .btn:active{transform:scale(.97);opacity:.88}
 .btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
@@ -56,17 +57,14 @@ select.input{cursor:pointer}
 .icon-btn:active{background:var(--s3)}
 .icon-btn.del{border-color:rgba(255,79,90,.22);color:var(--err)}
 .icon-btn.del:active{background:var(--err2)}
-/* HEADER */
 .header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--bd);position:sticky;top:0;z-index:50;background:rgba(9,9,13,.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
 .header-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:27px;color:var(--a);letter-spacing:3px}
 .header-right{display:flex;align-items:center;gap:10px}
 .header-user{font-size:13px;color:var(--ts);font-weight:500;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .header-out{background:none;border:1px solid var(--bd2);color:var(--ts);border-radius:7px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;transition:all .12s}
 .header-out:active{background:var(--s2)}
-/* LAYOUT */
 .tab-pane{overflow-y:auto;padding:18px 18px calc(var(--nav) + 24px)}
 .tab-pane.entering{animation:tabIn .22s var(--ease) both}
-/* NAV */
 .bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;height:var(--nav);display:flex;align-items:center;background:rgba(15,15,20,.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid var(--bd);z-index:100;padding-bottom:env(safe-area-inset-bottom)}
 .nav-btn{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:none;color:var(--td);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:color .18s;position:relative}
 .nav-btn.active{color:var(--a)}
@@ -77,7 +75,6 @@ select.input{cursor:pointer}
 .nav-circle{width:50px;height:50px;border-radius:50%;background:var(--a);display:flex;align-items:center;justify-content:center;box-shadow:0 0 18px rgba(200,255,60,.3);transition:transform .18s var(--spring)}
 .nav-circle:active{transform:scale(.9)}
 .nav-circle svg{width:24px;height:24px;color:#000}
-/* STATS */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .stat-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px 14px}
 .stat-num{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:48px;line-height:1;color:var(--t);font-variant-numeric:tabular-nums}
@@ -90,7 +87,6 @@ select.input{cursor:pointer}
 .stat-unit{font-size:13px;color:var(--ts);font-family:'Barlow',sans-serif;font-weight:400}
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;margin-top:18px}
 .sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ts)}
-/* RECENT */
 .wo-item{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--bd)}
 .wo-item:last-child{border-bottom:none}
 .wo-dot{width:7px;height:7px;border-radius:50%;background:var(--a);flex-shrink:0}
@@ -99,7 +95,6 @@ select.input{cursor:pointer}
 .wo-date{font-size:11px;color:var(--td);white-space:nowrap;flex-shrink:0}
 .wo-del-btn{flex-shrink:0;width:32px;height:32px;border-radius:8px;background:none;border:1px solid transparent;color:var(--td);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
 .wo-del-btn:active{background:var(--err2);color:var(--err);border-color:rgba(255,79,90,.2)}
-/* LOG SET-BY-SET */
 .ex-block{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:12px;overflow:hidden;animation:slideUp .18s var(--ease)}
 .ex-block:focus-within{border-color:rgba(200,255,60,.15)}
 .ex-block-head{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 0}
@@ -119,7 +114,6 @@ select.input{cursor:pointer}
 .add-set-btn{display:flex;align-items:center;justify-content:center;gap:5px;width:calc(100% - 28px);margin:4px 14px 10px;padding:8px;background:var(--s3);border:1px dashed var(--bd2);border-radius:8px;color:var(--ts);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s}
 .add-set-btn:active{border-color:var(--a);color:var(--a);background:var(--s4)}
 .ex-notes-row{padding:0 14px 12px}
-/* HISTORY */
 .day-group{margin-bottom:20px}
 .day-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ts);padding-bottom:10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
 .day-del-btn{background:none;border:none;color:var(--td);font-size:12px;font-weight:600;cursor:pointer;padding:3px 8px;border-radius:6px;transition:all .12s;display:inline-flex;align-items:center;gap:4px}
@@ -130,19 +124,15 @@ select.input{cursor:pointer}
 .hist-set-row{display:flex;align-items:center;gap:10px;padding:3px 0 3px 16px;font-size:12px}
 .hist-set-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--td);width:26px;flex-shrink:0}
 .hist-set-val{color:var(--t);font-weight:500}
-/* FILTER */
 .filter-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:14px;margin-bottom:14px}
-/* CHIPS */
 .chip-row{display:flex;gap:7px;overflow-x:auto;padding-bottom:2px}
 .chip-row::-webkit-scrollbar{display:none}
 .chip{flex-shrink:0;padding:7px 14px;border-radius:100px;background:var(--s2);border:1px solid var(--bd);color:var(--ts);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;white-space:nowrap}
 .chip:active{transform:scale(.95)}
 .chip.active{background:var(--a);border-color:var(--a);color:#000;box-shadow:0 2px 10px rgba(200,255,60,.2)}
-/* CHARTS */
 .chart-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:16px;margin-bottom:12px;overflow:hidden}
 .chart-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--ts);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .chart-label-r{font-size:10px;color:var(--a);font-weight:600;letter-spacing:0;text-transform:none}
-/* PROGRESS */
 .metric-tabs{display:flex;background:var(--s3);border-radius:9px;padding:3px;margin-bottom:12px}
 .metric-tab{flex:1;text-align:center;padding:8px 4px;border-radius:7px;font-size:12px;font-weight:600;color:var(--ts);cursor:pointer;background:none;border:none;transition:all .18s}
 .metric-tab.active{background:var(--s2);color:var(--t);box-shadow:0 2px 6px rgba(0,0,0,.3)}
@@ -151,15 +141,12 @@ select.input{cursor:pointer}
 .prog-kpi-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:26px;color:var(--a);display:block;margin-bottom:3px;line-height:1}
 .prog-kpi-lbl{font-size:9px;color:var(--ts);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
 .no-data{text-align:center;padding:36px 0;font-size:13px;color:var(--ts);line-height:2.2}
-/* SKELETON */
 .skel{background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:200% 100%;border-radius:6px;animation:shimmer 1.5s ease-in-out infinite}
 @keyframes shimmer{to{background-position:-200% 0}}
-/* TOAST */
 #toast{position:fixed;bottom:calc(var(--nav) + 14px);left:50%;transform:translateX(-50%) translateY(14px);background:var(--s3);border:1px solid var(--bd2);color:var(--t);padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .22s var(--spring);max-width:calc(100vw - 40px);text-align:center;z-index:999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{border-color:var(--err);color:var(--err);background:rgba(255,79,90,.08)}
 #toast.ok{border-color:var(--ok);color:var(--ok);background:rgba(61,232,122,.08)}
-/* LOADER */
 #loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .35s}
 #loader.fade{opacity:0;pointer-events:none}
 .loader-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:72px;color:var(--a);letter-spacing:3px;animation:logoPulse 1.2s ease-in-out infinite;display:block;filter:drop-shadow(0 0 24px rgba(200,255,60,.4))}
@@ -167,14 +154,12 @@ select.input{cursor:pointer}
 .loader-fill{height:100%;background:var(--a);border-radius:1px;animation:barFill 1.2s ease-in-out infinite}
 @keyframes logoPulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes barFill{0%{width:0%;margin-left:0}60%{width:80%;margin-left:0}100%{width:0%;margin-left:100%}}
-/* SETTINGS */
 .settings-card{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);margin-bottom:14px;overflow:hidden}
 .settings-hd{padding:13px 15px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
 .settings-hd-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ts)}
 .avatar{width:52px;height:52px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--a),var(--a2));display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;color:#000;box-shadow:0 0 14px rgba(200,255,60,.2)}
 .badge{display:inline-block;padding:2px 7px;border-radius:100px;font-size:10px;font-weight:600}
 .badge.bp{background:var(--s3);color:var(--ts);border:1px solid var(--bd)}
-.badge.custom{background:var(--a3);color:var(--a);border:1px solid rgba(200,255,60,.18)}
 .ex-mgmt-item{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd)}
 .ex-mgmt-item:last-child{border-bottom:none}
 .ex-mgmt-name{flex:1;font-size:14px;font-weight:500;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -185,7 +170,6 @@ select.input{cursor:pointer}
 .bp-sel{background:var(--s3);border:1px solid var(--bd);color:var(--t);font-size:12px;border-radius:7px;padding:5px 10px;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:110px}
 .search-wrap{position:relative}
 .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--ts);pointer-events:none}
-/* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:0 12px 12px}
 .modal-overlay.show{opacity:1;pointer-events:auto}
 .modal-sheet{background:var(--s2);border:1px solid var(--bd2);border-radius:20px;padding:20px 18px;width:100%;max-width:440px;transform:translateY(18px);transition:transform .25s var(--spring)}
@@ -213,7 +197,6 @@ select.input{cursor:pointer}
   </div>
 </div>
 <div id="app">
-<!-- AUTH -->
 <div id="v-auth" class="view hidden">
   <div class="auth-inner">
     <div class="auth-brand"><span class="auth-logo">LIFT</span><div class="auth-tagline">Workout Tracker</div></div>
@@ -228,20 +211,18 @@ select.input{cursor:pointer}
     </form>
     <form id="form-reg" class="hidden" onsubmit="doRegister(event)">
       <div class="field"><label>ชื่อที่แสดง</label><input id="r-name" class="input" type="text" autocapitalize="words" placeholder="ชื่อของคุณ"></div>
-      <div class="field"><label>ชื่อผู้ใช้</label><input id="r-user" class="input" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username"></div>
+      <div class="field"><label>ชื่อผู้ใช้</label><input id="r-user" class="input" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="username (ภาษาอังกฤษ)"></div>
       <div class="field"><label>รหัสผ่าน (อย่างน้อย 6 ตัว)</label><input id="r-pass" class="input" type="password" autocomplete="new-password" placeholder="••••••"></div>
       <div class="field" style="margin-bottom:22px"><label>ยืนยันรหัสผ่าน</label><input id="r-cfm" class="input" type="password" autocomplete="new-password" placeholder="••••••"></div>
       <button id="btn-reg" class="btn" type="submit">สมัครสมาชิก</button>
     </form>
   </div>
 </div>
-<!-- MAIN -->
 <div id="v-main" class="view hidden">
   <header class="header">
     <div class="header-logo">LIFT</div>
     <div class="header-right"><span class="header-user" id="u-name"></span><button class="header-out" onclick="doLogout()">ออก</button></div>
   </header>
-  <!-- DASH -->
   <div id="tab-dash" class="tab-pane">
     <div id="stats-wrap"></div>
     <div class="sec-head" style="margin-top:4px">
@@ -250,10 +231,9 @@ select.input{cursor:pointer}
     </div>
     <div class="chart-card">
       <div class="chart-label"><span>กิจกรรม</span></div>
-      <div id="dash-chart"><div style="height:90px;display:flex;align-items:flex-end;gap:3px">${Array(30).fill('<div class="skel" style="flex:1;height:55%;border-radius:2px 2px 0 0"></div>').join('')}</div></div>
+      <div id="dash-chart"></div>
     </div>
   </div>
-  <!-- PROGRESS -->
   <div id="tab-prog" class="tab-pane hidden">
     <div class="sec-head" style="margin-top:0"><div class="sec-title">Progress</div></div>
     <div style="margin-bottom:12px">
@@ -288,7 +268,6 @@ select.input{cursor:pointer}
       <div id="top-ex-list"></div>
     </div>
   </div>
-  <!-- LOG -->
   <div id="tab-log" class="tab-pane hidden">
     <div class="sec-head" style="margin-top:0"><div class="sec-title">บันทึก Workout</div></div>
     <div class="field" style="margin-bottom:18px"><label>วันที่</label><input id="log-date" class="input" type="date"></div>
@@ -298,7 +277,6 @@ select.input{cursor:pointer}
     </button>
     <button id="btn-save" onclick="saveWorkout()" class="btn">บันทึก Workout 💪</button>
   </div>
-  <!-- HISTORY -->
   <div id="tab-hist" class="tab-pane hidden">
     <div class="filter-card">
       <div class="sec-title" style="margin-bottom:12px">กรอง</div>
@@ -313,7 +291,6 @@ select.input{cursor:pointer}
     </div>
     <div id="hist-list"></div>
   </div>
-  <!-- SETTINGS -->
   <div id="tab-settings" class="tab-pane hidden">
     <div class="sec-head" style="margin-top:0"><div class="sec-title">ตั้งค่า</div></div>
     <div class="settings-card">
@@ -348,7 +325,7 @@ select.input{cursor:pointer}
       </div>
       <div id="ex-list" style="max-height:420px;overflow-y:auto"></div>
     </div>
-    <div style="text-align:center;padding:8px 0 2px;font-size:12px;color:var(--td)">LIFT v3.2</div>
+    <div style="text-align:center;padding:8px 0 2px;font-size:12px;color:var(--td)">LIFT v5.0 · Firebase</div>
   </div>
   <nav class="bottom-nav">
     <button class="nav-btn active" data-tab="dash" onclick="setTab('dash')">
@@ -367,26 +344,55 @@ select.input{cursor:pointer}
   </nav>
 </div>
 </div>
+
 <script>
-const SCRIPT_URL='https://script.google.com/macros/s/AKfycbwK8TeSm2w4v9RwYDr2nN3XOZh6VWbzNGLhZpMzetoTz43CzpUz2tRNDqcKuu2N3c8H/exec';
+// ════════════════════════════════════════════════════
+//  🔥 FIREBASE CONFIG — วางค่าจาก Firebase Console
+//  Project Settings → Your apps → SDK setup
+// ════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyA4i47L6-exaNPTRl9DE_-egeL20QQ8Joc",
+  authDomain: "lift-workout-log.firebaseapp.com",
+  projectId: "lift-workout-log",
+  storageBucket: "lift-workout-log.firebasestorage.app",
+  messagingSenderId: "265335235686",
+  appId: "1:265335235686:web:6ba0e6345de27e028679a7",
+  measurementId: "G-LJ5EVDSH0R"
+};
+// ════════════════════════════════════════════════════
 
-const BODY_PARTS=['อก','หลัง','ไหล่','แขน','ขา','Core','Cardio','Full Body','อื่นๆ'];
-const DAYS_TH   =['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
-const MONTHS_TH =['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-const S={
-  token:localStorage.getItem('lt'),
-  user:JSON.parse(localStorage.getItem('lu')||'null'),
-  exercises:[], // [{id,name,cat}] loaded from server per-user
-  exOpts:'',tab:'dash',
-  pf:{period:'7',bp:'',ex:'',metric:'weight'},
-  _pc:null,_hd:[],
+// Enable offline persistence (ใช้งานได้แม้ไม่มีอินเทอร์เน็ต)
+db.enablePersistence({ synchronizeTabs: true }).catch(() => {});
+
+// ── Firestore refs ─────────────────────────────────
+const uref  = () => db.collection('users').doc(S.user.uid);
+const exCol = () => uref().collection('exercises');
+const woCol = () => uref().collection('workouts');
+const TS    = () => firebase.firestore.FieldValue.serverTimestamp();
+
+// ── State ──────────────────────────────────────────
+const S = {
+  user:      null,   // { uid, displayName, username }
+  exercises: [],     // [{ id, name, cat }]
+  exOpts:    '',
+  tab:       'dash',
+  pf:        { period:'7', bp:'', ex:'', metric:'weight' },
+  _pc:       null,
+  _hd:       [],
 };
 
-// ── Exercise helpers (all server-backed) ──────────
-function getAllEx(){return S.exercises;}
-function getExCat(name){return S.exercises.find(e=>e.name===name)?.cat||'อื่นๆ';}
-function getDistinctBPs(){return[...new Set(S.exercises.map(e=>e.cat||'อื่นๆ'))].sort();}
+const BODY_PARTS = ['อก','หลัง','ไหล่','แขน','ขา','Core','Cardio','Full Body','อื่นๆ'];
+const DAYS_TH    = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+const MONTHS_TH  = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+// ── Exercise helpers ───────────────────────────────
+function getAllEx(){ return S.exercises; }
+function getExCat(name){ return S.exercises.find(e=>e.name===name)?.cat||'อื่นๆ'; }
+function getDistinctBPs(){ return [...new Set(S.exercises.map(e=>e.cat||'อื่นๆ'))].sort(); }
 function buildExOpts(){
   const groups={};
   S.exercises.forEach(e=>{(groups[e.cat]=groups[e.cat]||[]).push(e);});
@@ -394,34 +400,12 @@ function buildExOpts(){
   document.querySelectorAll('.ex-sel').forEach(populateSel);
 }
 async function loadExercises(){
-  const r=await api('getExercises');
-  if(r.success){S.exercises=(r.data||[]).map(e=>({id:e.id,name:e.name,cat:e.category||'อื่นๆ'}));buildExOpts();}
+  const snap = await exCol().orderBy('name').get();
+  S.exercises = snap.docs.map(d=>({ id:d.id, name:d.data().name, cat:d.data().category||'อื่นๆ' }));
+  buildExOpts();
 }
 
-// ── CRITICAL: Normalize date ──────────────────────
-// Sheets returns dates as Date objects or strings — always convert to YYYY-MM-DD
-function normDate(d){
-  if(!d)return'';
-  if(typeof d==='string')return d.slice(0,10);
-  if(d instanceof Date)return d.toISOString().slice(0,10);
-  if(typeof d==='number'){return new Date((d-25569)*86400000).toISOString().slice(0,10);}
-  return String(d).slice(0,10);
-}
-function normWO(arr){return(arr||[]).map(w=>({...w,date:normDate(w.date)}));}
-
-// ── API ───────────────────────────────────────────
-async function api(action,data={}){
-  try{
-    const body={action,...data};
-    if(S.token)body.token=S.token;
-    const r=await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
-    const json=await r.json();
-    if(json.code===401)doLogout();
-    return json;
-  }catch{return{success:false,message:'เชื่อมต่อไม่ได้'};}
-}
-
-// ── Toast ─────────────────────────────────────────
+// ── Toast ──────────────────────────────────────────
 let _tt;
 function toast(msg,type=''){
   const el=document.getElementById('toast');
@@ -430,7 +414,7 @@ function toast(msg,type=''){
   clearTimeout(_tt);_tt=setTimeout(()=>(el.className=''),2800);
 }
 
-// ── Confirm ───────────────────────────────────────
+// ── Confirm ────────────────────────────────────────
 function showConfirm(title,body,onOk,okLabel='ลบ'){
   document.getElementById('confirm-title').textContent=title;
   document.getElementById('confirm-body').textContent=body;
@@ -444,18 +428,39 @@ function closeConfirm(e){
   document.getElementById('confirm-modal').classList.remove('show');
 }
 
-// ── Init ──────────────────────────────────────────
-async function init(){
-  if(S.token&&S.user){await loadExercises();await showMain();}
-  else{hideSplash();showAuth();}
-}
+// ── Loader ─────────────────────────────────────────
 function hideSplash(){
   const l=document.getElementById('loader');
   l.classList.add('fade');
   setTimeout(()=>(l.style.display='none'),360);
 }
 
-// ── Auth ──────────────────────────────────────────
+// ── Init — Firebase Auth handles session automatically ─
+function init(){
+  // onAuthStateChanged fires on every page load
+  // Firebase auto-restores session from IndexedDB (offline too)
+  auth.onAuthStateChanged(async firebaseUser => {
+    if(firebaseUser){
+      // Load user profile from Firestore
+      const doc = await db.collection('users').doc(firebaseUser.uid).get();
+      S.user = {
+        uid:         firebaseUser.uid,
+        displayName: doc.data()?.displayName || firebaseUser.email.split('@')[0],
+        username:    doc.data()?.username    || firebaseUser.email.split('@')[0],
+      };
+      await loadExercises();
+      showMain();
+    } else {
+      hideSplash();
+      showAuth();
+    }
+  });
+}
+
+// ── Auth ───────────────────────────────────────────
+// Username → Firebase email trick: username@liftapp.internal
+const toEmail = u => u.toLowerCase().trim()+'@liftapp.internal';
+
 function showAuth(){document.getElementById('v-auth').classList.remove('hidden');document.getElementById('v-main').classList.add('hidden');}
 function setAuthTab(t){
   document.getElementById('tab-login').classList.toggle('active',t==='login');
@@ -463,6 +468,7 @@ function setAuthTab(t){
   document.getElementById('form-login').classList.toggle('hidden',t!=='login');
   document.getElementById('form-reg').classList.toggle('hidden',t!=='reg');
 }
+
 async function doLogin(e){
   e.preventDefault();
   const btn=document.getElementById('btn-login');
@@ -470,41 +476,61 @@ async function doLogin(e){
   const password=document.getElementById('l-pass').value;
   if(!username||!password)return toast('กรอกข้อมูลให้ครบ','err');
   btn.disabled=true;btn.textContent='กำลังเข้า...';
-  const r=await api('login',{username,password});
-  btn.disabled=false;btn.textContent='เข้าสู่ระบบ';
-  if(r.success){
-    S.token=r.data.token;S.user={displayName:r.data.displayName,username};
-    localStorage.setItem('lt',S.token);localStorage.setItem('lu',JSON.stringify(S.user));
-    await loadExercises();
-    await showMain();
-  }else toast(r.message||'เข้าสู่ระบบไม่สำเร็จ','err');
+  try{
+    await auth.signInWithEmailAndPassword(toEmail(username),password);
+    // onAuthStateChanged จะ handle showMain() ให้เอง
+  }catch(err){
+    btn.disabled=false;btn.textContent='เข้าสู่ระบบ';
+    const msg={'auth/user-not-found':'ไม่พบผู้ใช้นี้','auth/wrong-password':'รหัสผ่านไม่ถูกต้อง','auth/invalid-credential':'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'};
+    toast(msg[err.code]||err.message,'err');
+  }
 }
+
 async function doRegister(e){
   e.preventDefault();
-  const username=document.getElementById('r-user').value.trim();
-  const password=document.getElementById('r-pass').value;
-  const confirm=document.getElementById('r-cfm').value;
+  const username   =document.getElementById('r-user').value.trim();
+  const password   =document.getElementById('r-pass').value;
+  const confirm    =document.getElementById('r-cfm').value;
   const displayName=document.getElementById('r-name').value.trim();
   if(!username||!password)return toast('กรอกข้อมูลให้ครบ','err');
-  if(password!==confirm)return toast('รหัสผ่านไม่ตรงกัน','err');
+  if(username.length<3)   return toast('username ต้องมีอย่างน้อย 3 ตัวอักษร','err');
+  if(password.length<6)   return toast('รหัสผ่านต้องมีอย่างน้อย 6 ตัว','err');
+  if(password!==confirm)  return toast('รหัสผ่านไม่ตรงกัน','err');
   const btn=document.getElementById('btn-reg');
   btn.disabled=true;btn.textContent='กำลังสมัคร...';
-  const r=await api('register',{username,password,displayName});
-  btn.disabled=false;btn.textContent='สมัครสมาชิก';
-  if(r.success){toast('สมัครสำเร็จ','ok');setAuthTab('login');document.getElementById('l-user').value=username;}
-  else toast(r.message||'สมัครไม่สำเร็จ','err');
+  try{
+    const cred=await auth.createUserWithEmailAndPassword(toEmail(username),password);
+    // Save profile to Firestore
+    await db.collection('users').doc(cred.user.uid).set({
+      username,
+      displayName:displayName||username,
+      createdAt:TS(),
+    });
+    // onAuthStateChanged จะ handle showMain()
+  }catch(err){
+    btn.disabled=false;btn.textContent='สมัครสมาชิก';
+    const msg={'auth/email-already-in-use':'ชื่อผู้ใช้นี้ถูกใช้แล้ว'};
+    toast(msg[err.code]||err.message,'err');
+  }
 }
-function doLogout(){S.token=null;S.user=null;S._pc=null;S.exercises=[];S.exOpts='';localStorage.removeItem('lt');localStorage.removeItem('lu');showAuth();}
 
-// ── Main ──────────────────────────────────────────
-async function showMain(){
+async function doLogout(){
+  await auth.signOut();
+  S.user=null;S.exercises=[];S.exOpts='';S._pc=null;
+  document.getElementById('v-main').classList.add('hidden');
+  showAuth();
+}
+
+// ── Main ───────────────────────────────────────────
+function showMain(){
   document.getElementById('v-auth').classList.add('hidden');
   document.getElementById('v-main').classList.remove('hidden');
   document.getElementById('u-name').textContent=S.user?.displayName||'';
-  hideSplash();setTab('dash');
+  hideSplash();
+  setTab('dash');
 }
 
-// ── Tabs ──────────────────────────────────────────
+// ── Tabs ───────────────────────────────────────────
 const ALL_TABS=['dash','prog','log','hist','settings'];
 function setTab(tab){
   S.tab=tab;
@@ -515,21 +541,57 @@ function setTab(tab){
   });
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));
   document.getElementById('nav-circle')?.classList.toggle('active-tab',tab==='log');
-  if(tab==='dash')loadDash();
-  if(tab==='prog')loadProg();
-  if(tab==='log')initLog();
-  if(tab==='hist'){populateHistFilters();loadHist();}
+  if(tab==='dash')    loadDash();
+  if(tab==='prog')    loadProg();
+  if(tab==='log')     initLog();
+  if(tab==='hist')    {populateHistFilters();loadHist();}
   if(tab==='settings')loadSettings();
 }
 
-// ═══════════════ DASHBOARD ═══════════════════════
+// ═══════════════ DASHBOARD ════════════════════════
 async function loadDash(){
   document.getElementById('stats-wrap').innerHTML=skelStats();
+  document.getElementById('dash-chart').innerHTML=`<div style="height:90px;display:flex;align-items:flex-end;gap:3px">${Array(30).fill('<div class="skel" style="flex:1;height:55%;border-radius:2px 2px 0 0"></div>').join('')}</div>`;
+
   const from30=new Date();from30.setDate(from30.getDate()-29);
   const fromStr=from30.toISOString().slice(0,10);
-  const[sr,wr]=await Promise.all([api('getStats'),api('getWorkouts',{filters:{from:fromStr}})]);
-  if(sr.success)renderStats(sr.data);
-  if(wr.success){const ws=normWO(wr.data);renderDashChart(ws);}
+
+  // Fetch last 30 days in parallel with all-time stats
+  const [recentSnap, allSnap] = await Promise.all([
+    woCol().where('date','>=',fromStr).orderBy('date','desc').get(),
+    woCol().get(),
+  ]);
+
+  const recent   = recentSnap.docs.map(d=>({...d.data(),workoutId:d.id}));
+  const allWO    = allSnap.docs.map(d=>({...d.data(),workoutId:d.id}));
+  const statsData= computeStats(allWO);
+
+  renderStats(statsData);
+  renderDashChart(recent);
+}
+
+function computeStats(workouts){
+  const weekAgo=new Date(Date.now()-7*864e5).toISOString().slice(0,10);
+  let totalKg=0;
+  const exMap={},dates=new Set(),weekDates=new Set();
+  workouts.forEach(w=>{
+    dates.add(w.date);
+    totalKg+=(w.weight||0)*(w.reps||0);
+    exMap[w.exerciseName]=(exMap[w.exerciseName]||0)+1;
+    if(w.date>=weekAgo)weekDates.add(w.date);
+  });
+  const weeklyStreak=calcWeeklyStreak([...dates]);
+  const top=Object.entries(exMap).sort((a,b)=>b[1]-a[1])[0];
+  return{totalSessions:dates.size,weekSessions:weekDates.size,totalWeight:Math.round(totalKg),favoriteExercise:top?top[0]:'—',weeklyStreak};
+}
+
+function calcWeeklyStreak(dateStrings){
+  if(!dateStrings.length)return 0;
+  function getMon(ds){const d=new Date(ds+'T00:00:00Z');const day=d.getUTCDay();d.setUTCDate(d.getUTCDate()-(day===0?6:day-1));return d.toISOString().slice(0,10);}
+  const weeks=new Set(dateStrings.map(getMon));
+  let cur=getMon(new Date().toISOString().slice(0,10)),streak=0;
+  while(weeks.has(cur)){streak++;const d=new Date(cur+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-7);cur=d.toISOString().slice(0,10);}
+  return streak;
 }
 
 function skelStats(){return`<div class="stats-grid"><div class="stat-card"><div class="skel" style="height:46px;width:54px;margin-bottom:8px;border-radius:7px"></div><div class="skel" style="height:10px;width:68px"></div></div><div class="stat-card"><div class="skel" style="height:46px;width:54px;margin-bottom:8px;border-radius:7px"></div><div class="skel" style="height:10px;width:68px"></div></div></div><div class="skel" style="height:82px;border-radius:14px;margin-bottom:10px"></div><div class="stat-wide"><div class="skel" style="height:10px;width:76px;margin-bottom:7px"></div><div class="skel" style="height:17px;width:120px"></div></div><div class="stat-wide"><div class="skel" style="height:10px;width:76px;margin-bottom:7px"></div><div class="skel" style="height:34px;width:100px"></div></div>`;}
@@ -554,7 +616,7 @@ function renderStats(d){
       <div style="flex:1;min-width:0">
         <div style="font-size:14px;font-weight:600;margin-bottom:4px">Weekly Streak ${flames}</div>
         <div style="font-size:11px;color:var(--ts);margin-bottom:8px">${streak?`${streak} สัปดาห์ติดต่อกัน`:'เริ่ม streak สัปดาห์นี้เลย!'}</div>
-        <div style="display:flex;gap:3px">${bars}${empties}${streak>8?`<span style="font-size:10px;color:var(--ts);margin-left:4px;align-self:center">+${streak-8}</span>`:''}</div>
+        <div style="display:flex;gap:3px">${bars}${empties}</div>
       </div>
     </div>
     <div class="stat-wide" style="animation:countUp .35s .13s ease both"><div class="stat-wide-lbl">ท่าที่ชอบ</div><div class="stat-wide-val">${esc(d.favoriteExercise||'—')}</div></div>
@@ -569,15 +631,13 @@ function renderDashChart(workouts){
   document.getElementById('dash-meta').textContent=`${days.filter(d=>d.count>0).length} วันที่ออกกำลังกาย`;
   const maxV=Math.max(...days.map(d=>d.count),1);
   const W=360,H=110,PL=6,PR=6,PT=14,PB=28,cW=W-PL-PR,cH=H-PT-PB,n=days.length;
-  const xs=i=>PL+(i/(n-1))*cW;
-  const ys=v=>PT+cH-(v/maxV)*cH;
+  const xs=i=>PL+(i/(n-1))*cW,ys=v=>PT+cH-(v/maxV)*cH;
   const pts=days.map((d,i)=>`${xs(i).toFixed(1)},${ys(d.count).toFixed(1)}`).join(' ');
   const areaPts=`${xs(0).toFixed(1)},${(PT+cH).toFixed(1)} ${pts} ${xs(n-1).toFixed(1)},${(PT+cH).toFixed(1)}`;
   const yLines=[0,.5,1].map(t=>`<line x1="${PL}" y1="${ys(maxV*t).toFixed(1)}" x2="${W-PR}" y2="${ys(maxV*t).toFixed(1)}" stroke="rgba(255,255,255,.04)" stroke-width="1"/>`).join('');
   const xLabels=days.map((d,i)=>{
     if(i!==0&&i!==14&&i!==n-1)return'';
-    const isT=d.date===todayStr;
-    const lbl=isT?'วันนี้':`${d.d.getDate()}/${d.d.getMonth()+1}`;
+    const isT=d.date===todayStr,lbl=isT?'วันนี้':`${d.d.getDate()}/${d.d.getMonth()+1}`;
     return`<text x="${xs(i).toFixed(1)}" y="${H-5}" text-anchor="${i===0?'start':i===n-1?'end':'middle'}" fill="${isT?'#c8ff3c':'#7a7a96'}" font-size="10" font-weight="${isT?'700':'400'}" font-family="Barlow,sans-serif">${lbl}</text>`;
   }).join('');
   const dots=days.map((d,i)=>{
@@ -591,13 +651,8 @@ function renderDashChart(workouts){
     <polyline points="${pts}" fill="none" stroke="#c8ff3c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     ${dots}${xLabels}</svg>`;
 }
-function renderRecent(list){
-  const el=document.getElementById('recent-list');
-  if(!list.length){el.innerHTML=`<div style="text-align:center;padding:32px 0;color:var(--ts);font-size:14px;line-height:2.4">ยังไม่มีข้อมูล<br>กด <strong style="color:var(--a);font-size:20px">+</strong> เริ่มบันทึก</div>`;return;}
-  el.innerHTML=list.map(w=>`<div class="wo-item"><div class="wo-dot"></div><div style="flex:1;min-width:0"><div class="wo-name">${esc(w.exerciseName)}</div><div class="wo-meta">${metaStr(w)}</div></div><div class="wo-date">${relDate(w.date)}</div></div>`).join('');
-}
 
-// ═══════════════ PROGRESS ════════════════════════
+// ═══════════════ PROGRESS ═════════════════════════
 async function loadProg(){populateProgFilters();await renderProg();}
 function setProgPeriod(p){S.pf.period=p;S._pc=null;document.querySelectorAll('#period-chips .chip').forEach(c=>c.classList.toggle('active',c.dataset.p===p));renderProg();}
 function setMetric(m){S.pf.metric=m;document.querySelectorAll('#metric-tabs .metric-tab').forEach(c=>c.classList.toggle('active',c.dataset.m===m));renderProg();}
@@ -623,84 +678,70 @@ function getPeriodRange(){
 async function renderProg(){
   document.getElementById('prog-kpi').innerHTML=[0,1,2].map(()=>`<div class="prog-kpi"><div class="skel" style="height:24px;width:48px;margin:0 auto 5px;border-radius:5px"></div><div class="skel" style="height:8px;width:36px;margin:0 auto;border-radius:4px"></div></div>`).join('');
   document.getElementById('prog-chart').innerHTML=`<div style="height:130px;display:flex;align-items:flex-end;gap:3px">${Array(12).fill('<div class="skel" style="flex:1;border-radius:3px 3px 0 0"></div>').join('')}</div>`;
+
   const{from,to}=getPeriodRange();
-  const apiFilters={from,to};
-  // Don't pre-filter by exercise on API — fetch all for period so we can do multi-ex compare
   document.getElementById('prog-chart-range').textContent=from?`${from.slice(5).replace('-','/')} – ${to.slice(5).replace('-','/')}`:'ทั้งหมด';
-  let workouts;
+
   const ck=S.pf.period;
+  let workouts;
   if(S._pc?.key===ck){workouts=S._pc.data;}
   else{
-    const r=await api('getWorkouts',{filters:apiFilters});
-    if(!r.success){document.getElementById('prog-chart').innerHTML=`<div class="no-data">${esc(r.message)}</div>`;document.getElementById('prog-kpi').innerHTML='';return;}
-    workouts=normWO(r.data);S._pc={key:ck,data:workouts};
+    // Firestore query — filter by date range (requires composite index on date)
+    let q=woCol().orderBy('date','desc');
+    if(from)q=q.where('date','>=',from);
+    if(to)  q=q.where('date','<=',to);
+    try{
+      const snap=await q.get();
+      workouts=snap.docs.map(d=>({...d.data(),workoutId:d.id}));
+      S._pc={key:ck,data:workouts};
+    }catch(err){
+      // Composite index not created yet — show link hint
+      if(err.code==='failed-precondition'){
+        document.getElementById('prog-chart').innerHTML=`<div class="no-data" style="font-size:12px;line-height:2">ต้องสร้าง Index ก่อน<br><a href="${err.message.match(/https[^\s]+/)?.[0]||'https://console.firebase.google.com'}" target="_blank" style="color:var(--a)">คลิกที่นี่เพื่อสร้าง Index อัตโนมัติ ↗</a></div>`;
+        document.getElementById('prog-kpi').innerHTML='';
+        return;
+      }
+      document.getElementById('prog-chart').innerHTML=`<div class="no-data">${esc(err.message)}</div>`;
+      return;
+    }
   }
+
   const{bp,ex:exName,metric}=S.pf;
   let filt=workouts;
-  if(bp&&!exName) filt=workouts.filter(w=>getExCat(w.exerciseName)===bp);
-  if(exName)      filt=workouts.filter(w=>w.exerciseName===exName);
+  if(bp&&!exName)filt=workouts.filter(w=>getExCat(w.exerciseName)===bp);
+  if(exName)     filt=workouts.filter(w=>w.exerciseName===exName);
 
   if(exName){
-    // ── Single exercise: line chart + trend line ──
     const ld=buildLineData(filt,metric);
     renderKPIs(calcKPIs(filt,metric),metric);
     document.getElementById('prog-chart-label').textContent=`${exName} — ${metricLbl(metric)}`;
     document.getElementById('top-ex-card').style.display='none';
-    document.getElementById('prog-chart').innerHTML=ld.length
-      ?svgLine(ld,metric,true)
-      :`<div class="no-data">ยังไม่มีข้อมูลในช่วงนี้ 📭</div>`;
-  } else if(bp){
-    // ── Body part: top-5 exercises as overlaid lines ──
-    const exInBP=[...new Set(filt.map(w=>w.exerciseName))];
+    document.getElementById('prog-chart').innerHTML=ld.length?svgLine(ld,metric,true):`<div class="no-data">ยังไม่มีข้อมูลในช่วงนี้ 📭</div>`;
+  }else if(bp){
     if(metric==='sessions'){
-      // sessions mode: show bar of sessions per exercise
-      const grp={};filt.forEach(w=>{const d=w.date;if(!grp[w.exerciseName])grp[w.exerciseName]=new Set();grp[w.exerciseName].add(d);});
+      const grp={};filt.forEach(w=>{if(!grp[w.exerciseName])grp[w.exerciseName]=new Set();grp[w.exerciseName].add(w.date);});
       const bar=Object.entries(grp).sort((a,b)=>b[1].size-a[1].size).slice(0,10).map(([l,s])=>({l,v:s.size}));
       renderKPIsOv(filt);document.getElementById('prog-chart-label').textContent=`${bp} — Sessions`;
       document.getElementById('top-ex-card').style.display='none';
       document.getElementById('prog-chart').innerHTML=bar.length?svgBar(bar):`<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
-    } else {
-      // trend mode: multi-line chart, top 5 exercises
-      const top5=Object.entries(
-        filt.reduce((g,w)=>{g[w.exerciseName]=(g[w.exerciseName]||0)+1;return g;},{}))
-        .sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n])=>n);
+    }else{
+      const top5=Object.entries(filt.reduce((g,w)=>{g[w.exerciseName]=(g[w.exerciseName]||0)+1;return g;},{})).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([n])=>n);
       const series=top5.map(n=>({name:n,data:buildLineData(filt.filter(w=>w.exerciseName===n),metric)})).filter(s=>s.data.length);
       const kpiEx=series[0]?.name||'';
       renderKPIs(kpiEx?calcKPIs(filt.filter(w=>w.exerciseName===kpiEx),metric):{pr:0,sessions:0,avg:0},metric);
       document.getElementById('prog-chart-label').textContent=`${bp} — ${metricLbl(metric)} (Top ${series.length} ท่า)`;
       document.getElementById('top-ex-card').style.display='none';
-      document.getElementById('prog-chart').innerHTML=series.length
-        ?svgMultiLine(series,metric)
-        :`<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
+      document.getElementById('prog-chart').innerHTML=series.length?svgMultiLine(series,metric):`<div class="no-data">ยังไม่มีข้อมูล 📭</div>`;
     }
-  } else {
-    // ── Overview: trend line of total sessions per day ──
-    if(metric==='sessions'){
-      const ld=buildLineData(filt,'sessions');
-      renderKPIsOv(filt);
-      document.getElementById('prog-chart-label').textContent='Sessions ต่อวัน';
-      document.getElementById('prog-chart').innerHTML=ld.length
-        ?svgLine(ld,'sessions',false)
-        :`<div class="no-data">ยังไม่มีข้อมูล 🏋️</div>`;
-    } else {
-      // metric overview: trend of daily aggregated value (all exercises combined)
-      const ld=buildLineData(filt,metric);
-      renderKPIsOv(filt);
-      document.getElementById('prog-chart-label').textContent=`${metricLbl(metric)} รายวัน`;
-      document.getElementById('prog-chart').innerHTML=ld.length
-        ?svgLine(ld,metric,false)
-        :`<div class="no-data">ยังไม่มีข้อมูล 🏋️</div>`;
-    }
+  }else{
+    const ld=buildLineData(filt,metric==='sessions'?'sessions':metric);
+    renderKPIsOv(filt);
+    document.getElementById('prog-chart-label').textContent=metric==='sessions'?'Sessions ต่อวัน':`${metricLbl(metric)} รายวัน`;
+    document.getElementById('prog-chart').innerHTML=ld.length?svgLine(ld,metric,false):`<div class="no-data">ยังไม่มีข้อมูล 🏋️</div>`;
     renderTopEx(filt);
   }
 }
-function metricVal(w,m){if(m==='weight')return Number(w.weight)||0;if(m==='volume')return(Number(w.reps)||0)*(Number(w.weight)||0);if(m==='reps')return Number(w.reps)||0;return 1;}
 
-// buildLineData: aggregate raw set-rows into daily values
-// weight  = max weight that day
-// volume  = sum of (reps × weight) all sets that day
-// reps    = max reps in a single set that day
-// sessions= number of distinct sets (rows) that day
 function buildLineData(ws,m){
   const grp={};ws.forEach(w=>{if(!grp[w.date])grp[w.date]=[];grp[w.date].push(w);});
   return Object.entries(grp).sort(([a],[b])=>a.localeCompare(b)).map(([date,items])=>{
@@ -712,23 +753,18 @@ function buildLineData(ws,m){
     return{date,v};
   }).filter(d=>d.v>0);
 }
-
-// calcKPIs now derives from daily aggregates (not raw rows)
 function calcKPIs(ws,m){
   const daily=buildLineData(ws,m);
-  if(!daily.length)return{pr:0,sessions:daily.length,avg:0};
-  const pr=Math.max(...daily.map(d=>d.v));
-  const avg=daily.reduce((s,d)=>s+d.v,0)/daily.length;
-  return{pr,sessions:daily.length,avg};
+  if(!daily.length)return{pr:0,sessions:0,avg:0};
+  return{pr:Math.max(...daily.map(d=>d.v)),sessions:daily.length,avg:daily.reduce((s,d)=>s+d.v,0)/daily.length};
 }
 function renderKPIs({pr,sessions,avg},m){
   const u=m==='weight'?' kg':'';
   document.getElementById('prog-kpi').innerHTML=`<div class="prog-kpi"><span class="prog-kpi-val">${fmt(pr)}${u}</span><div class="prog-kpi-lbl">PR</div></div><div class="prog-kpi"><span class="prog-kpi-val">${sessions}</span><div class="prog-kpi-lbl">Sessions</div></div><div class="prog-kpi"><span class="prog-kpi-val">${fmt(avg)}${u}</span><div class="prog-kpi-lbl">เฉลี่ย</div></div>`;
 }
 function renderKPIsOv(ws){
-  const sessions=[...new Set(ws.map(w=>w.date))].length;
-  const exCount=[...new Set(ws.map(w=>w.exerciseName))].length;
-  const vol=ws.reduce((s,w)=>s+(Number(w.sets)||0)*(Number(w.reps)||0)*(Number(w.weight)||0),0);
+  const sessions=[...new Set(ws.map(w=>w.date))].length,exCount=[...new Set(ws.map(w=>w.exerciseName))].length;
+  const vol=ws.reduce((s,w)=>s+(Number(w.reps)||0)*(Number(w.weight)||0),0);
   document.getElementById('prog-kpi').innerHTML=`<div class="prog-kpi"><span class="prog-kpi-val">${sessions}</span><div class="prog-kpi-lbl">Sessions</div></div><div class="prog-kpi"><span class="prog-kpi-val">${exCount}</span><div class="prog-kpi-lbl">ท่า</div></div><div class="prog-kpi"><span class="prog-kpi-val">${vol>=1000?(vol/1000).toFixed(1)+'k':Math.round(vol)}</span><div class="prog-kpi-lbl">Volume</div></div>`;
 }
 function renderTopEx(ws){
@@ -748,17 +784,12 @@ function renderTopEx(ws){
 const fmt=n=>Number.isFinite(n)?Math.round(n*10)/10:0;
 const metricLbl=m=>({weight:'น้ำหนัก (kg)',volume:'Volume',reps:'Reps',sessions:'Sessions'}[m]||m);
 
-// ── SVG Line Chart (with optional trend line) ─────
+// ── SVG Charts ─────────────────────────────────────
 function svgLine(data,metric,showTrend=false){
   const W=360,H=190,PL=46,PR=14,PT=12,PB=36,cW=W-PL-PR,cH=H-PT-PB;
   const vals=data.map(d=>d.v),minV=Math.min(...vals),maxV=Math.max(...vals),vR=maxV-minV||1;
-  const xs=i=>PL+(i/Math.max(data.length-1,1))*cW;
-  const ys=v=>PT+cH-((v-minV)/vR)*cH;
-  const yLines=[0,.33,.67,1].map(t=>{
-    const v=minV+vR*t,y=ys(v).toFixed(1);
-    const lbl=metric==='volume'&&v>=1000?(v/1000).toFixed(1)+'k':Math.round(v);
-    return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/><text x="${PL-4}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${lbl}</text>`;
-  }).join('');
+  const xs=i=>PL+(i/Math.max(data.length-1,1))*cW,ys=v=>PT+cH-((v-minV)/vR)*cH;
+  const yLines=[0,.33,.67,1].map(t=>{const v=minV+vR*t,y=ys(v).toFixed(1);const lbl=metric==='volume'&&v>=1000?(v/1000).toFixed(1)+'k':Math.round(v);return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/><text x="${PL-4}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${lbl}</text>`;}).join('');
   const step=Math.max(1,Math.ceil(data.length/5));
   const idxs=[...new Set([0,...data.map((_,i)=>i).filter(i=>i%step===0),data.length-1])];
   const xLabels=idxs.map(i=>{const dt=new Date(data[i].date+'T00:00:00');return`<text x="${xs(i).toFixed(1)}" y="${H-5}" text-anchor="middle" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}</text>`;}).join('');
@@ -766,24 +797,15 @@ function svgLine(data,metric,showTrend=false){
   const areaPts=`${PL},${(PT+cH).toFixed(1)} ${pts} ${(W-PR).toFixed(1)},${(PT+cH).toFixed(1)}`;
   const dotR=data.length<=14?4.5:data.length<=30?3.5:2.5;
   const dots=data.map((d,i)=>`<circle cx="${xs(i).toFixed(1)}" cy="${ys(d.v).toFixed(1)}" r="${dotR}" fill="#c8ff3c" stroke="#09090d" stroke-width="2"/>`).join('');
-  // Linear regression trend line
   let trendSvg='';
   if(showTrend&&data.length>=3){
-    const n=data.length,sumX=n*(n-1)/2,sumX2=n*(n-1)*(2*n-1)/6;
-    const sumY=data.reduce((s,d)=>s+d.v,0);
-    const sumXY=data.reduce((s,d,i)=>s+i*d.v,0);
-    const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX);
-    const intercept=(sumY-slope*sumX)/n;
+    const n=data.length,sumX=n*(n-1)/2,sumX2=n*(n-1)*(2*n-1)/6,sumY=data.reduce((s,d)=>s+d.v,0),sumXY=data.reduce((s,d,i)=>s+i*d.v,0);
+    const slope=(n*sumXY-sumX*sumY)/(n*sumX2-sumX*sumX),intercept=(sumY-slope*sumX)/n;
     const ty0=intercept,ty1=slope*(n-1)+intercept;
-    // clamp to data range for display
     const ty0c=Math.max(minV,Math.min(maxV,ty0)),ty1c=Math.max(minV,Math.min(maxV,ty1));
     trendSvg=`<line x1="${xs(0).toFixed(1)}" y1="${ys(ty0c).toFixed(1)}" x2="${xs(n-1).toFixed(1)}" y2="${ys(ty1c).toFixed(1)}" stroke="rgba(200,255,60,.35)" stroke-width="1.5" stroke-dasharray="5,4"/>`;
-    // trend badge
     const pct=ty0>0?((ty1-ty0)/ty0*100):0;
-    if(Math.abs(pct)>0.5){
-      const up=pct>0;
-      trendSvg+=`<text x="${W-PR-2}" y="${PT-2}" text-anchor="end" fill="${up?'#c8ff3c':'#ff4f5a'}" font-size="10" font-weight="700" font-family="Barlow,sans-serif">${up?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%</text>`;
-    }
+    if(Math.abs(pct)>0.5){const up=pct>0;trendSvg+=`<text x="${W-PR-2}" y="${PT-2}" text-anchor="end" fill="${up?'#c8ff3c':'#ff4f5a'}" font-size="10" font-weight="700" font-family="Barlow,sans-serif">${up?'▲':'▼'} ${Math.abs(pct).toFixed(1)}%</text>`;}
   }
   return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
     <defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#c8ff3c" stop-opacity="0.15"/><stop offset="100%" stop-color="#c8ff3c" stop-opacity="0"/></linearGradient></defs>
@@ -791,90 +813,47 @@ function svgLine(data,metric,showTrend=false){
     <polyline points="${pts}" fill="none" stroke="#c8ff3c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
     ${trendSvg}${dots}${xLabels}</svg>`;
 }
-
-// ── Multi-line chart (top exercises in a body part) ─
 const MULTI_COLORS=['#c8ff3c','#38bdf8','#fb923c','#a78bfa','#f472b6'];
 function svgMultiLine(series,metric){
   if(!series.length)return'<div class="no-data">ไม่มีข้อมูล</div>';
-  // collect all dates across series, sort
   const allDates=[...new Set(series.flatMap(s=>s.data.map(d=>d.date)))].sort();
   if(allDates.length<2)return`<svg viewBox="0 0 360 40" style="width:100%"><text x="180" y="24" text-anchor="middle" fill="#7a7a96" font-size="12" font-family="Barlow,sans-serif">ต้องมีอย่างน้อย 2 วัน</text></svg>`;
-  const allVals=series.flatMap(s=>s.data.map(d=>d.v));
-  const minV=Math.min(...allVals),maxV=Math.max(...allVals),vR=maxV-minV||1;
-  const n=allDates.length;
-  const W=360,H=200,PL=46,PR=14,PT=12,PB=44,cW=W-PL-PR,cH=H-PT-PB;
-  const xs=i=>PL+(i/(n-1))*cW;
-  const ys=v=>PT+cH-((v-minV)/vR)*cH;
-  const yLines=[0,.5,1].map(t=>{
-    const v=minV+vR*t,y=ys(v).toFixed(1);
-    const lbl=metric==='volume'&&v>=1000?(v/1000).toFixed(1)+'k':Math.round(v);
-    return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/><text x="${PL-4}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${lbl}</text>`;
-  }).join('');
+  const allVals=series.flatMap(s=>s.data.map(d=>d.v)),minV=Math.min(...allVals),maxV=Math.max(...allVals),vR=maxV-minV||1;
+  const n=allDates.length,W=360,H=200,PL=46,PR=14,PT=12,PB=44,cW=W-PL-PR,cH=H-PT-PB;
+  const xs=i=>PL+(i/(n-1))*cW,ys=v=>PT+cH-((v-minV)/vR)*cH;
+  const yLines=[0,.5,1].map(t=>{const v=minV+vR*t,y=ys(v).toFixed(1);const lbl=metric==='volume'&&v>=1000?(v/1000).toFixed(1)+'k':Math.round(v);return`<line x1="${PL}" y1="${y}" x2="${W-PR}" y2="${y}" stroke="rgba(255,255,255,.05)" stroke-width="1"/><text x="${PL-4}" y="${(parseFloat(y)+4).toFixed(1)}" text-anchor="end" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${lbl}</text>`;}).join('');
   const step=Math.max(1,Math.ceil(n/4));
   const idxs=[...new Set([0,...allDates.map((_,i)=>i).filter(i=>i%step===0),n-1])];
   const xLabels=idxs.map(i=>{const dt=new Date(allDates[i]+'T00:00:00');return`<text x="${xs(i).toFixed(1)}" y="${H-PB+14}" text-anchor="middle" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}</text>`;}).join('');
-  const lines=series.map((s,si)=>{
-    const color=MULTI_COLORS[si%MULTI_COLORS.length];
-    // build points — only where date exists in this series
-    const dateMap=Object.fromEntries(s.data.map(d=>[d.date,d.v]));
-    const validPts=allDates.map((dt,i)=>dateMap[dt]!=null?{i,v:dateMap[dt]}:null).filter(Boolean);
-    if(!validPts.length)return'';
-    const pts=validPts.map(p=>`${xs(p.i).toFixed(1)},${ys(p.v).toFixed(1)}`).join(' ');
-    const dots=validPts.map(p=>`<circle cx="${xs(p.i).toFixed(1)}" cy="${ys(p.v).toFixed(1)}" r="3" fill="${color}" stroke="#09090d" stroke-width="1.5"/>`).join('');
-    return`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>${dots}`;
-  }).join('');
-  // Legend
-  const legend=series.map((s,si)=>{
-    const color=MULTI_COLORS[si%MULTI_COLORS.length];
-    const lbl=s.name.length>12?s.name.slice(0,12)+'…':s.name;
-    const lx=PL+(si%3)*(cW/3),ly=H-PB+26+(Math.floor(si/3)*14);
-    return`<circle cx="${lx+5}" cy="${ly-4}" r="4" fill="${color}"/><text x="${lx+13}" y="${ly}" fill="#eeeef4" font-size="10" font-family="Barlow,sans-serif">${esc(lbl)}</text>`;
-  }).join('');
-  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">
-    ${yLines}${lines}${xLabels}${legend}</svg>`;
+  const lines=series.map((s,si)=>{const color=MULTI_COLORS[si%MULTI_COLORS.length];const dateMap=Object.fromEntries(s.data.map(d=>[d.date,d.v]));const validPts=allDates.map((dt,i)=>dateMap[dt]!=null?{i,v:dateMap[dt]}:null).filter(Boolean);if(!validPts.length)return'';const pts=validPts.map(p=>`${xs(p.i).toFixed(1)},${ys(p.v).toFixed(1)}`).join(' ');const dots=validPts.map(p=>`<circle cx="${xs(p.i).toFixed(1)}" cy="${ys(p.v).toFixed(1)}" r="3" fill="${color}" stroke="#09090d" stroke-width="1.5"/>`).join('');return`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/>${dots}`;}).join('');
+  const legend=series.map((s,si)=>{const color=MULTI_COLORS[si%MULTI_COLORS.length];const lbl=s.name.length>12?s.name.slice(0,12)+'…':s.name;const lx=PL+(si%3)*(cW/3),ly=H-PB+26+(Math.floor(si/3)*14);return`<circle cx="${lx+5}" cy="${ly-4}" r="4" fill="${color}"/><text x="${lx+13}" y="${ly}" fill="#eeeef4" font-size="10" font-family="Barlow,sans-serif">${esc(lbl)}</text>`;}).join('');
+  return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${yLines}${lines}${xLabels}${legend}</svg>`;
 }
 function svgBar(data){
   if(!data.length)return'<div class="no-data">ไม่มีข้อมูล</div>';
   const maxV=Math.max(...data.map(d=>d.v));
   const rowH=32,gap=7,W=360,PL=74,PR=44,bW=W-PL-PR,H=data.length*(rowH+gap)+gap;
-  const bars=data.map((d,i)=>{
-    const y=gap+i*(rowH+gap),bw=Math.max((d.v/maxV)*bW,4);
-    const lbl=d.l.length>9?d.l.slice(0,9)+'…':d.l;
-    return`<text x="${PL-8}" y="${(y+rowH*.66).toFixed(1)}" text-anchor="end" fill="#eeeef4" font-size="12" font-weight="500" font-family="Barlow,sans-serif">${esc(lbl)}</text><rect x="${PL}" y="${y+7}" width="${bw.toFixed(1)}" height="${rowH-14}" rx="5" fill="rgba(200,255,60,.75)"/><text x="${(PL+bw+7).toFixed(1)}" y="${(y+rowH*.66).toFixed(1)}" fill="#7a7a96" font-size="12" font-weight="600" font-family="Barlow Condensed,sans-serif">${d.v}</text>`;
-  }).join('');
+  const bars=data.map((d,i)=>{const y=gap+i*(rowH+gap),bw=Math.max((d.v/maxV)*bW,4);const lbl=d.l.length>9?d.l.slice(0,9)+'…':d.l;return`<text x="${PL-8}" y="${(y+rowH*.66).toFixed(1)}" text-anchor="end" fill="#eeeef4" font-size="12" font-weight="500" font-family="Barlow,sans-serif">${esc(lbl)}</text><rect x="${PL}" y="${y+7}" width="${bw.toFixed(1)}" height="${rowH-14}" rx="5" fill="rgba(200,255,60,.75)"/><text x="${(PL+bw+7).toFixed(1)}" y="${(y+rowH*.66).toFixed(1)}" fill="#7a7a96" font-size="12" font-weight="600" font-family="Barlow Condensed,sans-serif">${d.v}</text>`;}).join('');
   return`<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${bars}</svg>`;
 }
 
 // ═══════════════ LOG — SET BY SET ════════════════
-function initLog(){
-  document.getElementById('log-date').value=todayStr();
-  document.getElementById('log-exercises').innerHTML='';
-  addExBlock();
-}
+function initLog(){document.getElementById('log-date').value=todayStr();document.getElementById('log-exercises').innerHTML='';addExBlock();}
 function addExBlock(){
-  const container=document.getElementById('log-exercises');
-  const idx=container.children.length;
-  const div=document.createElement('div');
-  div.className='ex-block';
+  const container=document.getElementById('log-exercises'),idx=container.children.length;
+  const div=document.createElement('div');div.className='ex-block';
   div.innerHTML=`
     <div class="ex-block-head">
       <span class="ex-block-num">EXERCISE ${idx+1}</span>
       ${idx>0?`<button type="button" class="ex-block-del" onclick="delExBlock(this)">×</button>`:''}
     </div>
-    <div class="ex-sel-wrap">
-      <div class="field" style="margin-bottom:0">
-        <label>ท่าออกกำลังกาย</label>
-        <select class="input ex-sel" onchange="onExSel(this)"><option value="">— เลือกท่า —</option></select>
-        <input type="text" class="input custom-ex" style="display:none;margin-top:8px" placeholder="พิมพ์ชื่อท่า...">
-      </div>
-    </div>
+    <div class="ex-sel-wrap"><div class="field" style="margin-bottom:0">
+      <label>ท่าออกกำลังกาย</label>
+      <select class="input ex-sel" onchange="onExSel(this)"><option value="">— เลือกท่า —</option></select>
+      <input type="text" class="input custom-ex" style="display:none;margin-top:8px" placeholder="พิมพ์ชื่อท่า...">
+    </div></div>
     <div class="sets-table">
-      <div class="sets-header">
-        <div class="sets-col-lbl"></div>
-        <div class="sets-col-lbl">REPS</div>
-        <div class="sets-col-lbl">KG</div>
-        <div style="width:28px"></div>
-      </div>
+      <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl">REPS</div><div class="sets-col-lbl">KG</div><div style="width:28px"></div></div>
       <div class="sets-list"></div>
     </div>
     <button type="button" class="add-set-btn" onclick="addSetToBlock(this)">
@@ -886,79 +865,51 @@ function addExBlock(){
   addSetRow(div.querySelector('.sets-list'),1);
   if(idx>0)div.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
-function addSetToBlock(btn){
-  const sl=btn.closest('.ex-block').querySelector('.sets-list');
-  addSetRow(sl,sl.children.length+1);
-}
+function addSetToBlock(btn){const sl=btn.closest('.ex-block').querySelector('.sets-list');addSetRow(sl,sl.children.length+1);}
 function addSetRow(sl,n){
   const prev=sl.lastElementChild;
-  const pReps=prev?prev.querySelector('[name=reps]').value:'10';
-  const pWt  =prev?prev.querySelector('[name=weight]').value:'';
-  const row=document.createElement('div');
-  row.className='set-row';
-  row.innerHTML=`
-    <span class="set-lbl">S${n}</span>
-    <input class="set-inp" type="number" name="reps"   min="0" inputmode="numeric" placeholder="Reps" value="${pReps}">
-    <input class="set-inp" type="number" name="weight" min="0" step="0.5" inputmode="decimal" placeholder="kg" value="${pWt}">
-    <button type="button" class="set-del" onclick="delSetRow(this)">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>`;
+  const pR=prev?prev.querySelector('[name=reps]').value:'10',pW=prev?prev.querySelector('[name=weight]').value:'';
+  const row=document.createElement('div');row.className='set-row';
+  row.innerHTML=`<span class="set-lbl">S${n}</span><input class="set-inp" type="number" name="reps" min="0" inputmode="numeric" placeholder="Reps" value="${pR}"><input class="set-inp" type="number" name="weight" min="0" step="0.5" inputmode="decimal" placeholder="kg" value="${pW}"><button type="button" class="set-del" onclick="delSetRow(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   sl.appendChild(row);
-  // micro-animation
   row.style.cssText='opacity:0;transform:translateX(-6px)';
   requestAnimationFrame(()=>{row.style.cssText='transition:opacity .14s,transform .14s;opacity:1;transform:translateX(0)';});
 }
-function delSetRow(btn){
-  const sl=btn.closest('.sets-list');
-  if(sl.children.length<=1)return toast('ต้องมีอย่างน้อย 1 set','err');
-  btn.closest('.set-row').remove();
-  [...sl.children].forEach((r,i)=>r.querySelector('.set-lbl').textContent='S'+(i+1));
-}
-function delExBlock(btn){
-  btn.closest('.ex-block').remove();
-  document.querySelectorAll('.ex-block-num').forEach((el,i)=>(el.textContent='EXERCISE '+(i+1)));
-}
-function onExSel(sel){
-  const cust=sel.closest('.ex-block').querySelector('.custom-ex');
-  const isCust=sel.value==='__custom';
-  cust.style.display=isCust?'block':'none';
-  if(isCust)cust.focus();
-}
-function populateSel(sel){
-  if(!sel)return;
-  const v=sel.value;
-  sel.innerHTML=`<option value="">— เลือกท่า —</option>${S.exOpts}<option value="__custom">อื่นๆ (พิมพ์เอง)</option>`;
-  if(v)sel.value=v;
-}
+function delSetRow(btn){const sl=btn.closest('.sets-list');if(sl.children.length<=1)return toast('ต้องมีอย่างน้อย 1 set','err');btn.closest('.set-row').remove();[...sl.children].forEach((r,i)=>r.querySelector('.set-lbl').textContent='S'+(i+1));}
+function delExBlock(btn){btn.closest('.ex-block').remove();document.querySelectorAll('.ex-block-num').forEach((el,i)=>(el.textContent='EXERCISE '+(i+1)));}
+function onExSel(sel){const cust=sel.closest('.ex-block').querySelector('.custom-ex');const isCust=sel.value==='__custom';cust.style.display=isCust?'block':'none';if(isCust)cust.focus();}
+function populateSel(sel){if(!sel)return;const v=sel.value;sel.innerHTML=`<option value="">— เลือกท่า —</option>${S.exOpts}<option value="__custom">อื่นๆ (พิมพ์เอง)</option>`;if(v)sel.value=v;}
+
 async function saveWorkout(){
   const date=document.getElementById('log-date').value;
   if(!date)return toast('กรุณาเลือกวันที่','err');
   const blocks=[...document.querySelectorAll('.ex-block')];
-  const workouts=[];
+  const docs=[];
   for(let i=0;i<blocks.length;i++){
-    const block=blocks[i];
-    const sel=block.querySelector('.ex-sel');
-    const cust=block.querySelector('.custom-ex');
+    const block=blocks[i],sel=block.querySelector('.ex-sel'),cust=block.querySelector('.custom-ex');
     const exName=sel.value==='__custom'?cust.value.trim():sel.value;
     if(!exName)return toast(`กรุณาเลือกท่า ${i+1}`,'err');
     const notes=block.querySelector('[name=notes]').value||'';
-    const rows=[...block.querySelectorAll('.sets-list .set-row')];
-    for(let j=0;j<rows.length;j++){
-      const reps=Number(rows[j].querySelector('[name=reps]').value)||0;
-      const weight=Number(rows[j].querySelector('[name=weight]').value)||0;
-      workouts.push({date,exerciseName:exName,sets:1,reps,weight,duration:0,notes:j===0?notes:''});
-    }
+    [...block.querySelectorAll('.sets-list .set-row')].forEach((row,j)=>{
+      docs.push({date,exerciseName:exName,sets:1,reps:Number(row.querySelector('[name=reps]').value)||0,weight:Number(row.querySelector('[name=weight]').value)||0,duration:0,notes:j===0?notes:'',createdAt:TS()});
+    });
   }
-  if(!workouts.length)return toast('ไม่มีข้อมูล','err');
+  if(!docs.length)return toast('ไม่มีข้อมูล','err');
   const btn=document.getElementById('btn-save');
   btn.disabled=true;btn.textContent='กำลังบันทึก...';
-  const r=await api('addWorkouts',{workouts});
-  btn.disabled=false;btn.textContent='บันทึก Workout 💪';
-  if(r.success){S._pc=null;toast('บันทึกสำเร็จ 💪','ok');initLog();}
-  else toast(r.message||'บันทึกไม่สำเร็จ','err');
+  try{
+    // Batch write — faster than multiple addDoc calls
+    const batch=db.batch();
+    docs.forEach(d=>batch.set(woCol().doc(),d));
+    await batch.commit();
+    S._pc=null;
+    toast('บันทึกสำเร็จ 💪','ok');
+    initLog();
+  }catch(err){toast(err.message||'บันทึกไม่สำเร็จ','err');}
+  finally{btn.disabled=false;btn.textContent='บันทึก Workout 💪';}
 }
 
-// ═══════════════ HISTORY ═════════════════════════
+// ═══════════════ HISTORY ══════════════════════════
 function populateHistFilters(){
   const bpSel=document.getElementById('f-bp');
   bpSel.innerHTML=`<option value="">ทั้งหมด</option>`+getDistinctBPs().map(b=>`<option value="${esc(b)}" ${b===bpSel.value?'selected':''}>${esc(b)}</option>`).join('');
@@ -974,52 +925,40 @@ let _hl=false;
 async function loadHist(){
   if(_hl)return;_hl=true;
   document.getElementById('hist-list').innerHTML=skelRecent(5);
-  const bp=document.getElementById('f-bp')?.value||'';
-  const apiFilters={from:document.getElementById('f-from').value,to:document.getElementById('f-to').value,exercise:bp?'':(document.getElementById('f-ex').value||'')};
-  const r=await api('getWorkouts',{filters:apiFilters});
-  _hl=false;
-  if(r.success){
-    let data=normWO(r.data);
+  const from=document.getElementById('f-from').value,to=document.getElementById('f-to').value;
+  const bp=document.getElementById('f-bp').value,exFilter=document.getElementById('f-ex').value;
+  try{
+    let q=woCol().orderBy('date','desc');
+    if(from)q=q.where('date','>=',from);
+    if(to)  q=q.where('date','<=',to);
+    const snap=await q.get();
+    let data=snap.docs.map(d=>({...d.data(),workoutId:d.id}));
     if(bp)data=data.filter(w=>getExCat(w.exerciseName)===bp);
-    const ex2=document.getElementById('f-ex').value;
-    if(bp&&ex2)data=data.filter(w=>w.exerciseName===ex2);
+    if(exFilter)data=data.filter(w=>w.exerciseName===exFilter);
     S._hd=data;renderHist(data);
-  }else{document.getElementById('hist-list').innerHTML=`<p style="color:var(--ts);text-align:center;padding:32px 0;font-size:14px">${esc(r.message)}</p>`;}
+  }catch(err){
+    if(err.code==='failed-precondition'){
+      document.getElementById('hist-list').innerHTML=`<div class="no-data" style="font-size:12px;line-height:2">ต้องสร้าง Index ก่อน<br><a href="${err.message.match(/https[^\s]+/)?.[0]||'https://console.firebase.google.com'}" target="_blank" style="color:var(--a)">คลิกสร้าง Index อัตโนมัติ ↗</a></div>`;
+    }else document.getElementById('hist-list').innerHTML=`<p style="color:var(--ts);text-align:center;padding:32px 0;font-size:14px">${esc(err.message)}</p>`;
+  }finally{_hl=false;}
 }
 function renderHist(list){
   const el=document.getElementById('hist-list');
   if(!list.length){el.innerHTML='<p style="color:var(--ts);text-align:center;padding:40px 0;font-size:14px;line-height:2.4">ไม่มีข้อมูลในช่วงนี้</p>';return;}
-  // Group by date → exercise
   const byDate={};
-  list.forEach((w,idx)=>{
-    if(!byDate[w.date])byDate[w.date]={};
-    if(!byDate[w.date][w.exerciseName])byDate[w.date][w.exerciseName]=[];
-    byDate[w.date][w.exerciseName].push({...w,_idx:idx});
-  });
+  list.forEach((w,idx)=>{if(!byDate[w.date])byDate[w.date]={};if(!byDate[w.date][w.exerciseName])byDate[w.date][w.exerciseName]=[];byDate[w.date][w.exerciseName].push({...w,_idx:idx});});
   el.innerHTML=Object.entries(byDate).sort(([a],[b])=>b.localeCompare(a)).map(([date,exercises])=>`
     <div class="day-group">
-      <div class="day-lbl">
-        <span>${formatDate(date)}</span>
-        <button class="day-del-btn" onclick="confirmDelDay('${esc(date)}')">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>ลบทั้งวัน
-        </button>
-      </div>
+      <div class="day-lbl"><span>${formatDate(date)}</span><button class="day-del-btn" onclick="confirmDelDay('${esc(date)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>ลบทั้งวัน</button></div>
       ${Object.entries(exercises).map(([exName,sets])=>`
         <div class="hist-ex-group">
           <div class="hist-ex-head">
             <span style="font-size:14px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(exName)}</span>
             <span class="badge bp" style="flex-shrink:0">${esc(getExCat(exName))}</span>
-            <button class="wo-del-btn" onclick="confirmDelWOs(${JSON.stringify(sets.map(s=>s._idx))},'${esc(exName)}')" title="ลบ" style="flex-shrink:0">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>
-            </button>
+            <button class="wo-del-btn" onclick="confirmDelWOs(${JSON.stringify(sets.map(s=>s._idx))},'${esc(exName)}')" title="ลบ" style="flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg></button>
           </div>
           <div style="padding-left:12px">
-            ${sets.map((s,si)=>`
-              <div class="hist-set-row">
-                <span class="hist-set-lbl">S${si+1}</span>
-                <span class="hist-set-val">${s.reps||0} reps${Number(s.weight)?` × ${s.weight} kg`:''}</span>
-                ${s.notes?`<span style="color:var(--td);font-size:11px;margin-left:6px">· ${esc(s.notes)}</span>`:''}
-              </div>`).join('')}
+            ${sets.map((s,si)=>`<div class="hist-set-row"><span class="hist-set-lbl">S${si+1}</span><span class="hist-set-val">${s.reps||0} reps${Number(s.weight)?` × ${s.weight} kg`:''}</span>${s.notes?`<span style="color:var(--td);font-size:11px;margin-left:6px">· ${esc(s.notes)}</span>`:''}</div>`).join('')}
           </div>
         </div>`).join('')}
     </div>`).join('');
@@ -1027,17 +966,24 @@ function renderHist(list){
 function confirmDelWOs(idxArr,exName){showConfirm(`ลบ ${esc(exName)}?`,`${idxArr.length} set จะถูกลบถาวร`,()=>deleteWOs(idxArr));}
 async function deleteWOs(idxArr){
   const items=idxArr.map(i=>S._hd[i]).filter(Boolean);
-  const ids=items.map(w=>w.workoutId).filter(Boolean);
-  if(!ids.length){toast('ไม่พบ workoutId — ลองโหลดใหม่','err');return;}
-  const r=await api('deleteWorkouts',{workoutIds:ids});
-  if(r.success){const ds=new Set(idxArr);S._hd=S._hd.filter((_,i)=>!ds.has(i));S._pc=null;toast('ลบเรียบร้อย','ok');renderHist(S._hd);}
-  else toast(r.message||'ลบไม่สำเร็จ','err');
+  if(!items.length)return toast('ไม่พบข้อมูล','err');
+  try{
+    const batch=db.batch();
+    items.forEach(w=>batch.delete(woCol().doc(w.workoutId)));
+    await batch.commit();
+    const ds=new Set(idxArr);S._hd=S._hd.filter((_,i)=>!ds.has(i));S._pc=null;
+    toast('ลบเรียบร้อย','ok');renderHist(S._hd);
+  }catch(err){toast(err.message||'ลบไม่สำเร็จ','err');}
 }
 function confirmDelDay(date){const cnt=S._hd.filter(w=>w.date===date).length;showConfirm('ลบทั้งวัน?',`ลบ ${cnt} รายการของวันที่ ${formatDate(date)}`,()=>deleteDay(date));}
 async function deleteDay(date){
-  const r=await api('deleteWorkoutsByDate',{date});
-  if(r.success){S._hd=S._hd.filter(w=>w.date!==date);S._pc=null;toast(`ลบวัน ${formatDate(date)} แล้ว`,'ok');renderHist(S._hd);}
-  else toast(r.message||'ลบไม่สำเร็จ','err');
+  try{
+    const snap=await woCol().where('date','==',date).get();
+    const batch=db.batch();snap.docs.forEach(d=>batch.delete(d.ref));
+    await batch.commit();
+    S._hd=S._hd.filter(w=>w.date!==date);S._pc=null;
+    toast(`ลบวัน ${formatDate(date)} แล้ว`,'ok');renderHist(S._hd);
+  }catch(err){toast(err.message||'ลบไม่สำเร็จ','err');}
 }
 
 // ═══════════════ SETTINGS ════════════════════════
@@ -1059,63 +1005,64 @@ async function saveProfile(){
   const newName=document.getElementById('edit-display-name').value.trim();
   const newPass=document.getElementById('edit-password').value;
   if(!newName)return toast('กรุณากรอกชื่อ','err');
-  S.user={...S.user,displayName:newName};localStorage.setItem('lu',JSON.stringify(S.user));
+  const updates={displayName:newName};
+  await uref().update(updates);
+  S.user={...S.user,displayName:newName};
   document.getElementById('u-name').textContent=newName;
   document.getElementById('profile-name-display').textContent=newName;
   document.getElementById('profile-avatar').textContent=newName.charAt(0).toUpperCase();
-  const p={displayName:newName};if(newPass)p.password=newPass;
-  await api('updateProfile',p);toast('บันทึกโปรไฟล์สำเร็จ','ok');
+  if(newPass){
+    try{await auth.currentUser.updatePassword(newPass);toast('บันทึกสำเร็จ','ok');}
+    catch(err){toast(err.message,'err');return;}
+  }else toast('บันทึกสำเร็จ','ok');
   document.getElementById('edit-password').value='';toggleEditProfile();
 }
+
 function toggleAddExForm(){const f=document.getElementById('add-ex-form');f.classList.toggle('hidden');if(!f.classList.contains('hidden'))document.getElementById('new-ex-name').focus();}
 async function addExercise(){
-  const name=document.getElementById('new-ex-name').value.trim();
-  const bp=document.getElementById('new-ex-bp').value;
+  const name=document.getElementById('new-ex-name').value.trim(),bp=document.getElementById('new-ex-bp').value;
   if(!name)return toast('กรุณากรอกชื่อท่า','err');
   if(!bp)return toast('กรุณาเลือก Body Part','err');
   if(S.exercises.find(e=>e.name.toLowerCase()===name.toLowerCase()))return toast('ท่านี้มีอยู่แล้ว','err');
-  const r=await api('addExercise',{name,category:bp});
-  if(r.success){
+  try{
+    await exCol().add({name,category:bp,createdAt:TS()});
     await loadExercises();
     document.getElementById('new-ex-name').value='';document.getElementById('new-ex-bp').value='';
     toggleAddExForm();
     renderExList(document.getElementById('ex-search').value||'');
     populateProgFilters();populateHistFilters();
     toast(`เพิ่ม "${name}" สำเร็จ ✓`,'ok');
-  }else toast(r.message||'เพิ่มไม่สำเร็จ','err');
+  }catch(err){toast(err.message||'เพิ่มไม่สำเร็จ','err');}
 }
 function toggleExEdit(id){
-  const row=document.getElementById('ex-edit-'+id);
-  if(!row)return;
+  const row=document.getElementById('ex-edit-'+id);if(!row)return;
   const isHidden=row.classList.contains('hidden');
   document.querySelectorAll('.ex-edit-row').forEach(r=>r.classList.add('hidden'));
   if(isHidden)row.classList.remove('hidden');
 }
 async function saveExEdit(id){
   const row=document.getElementById('ex-edit-'+id);
-  const newName=row.querySelector('.ex-edit-inp').value.trim();
-  const newBP=row.querySelector('.bp-sel').value;
+  const newName=row.querySelector('.ex-edit-inp').value.trim(),newBP=row.querySelector('.bp-sel').value;
   if(!newName)return toast('กรุณากรอกชื่อ','err');
-  const ex=S.exercises.find(e=>String(e.id)===String(id));
-  if(ex&&newName.toLowerCase()!==ex.name.toLowerCase()&&S.exercises.find(e=>e.name.toLowerCase()===newName.toLowerCase()))
-    return toast('ชื่อนี้มีอยู่แล้ว','err');
-  const r=await api('updateExercise',{exerciseId:id,name:newName,category:newBP});
-  if(r.success){
+  const ex=S.exercises.find(e=>e.id===id);
+  if(ex&&newName.toLowerCase()!==ex.name.toLowerCase()&&S.exercises.find(e=>e.name.toLowerCase()===newName.toLowerCase()))return toast('ชื่อนี้มีอยู่แล้ว','err');
+  try{
+    await exCol().doc(id).update({name:newName,category:newBP});
     await loadExercises();
     renderExList(document.getElementById('ex-search').value||'');
     populateProgFilters();populateHistFilters();
     toast('แก้ไขสำเร็จ','ok');
-  }else toast(r.message||'แก้ไขไม่สำเร็จ','err');
+  }catch(err){toast(err.message||'แก้ไขไม่สำเร็จ','err');}
 }
-function confirmDeleteEx(id,name){showConfirm('ลบท่าออกกำลังกาย?',`"${name}" จะถูกลบออกจากรายการ`,()=>deleteEx(id,name));}
+function confirmDeleteEx(id,name){showConfirm('ลบท่าออกกำลังกาย?',`"${name}" จะถูกลบออกจากรายการ`,()=>deleteEx(id));}
 async function deleteEx(id){
-  const r=await api('deleteExercise',{exerciseId:id});
-  if(r.success){
+  try{
+    await exCol().doc(id).delete();
     await loadExercises();
     renderExList(document.getElementById('ex-search').value||'');
     populateProgFilters();populateHistFilters();
     toast('ลบเรียบร้อย','ok');
-  }else toast(r.message||'ลบไม่สำเร็จ','err');
+  }catch(err){toast(err.message||'ลบไม่สำเร็จ','err');}
 }
 let _exT;
 function renderExList(q){clearTimeout(_exT);_exT=setTimeout(()=>_renderExList(q),80);}
@@ -1123,19 +1070,16 @@ function _renderExList(query){
   const q=(query||'').toLowerCase();
   const filt=q?S.exercises.filter(e=>e.name.toLowerCase().includes(q)||e.cat.toLowerCase().includes(q)):S.exercises;
   const el=document.getElementById('ex-list');
-  if(!S.exercises.length){el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--ts);font-size:13px;line-height:2">ยังไม่มีท่า<br>กด "+ เพิ่ม" เพื่อเริ่มเพิ่มท่าของคุณ</div>`;return;}
+  if(!S.exercises.length){el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--ts);font-size:13px;line-height:2">ยังไม่มีท่า<br>กด "+ เพิ่ม" เพื่อเริ่ม</div>`;return;}
   if(!filt.length){el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--ts);font-size:13px">ไม่พบ "${query}"</div>`;return;}
   el.innerHTML=filt.map(e=>{
-    const sid=String(e.id).replace(/'/g,'&#39;');
-    const sname=esc(e.name).replace(/'/g,'&#39;');
+    const sid=String(e.id).replace(/'/g,'&#39;'),sname=esc(e.name).replace(/'/g,'&#39;');
     const opts=BODY_PARTS.map(b=>`<option value="${b}" ${b===e.cat?'selected':''}>${b}</option>`).join('');
     return`<div>
       <div class="ex-mgmt-item">
         <div class="ex-mgmt-name">${esc(e.name)}<span class="badge bp" style="font-size:9px;margin-left:7px">${esc(e.cat)}</span></div>
         <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-          <button class="icon-btn" onclick="toggleExEdit('${sid}')" title="แก้ไข">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </button>
+          <button class="icon-btn" onclick="toggleExEdit('${sid}')" title="แก้ไข"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
           <button class="icon-btn del" onclick="confirmDeleteEx('${sid}','${sname}')">✕</button>
         </div>
       </div>
@@ -1148,11 +1092,11 @@ function _renderExList(query){
   }).join('');
 }
 
-// ── Helpers ───────────────────────────────────────
-const todayStr=()=>new Date().toISOString().slice(0,10);
-function metaStr(w){const p=[];if(w.sets&&w.reps)p.push(`${w.sets}×${w.reps}`);if(Number(w.weight))p.push(`${w.weight} kg`);if(Number(w.duration))p.push(`${w.duration} นาที`);return p.join(' · ')||'—';}
-function relDate(d){const ds=normDate(d),diff=Math.floor((Date.now()-new Date(ds+'T00:00:00'))/864e5);if(diff===0)return'วันนี้';if(diff===1)return'เมื่อวาน';if(diff<7)return`${diff} วันก่อน`;return formatDate(ds);}
-function formatDate(d){const ds=normDate(d);if(!ds)return'';const dt=new Date(ds+'T00:00:00');return`${DAYS_TH[dt.getDay()]} ${dt.getDate()} ${MONTHS_TH[dt.getMonth()]} ${dt.getFullYear()+543}`;}
+// ── Helpers ────────────────────────────────────────
+const todayStr  =()=>new Date().toISOString().slice(0,10);
+function metaStr(w){const p=[];if(w.reps)p.push(`${w.reps} reps`);if(Number(w.weight))p.push(`${w.weight} kg`);return p.join(' × ')||'—';}
+function relDate(d){const diff=Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5);if(diff===0)return'วันนี้';if(diff===1)return'เมื่อวาน';if(diff<7)return`${diff} วันก่อน`;return formatDate(d);}
+function formatDate(d){if(!d)return'';const dt=new Date(d+'T00:00:00');return`${DAYS_TH[dt.getDay()]} ${dt.getDate()} ${MONTHS_TH[dt.getMonth()]} ${dt.getFullYear()+543}`;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 init();
