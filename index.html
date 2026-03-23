@@ -298,11 +298,12 @@ select.input{cursor:pointer}
     z-index:100;pointer-events:none;
     box-shadow:0 0 0 1px rgba(255,255,255,.07),inset 0 1px 1px rgba(255,255,255,.04);
   }
-  #v-auth{
+  /* Only apply flex layout when NOT hidden */
+  #v-auth:not(.hidden){
     flex:1!important;overflow-y:auto!important;
-    min-height:0!important;display:block!important;
+    min-height:0!important;display:flex!important;
   }
-  #v-main{
+  #v-main:not(.hidden){
     flex:1!important;display:flex!important;flex-direction:column!important;
     overflow:hidden!important;min-height:0!important;
   }
