@@ -500,7 +500,7 @@ select.input{cursor:pointer}
     <!-- Version -->
     <div style="text-align:center;padding:16px 0 4px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--a);letter-spacing:2px">LIFT</div>
-      <div style="font-size:12px;color:var(--td);margin-top:4px">v6.0 · Firebase · © 2025</div>
+      <div style="font-size:12px;color:var(--td);margin-top:4px">v7.0 · Firebase · © 2025</div>
     </div>
   </div>
   <nav class="bottom-nav">
@@ -1309,7 +1309,7 @@ function _renderExList(query){
   if(!filt.length){el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--ts);font-size:13px">ไม่พบ "${query}"</div>`;return;}
   el.innerHTML=filt.map(e=>{
     const sid=String(e.id).replace(/'/g,'&#39;'),sname=esc(e.name).replace(/'/g,'&#39;');
-    const opts=BODY_PARTS.map(b=>`<option value="${b}" ${b===e.cat?'selected':''}>${b}</option>`).join('');
+    const opts=getBodyParts().map(b=>`<option value="${b}" ${b===e.cat?'selected':''}>${b}</option>`).join('');
     return`<div>
       <div class="ex-mgmt-item">
         <div class="ex-mgmt-name">${esc(e.name)}<span class="badge bp" style="font-size:9px;margin-left:7px">${esc(e.cat)}</span></div>
@@ -1676,11 +1676,46 @@ function renderBPList(){
   el.innerHTML=arr.map(b=>{
     const isDefault=DEFAULT_BODY_PARTS.includes(b);
     const safe=esc(b).replace(/'/g,"&#39;");
-    return`<div class="bp-item">
-      <div class="bp-item-name">${esc(b)}</div>
-      ${isDefault?`<span style="font-size:10px;color:var(--td)">เริ่มต้น</span>`:`<button class="icon-btn del" onclick="confirmDeleteBP('${safe}')">✕</button>`}
+    const eid='bpe-'+encodeURIComponent(b).replace(/%/g,'_');
+    return`<div>
+      <div class="bp-item">
+        <div class="bp-item-name">${esc(b)}</div>
+        ${isDefault
+          ?`<span style="font-size:10px;color:var(--td)">เริ่มต้น</span>`
+          :`<div style="display:flex;gap:5px;flex-shrink:0">
+              <button class="icon-btn" onclick="toggleBPEdit('${safe}','${eid}')" title="แก้ไข"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+              <button class="icon-btn del" onclick="confirmDeleteBP('${safe}')">✕</button>
+            </div>`}
+      </div>
+      ${!isDefault?`<div id="${eid}" class="ex-edit-row hidden">
+        <input class="ex-edit-inp" type="text" value="${esc(b)}" placeholder="ชื่อ Body Part" onkeydown="if(event.key==='Enter')saveBPEdit('${safe}','${eid}')">
+        <button class="btn btn-sm" style="padding:7px 11px;font-size:13px;font-family:'Barlow',sans-serif;font-weight:600;letter-spacing:0;width:auto;flex-shrink:0" onclick="saveBPEdit('${safe}','${eid}')">บันทึก</button>
+      </div>`:''}
     </div>`;
   }).join('');
+}
+function toggleBPEdit(name,eid){
+  const row=document.getElementById(eid);if(!row)return;
+  const isHidden=row.classList.contains('hidden');
+  document.querySelectorAll('#bp-list .ex-edit-row').forEach(r=>r.classList.add('hidden'));
+  if(isHidden){row.classList.remove('hidden');row.querySelector('.ex-edit-inp').focus();}
+}
+function saveBPEdit(oldName,eid){
+  const row=document.getElementById(eid);if(!row)return;
+  const newName=row.querySelector('.ex-edit-inp').value.trim();
+  if(!newName)return toast('กรุณากรอกชื่อ','err');
+  if(newName.toLowerCase()===oldName.toLowerCase()){row.classList.add('hidden');return;}
+  const arr=getBodyParts();
+  if(arr.find(b=>b.toLowerCase()===newName.toLowerCase()))return toast('ชื่อนี้มีอยู่แล้ว','err');
+  const idx=arr.indexOf(oldName);if(idx===-1)return toast('ไม่พบ Body Part','err');
+  arr[idx]=newName;
+  saveBodyParts(arr);
+  S.exercises.forEach(e=>{if(e.cat===oldName)e.cat=newName;});
+  buildExOpts();
+  renderBPList();
+  document.getElementById('new-ex-bp').innerHTML=`<option value="">— เลือก —</option>`+getBodyParts().map(b=>`<option value="${b}">${b}</option>`).join('');
+  populateProgFilters();populateHistFilters();
+  toast(`เปลี่ยนชื่อเป็น "${newName}" สำเร็จ`,'ok');
 }
 
 
