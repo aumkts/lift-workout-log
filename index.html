@@ -832,7 +832,7 @@ function renderStats(d){
       </div>
     </div>
     <div class="stat-wide" style="animation:countUp .35s .13s ease both"><div class="stat-wide-lbl">ท่าที่ชอบ</div><div class="stat-wide-val">${esc(d.favoriteExercise||'—')}</div></div>
-    <div class="stat-wide" style="animation:countUp .35s .17s ease both"><div class="stat-wide-lbl">น้ำหนักรวมที่ยก</div><div class="stat-big"><span>${d.totalWeight.toLocaleString()}</span><span class="stat-unit">kg</span></div></div>`;
+    <div class="stat-wide" style="animation:countUp .35s .17s ease both"><div class="stat-wide-lbl">น้ำหนักรวมที่ยก</div><div class="stat-big"><span>${d.totalWeight.toLocaleString()}</span><span class="stat-unit" id="stat-unit-lbl">kg</span></div></div>`;
 }
 
 function renderDashChart(workouts){
@@ -971,7 +971,7 @@ function calcKPIs(ws,m){
   return{pr:Math.max(...daily.map(d=>d.v)),sessions:daily.length,avg:daily.reduce((s,d)=>s+d.v,0)/daily.length};
 }
 function renderKPIs({pr,sessions,avg},m){
-  const u=m==='weight'?' kg':'';
+  const u=m==='weight'?' '+unitLabel():'';
   document.getElementById('prog-kpi').innerHTML=`<div class="prog-kpi"><span class="prog-kpi-val">${fmt(pr)}${u}</span><div class="prog-kpi-lbl">PR</div></div><div class="prog-kpi"><span class="prog-kpi-val">${sessions}</span><div class="prog-kpi-lbl">Sessions</div></div><div class="prog-kpi"><span class="prog-kpi-val">${fmt(avg)}${u}</span><div class="prog-kpi-lbl">เฉลี่ย</div></div>`;
 }
 function renderKPIsOv(ws){
@@ -994,7 +994,7 @@ function renderTopEx(ws){
     </div>`).join('');
 }
 const fmt=n=>Number.isFinite(n)?Math.round(n*10)/10:0;
-const metricLbl=m=>({weight:'น้ำหนัก (kg)',volume:'Volume',reps:'Reps',sessions:'Sessions'}[m]||m);
+const metricLbl=m=>({weight:`น้ำหนัก (${unitLabel()})`,volume:'Volume',reps:'Reps',sessions:'Sessions'}[m]||m);
 
 // ── SVG Charts ─────────────────────────────────────
 function svgLine(data,metric,showTrend=false){
@@ -1368,7 +1368,7 @@ function renderPlans(){
       <div class="plan-ex-row">
         <div class="plan-ex-dot"></div>
         <div class="plan-ex-name">${esc(e.exerciseName||'')}</div>
-        <div class="plan-ex-detail">${e.sets||0}×${e.reps||0}${Number(e.weight)?` · ${e.weight}kg`:''}</div>
+        <div class="plan-ex-detail">${e.sets||0}×${e.reps||0}${Number(e.weight)?` · ${toDisplay(e.weight)}${unitLabel()}`:''}</div>
       </div>`).join('');
     return`<div class="plan-card" id="pc-${sid}">
       <div class="plan-card-head" onclick="togglePlanCard('${sid}')">
@@ -1446,7 +1446,7 @@ function addPlanExBlock(prefill=null){
     <div class="plan-inp-row">
       <div class="field" style="margin-bottom:0"><label>Sets</label><input class="input plan-sets" type="number" min="1" value="${prefill?.sets||3}" inputmode="numeric" style="text-align:center"></div>
       <div class="field" style="margin-bottom:0"><label>Reps</label><input class="input plan-reps" type="number" min="1" value="${prefill?.reps||10}" inputmode="numeric" style="text-align:center"></div>
-      <div class="field" style="margin-bottom:0"><label>kg</label><input class="input plan-weight" type="number" min="0" step="0.5" value="${prefill?.weight||''}" inputmode="decimal" placeholder="0" style="text-align:center"></div>
+      <div class="field" style="margin-bottom:0"><label class="plan-weight-lbl">${unitLabel()}</label><input class="input plan-weight" type="number" min="0" step="0.5" value="${prefill?.weight?toDisplay(prefill.weight):''}" inputmode="decimal" placeholder="0" style="text-align:center"></div>
     </div>`;
   list.appendChild(div);
   // Populate exercise select
@@ -1618,7 +1618,7 @@ async function saveEditHist(){
 
 // ── Helpers ────────────────────────────────────────
 const todayStr  =()=>new Date().toISOString().slice(0,10);
-function metaStr(w){const p=[];if(w.reps)p.push(`${w.reps} reps`);if(Number(w.weight))p.push(`${w.weight} kg`);return p.join(' × ')||'—';}
+function metaStr(w){const p=[];if(w.reps)p.push(`${w.reps} reps`);if(Number(w.weight))p.push(`${toDisplay(w.weight)} ${unitLabel()}`);return p.join(' × ')||'—';}
 function relDate(d){const diff=Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5);if(diff===0)return'วันนี้';if(diff===1)return'เมื่อวาน';if(diff<7)return`${diff} วันก่อน`;return formatDate(d);}
 function formatDate(d){if(!d)return'';const dt=new Date(d+'T00:00:00');return`${DAYS_TH[dt.getDay()]} ${dt.getDate()} ${MONTHS_TH[dt.getMonth()]} ${dt.getFullYear()+543}`;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -1632,11 +1632,25 @@ function setUnit(u){
   S.unit=u;localStorage.setItem('lift_unit',u);
   document.getElementById('unit-kg').classList.toggle('active',u==='kg');
   document.getElementById('unit-lbs').classList.toggle('active',u==='lbs');
-  // refresh header labels in log blocks
+  // refresh unit labels everywhere
   document.querySelectorAll('.sets-header').forEach(h=>{
     const cols=[...h.querySelectorAll('.sets-col-lbl')];
     if(cols[2])cols[2].textContent=unitLabel().toUpperCase();
   });
+  // refresh log weight input values
+  document.querySelectorAll('.set-inp[name=weight]').forEach(inp=>{
+    const v=Number(inp.dataset.kg||0);
+    if(v)inp.value=toDisplay(v);
+  });
+  // update unit labels in plan weight label
+  document.querySelectorAll('.plan-weight-lbl').forEach(el=>el.textContent=unitLabel());
+  // update dashboard stat unit
+  const sul=document.getElementById('stat-unit-lbl');
+  if(sul)sul.textContent=unitLabel();
+  // re-render active tab if needed
+  if(S.tab==='dash')    loadDash();
+  if(S.tab==='prog')    loadProg();
+  if(S.tab==='plan' && S.planSubTab==='hist') loadHist();
   toast(`เปลี่ยนหน่วยเป็น ${u}`,'ok');
 }
 
