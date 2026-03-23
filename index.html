@@ -34,7 +34,6 @@ input,select,button,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:0;height:0}
 .hidden{display:none!important}
 #app{max-width:480px;margin:0 auto;min-height:100svh}
-
 #v-auth{display:flex;align-items:center;justify-content:center;min-height:100svh;padding:28px 22px}
 .auth-inner{width:100%;max-width:360px;animation:slideUp .4s var(--ease)}
 .auth-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:82px;line-height:.88;color:var(--a);letter-spacing:3px;display:block;filter:drop-shadow(0 0 24px rgba(200,255,60,.3))}
@@ -260,93 +259,6 @@ select.input{cursor:pointer}
 .pick-plan-item-icon svg{width:20px;height:20px;color:var(--a)}
 .pick-plan-item-name{font-size:16px;font-weight:600;margin-bottom:3px}
 .pick-plan-item-meta{font-size:13px;color:var(--ts)}
-
-/* ══ DESKTOP PHONE FRAME ≥768px ══
-   Placed LAST so !important rules win over earlier CSS.
-   Key: nav becomes position:static, #app is flex column.
-═══════════════════════════════════ */
-@media(min-width:768px){
-  html,body{height:100vh;overflow:hidden}
-  body{
-    display:flex;align-items:center;justify-content:center;
-    background:
-      radial-gradient(ellipse 55% 45% at 68% 12%, rgba(200,255,60,.055) 0%, transparent 100%),
-      radial-gradient(ellipse 45% 55% at 15% 88%, rgba(56,189,248,.04) 0%, transparent 100%),
-      #0b0b10;
-  }
-  #app{
-    width:390px!important;max-width:390px!important;
-    height:min(852px,95vh)!important;min-height:0!important;
-    margin:0!important;
-    border-radius:50px;overflow:hidden;position:relative;
-    display:flex!important;flex-direction:column!important;
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.14),
-      0 0 0 10px #1c1c24,
-      0 0 0 11.5px rgba(255,255,255,.08),
-      0 48px 120px rgba(0,0,0,.9),
-      0 10px 40px rgba(0,0,0,.6),
-      0 0 100px rgba(200,255,60,.06);
-  }
-  #app::before{
-    content:'';display:block;flex-shrink:0;
-    height:52px;background:#08080e;position:relative;z-index:1;
-  }
-  #app::after{
-    content:'';position:absolute;top:12px;left:50%;transform:translateX(-50%);
-    width:120px;height:34px;background:#000;border-radius:18px;
-    z-index:100;pointer-events:none;
-    box-shadow:0 0 0 1px rgba(255,255,255,.07),inset 0 1px 1px rgba(255,255,255,.04);
-  }
-  /* Only apply flex layout when NOT hidden */
-  #v-auth:not(.hidden){
-    flex:1!important;overflow-y:auto!important;
-    min-height:0!important;display:flex!important;
-  }
-  #v-main:not(.hidden){
-    flex:1!important;display:flex!important;flex-direction:column!important;
-    overflow:hidden!important;min-height:0!important;
-  }
-  .header{padding-top:12px!important;flex-shrink:0!important;}
-  .tab-pane{
-    flex:1!important;overflow-y:auto!important;
-    min-height:0!important;padding-bottom:16px!important;
-    scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.07) transparent;
-  }
-  .tab-pane::-webkit-scrollbar{width:2px}
-  .tab-pane::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
-  .bottom-nav{
-    position:static!important;transform:none!important;
-    width:100%!important;max-width:100%!important;
-    height:auto!important;min-height:var(--nav);flex-shrink:0!important;
-    border-radius:0 0 40px 40px;padding-bottom:18px;
-  }
-  .nav-btn{height:var(--nav)!important;}
-  .nav-center{height:var(--nav)!important;}
-  .bottom-nav::after{
-    content:'';position:absolute;bottom:7px;left:50%;transform:translateX(-50%);
-    width:130px;height:4px;background:rgba(255,255,255,.22);
-    border-radius:3px;pointer-events:none;
-  }
-  #toast{
-    position:absolute!important;
-    bottom:calc(var(--nav) + 20px)!important;
-    left:50%!important;
-    transform:translateX(-50%) translateY(14px)!important;
-  }
-  #toast.show{transform:translateX(-50%) translateY(0)!important;}
-  #loader{position:absolute!important;inset:0!important;border-radius:50px;}
-  .modal-overlay{position:absolute!important;inset:0!important;}
-  .plan-modal{position:absolute!important;inset:0!important;}
-  .pick-plan-sheet{position:absolute!important;inset:0!important;}
-  body::after{
-    content:'LIFT · Workout Tracker';
-    position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
-    font-family:'Barlow Condensed',sans-serif;
-    font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
-    color:rgba(255,255,255,.1);pointer-events:none;white-space:nowrap;
-  }
-}
 </style>
 </head>
 <body>
