@@ -123,9 +123,9 @@ select.input{cursor:pointer}
 .ex-block-del:active{color:var(--err)}
 .ex-sel-wrap{padding:10px 14px 0}
 .sets-table{padding:4px 14px 0}
-.sets-header{display:grid;grid-template-columns:28px 1fr 1fr 32px;gap:6px;margin-bottom:4px}
+.sets-header{display:grid;grid-template-columns:28px 1fr 1fr 36px 28px;gap:5px;margin-bottom:4px}
 .sets-col-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--td);text-align:center}
-.set-row{display:grid;grid-template-columns:28px 1fr 1fr 32px;align-items:center;gap:6px;margin-bottom:6px}
+.set-row{display:grid;grid-template-columns:28px 1fr 1fr 36px 28px;align-items:center;gap:5px;margin-bottom:6px}
 .set-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--ts);text-align:center}
 .set-inp{background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--t);font-size:15px;font-weight:500;padding:9px 8px;text-align:center;outline:none;transition:border-color .12s;-webkit-appearance:none;width:100%}
 .set-inp:focus{border-color:var(--a)}
@@ -198,6 +198,24 @@ select.input{cursor:pointer}
 .modal-body{font-size:13px;color:var(--ts);margin-bottom:20px;line-height:1.6}
 .modal-actions{display:flex;gap:10px}
 .modal-actions .btn{font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;padding:12px}
+
+/* unit toggle */
+.unit-toggle{display:flex;background:var(--s3);border-radius:8px;padding:3px;gap:2px}
+.unit-btn{flex:1;padding:7px 12px;border:none;background:none;color:var(--ts);font-size:13px;font-weight:600;border-radius:6px;cursor:pointer;transition:all .15s}
+.unit-btn.active{background:var(--s2);color:var(--t);box-shadow:0 1px 4px rgba(0,0,0,.3)}
+/* sec badge on set row */
+.set-mode-btn{width:36px;height:36px;border-radius:8px;background:var(--s3);border:1px solid var(--bd2);color:var(--ts);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;letter-spacing:0;line-height:1}
+.set-mode-btn.sec{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8}
+/* edit-hist modal */
+.edit-hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:0 12px 12px}
+.edit-hist-modal.show{opacity:1;pointer-events:auto}
+.edit-hist-inner{background:var(--s2);border:1px solid var(--bd2);border-radius:20px;padding:20px 18px;width:100%;max-width:440px;transform:translateY(18px);transition:transform .25s var(--spring)}
+.edit-hist-modal.show .edit-hist-inner{transform:translateY(0)}
+/* body-part management */
+.bp-item{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--bd)}
+.bp-item:last-child{border-bottom:none}
+.bp-item-name{flex:1;font-size:15px;font-weight:500}
+
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes tabIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -456,7 +474,34 @@ select.input{cursor:pointer}
       </div>
       <div id="ex-list" style="max-height:420px;overflow-y:auto"></div>
     </div>
-    <div style="text-align:center;padding:8px 0 2px;font-size:12px;color:var(--td)">LIFT v5.0 · Firebase</div>
+    <!-- Body Parts management -->
+    <div class="settings-card">
+      <div class="settings-hd">
+        <div class="settings-hd-title">Body Part</div>
+        <button class="btn btn-ghost btn-sm" onclick="toggleAddBPForm()">+ เพิ่ม</button>
+      </div>
+      <div id="add-bp-form" class="hidden add-ex-form-wrap">
+        <div class="field" style="margin-bottom:10px"><label>ชื่อ Body Part</label><input id="new-bp-name" class="input" type="text" placeholder="เช่น Glutes"></div>
+        <button class="btn" style="height:42px;padding:0;font-size:16px;font-family:'Barlow',sans-serif;font-weight:600;letter-spacing:0" onclick="addBodyPart()">เพิ่ม</button>
+      </div>
+      <div id="bp-list"></div>
+    </div>
+    <!-- Unit preference -->
+    <div class="settings-card">
+      <div class="settings-hd"><div class="settings-hd-title">หน่วยน้ำหนัก</div></div>
+      <div style="padding:14px 16px">
+        <div class="unit-toggle">
+          <button class="unit-btn active" id="unit-kg" onclick="setUnit('kg')">kg</button>
+          <button class="unit-btn" id="unit-lbs" onclick="setUnit('lbs')">lbs</button>
+        </div>
+        <div style="margin-top:8px;font-size:12px;color:var(--ts)">1 kg = 2.2046 lbs · ค่าจะถูกแสดงในหน่วยที่เลือก</div>
+      </div>
+    </div>
+    <!-- Version -->
+    <div style="text-align:center;padding:16px 0 4px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--a);letter-spacing:2px">LIFT</div>
+      <div style="font-size:12px;color:var(--td);margin-top:4px">v6.0 · Firebase · © 2025</div>
+    </div>
   </div>
   <nav class="bottom-nav">
     <button class="nav-btn active" data-tab="dash" onclick="setTab('dash')">
@@ -473,6 +518,30 @@ select.input{cursor:pointer}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>ตั้งค่า
     </button>
   </nav>
+
+<!-- Edit History Modal -->
+<div id="edit-hist-modal" class="edit-hist-modal" onclick="closeEditHist(event)">
+  <div class="edit-hist-inner">
+    <div style="font-size:17px;font-weight:700;margin-bottom:16px" id="edit-hist-title">แก้ไขเซต</div>
+    <div class="field" style="margin-bottom:12px"><label>วันที่</label><input id="eh-date" class="input" type="date"></div>
+    <div class="field" style="margin-bottom:12px"><label>ท่าออกกำลังกาย</label><input id="eh-ex" class="input" type="text"></div>
+    <div class="row2" style="margin-bottom:12px">
+      <div class="field" style="margin-bottom:0">
+        <label id="eh-val-lbl">Reps</label>
+        <input id="eh-reps" class="input" type="number" min="0" inputmode="numeric">
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label id="eh-wt-lbl">น้ำหนัก</label>
+        <input id="eh-weight" class="input" type="number" min="0" step="0.5" inputmode="decimal">
+      </div>
+    </div>
+    <div class="field" style="margin-bottom:18px"><label>หมายเหตุ</label><input id="eh-notes" class="input" type="text" placeholder="(ไม่บังคับ)"></div>
+    <div class="row2">
+      <button class="btn btn-ghost" onclick="closeEditHist()">ยกเลิก</button>
+      <button class="btn" style="font-family:'Barlow',sans-serif;font-size:16px;font-weight:600;letter-spacing:0" onclick="saveEditHist()">บันทึก</button>
+    </div>
+  </div>
+</div>
 </div>
 </div>
 
@@ -517,9 +586,17 @@ const S = {
   pf:        { period:'7', bp:'', ex:'', metric:'weight' },
   _pc:       null,
   _hd:       [],
+  unit:      localStorage.getItem('lift_unit')||'kg', // 'kg'|'lbs'
+  editingHistId: null,
 };
 
-const BODY_PARTS = ['อก','หลัง','ไหล่','แขน','ขา','Core','Cardio','Full Body','อื่นๆ'];
+const DEFAULT_BODY_PARTS = ['อก','หลัง','ไหล่','แขน','ขา','Core','Cardio','Full Body','อื่นๆ'];
+function getBodyParts(){
+  const stored=localStorage.getItem('lift_bps');
+  return stored?JSON.parse(stored):[...DEFAULT_BODY_PARTS];
+}
+function saveBodyParts(arr){localStorage.setItem('lift_bps',JSON.stringify(arr));}
+function BODY_PARTS_LIST(){return getBodyParts();}
 const DAYS_TH    = ['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
 const MONTHS_TH  = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
@@ -988,7 +1065,7 @@ function addExBlock(){
       <input type="text" class="input custom-ex" style="display:none;margin-top:8px" placeholder="พิมพ์ชื่อท่า...">
     </div></div>
     <div class="sets-table">
-      <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl">REPS</div><div class="sets-col-lbl">KG</div><div style="width:28px"></div></div>
+      <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl" id="sh-val">REPS / SEC</div><div class="sets-col-lbl" id="sh-wt">KG</div><div style="width:40px"></div></div>
       <div class="sets-list"></div>
     </div>
     <button type="button" class="add-set-btn" onclick="addSetToBlock(this)">
@@ -1001,14 +1078,30 @@ function addExBlock(){
   if(idx>0)div.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function addSetToBlock(btn){const sl=btn.closest('.ex-block').querySelector('.sets-list');addSetRow(sl,sl.children.length+1);}
-function addSetRow(sl,n){
+function addSetRow(sl,n,prefill=null){
   const prev=sl.lastElementChild;
-  const pR=prev?prev.querySelector('[name=reps]').value:'10',pW=prev?prev.querySelector('[name=weight]').value:'';
-  const row=document.createElement('div');row.className='set-row';
-  row.innerHTML=`<span class="set-lbl">S${n}</span><input class="set-inp" type="number" name="reps" min="0" inputmode="numeric" placeholder="Reps" value="${pR}"><input class="set-inp" type="number" name="weight" min="0" step="0.5" inputmode="decimal" placeholder="kg" value="${pW}"><button type="button" class="set-del" onclick="delSetRow(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  const prevMode=prev?prev.dataset.mode:'reps';
+  const mode=prefill?.mode||prevMode||'reps';
+  const pR=prefill!=null?prefill.reps:(prev?prev.querySelector('[name=reps]').value:'10');
+  const pW=prefill!=null?toDisplay(prefill.weight):(prev?prev.querySelector('[name=weight]').value:'');
+  const row=document.createElement('div');row.className='set-row';row.dataset.mode=mode;
+  const isSec=mode==='sec';
+  row.innerHTML=`<span class="set-lbl">S${n}</span>
+    <input class="set-inp" type="number" name="reps" min="0" inputmode="numeric" placeholder="${isSec?'วิ':'Reps'}" value="${pR}">
+    <input class="set-inp" type="number" name="weight" min="0" step="0.5" inputmode="decimal" placeholder="${unitLabel()}" value="${pW}">
+    <button type="button" class="set-mode-btn${isSec?' sec':''}" onclick="toggleSetMode(this)" title="สลับ Reps/Sec">${isSec?'SEC':'REP'}</button>
+    <button type="button" class="set-del" onclick="delSetRow(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
   sl.appendChild(row);
   row.style.cssText='opacity:0;transform:translateX(-6px)';
   requestAnimationFrame(()=>{row.style.cssText='transition:opacity .14s,transform .14s;opacity:1;transform:translateX(0)';});
+}
+function toggleSetMode(btn){
+  const row=btn.closest('.set-row');
+  const isSec=row.dataset.mode==='sec';
+  row.dataset.mode=isSec?'reps':'sec';
+  btn.textContent=isSec?'REP':'SEC';
+  btn.classList.toggle('sec',!isSec);
+  row.querySelector('[name=reps]').placeholder=isSec?'Reps':'วิ';
 }
 function delSetRow(btn){const sl=btn.closest('.sets-list');if(sl.children.length<=1)return toast('ต้องมีอย่างน้อย 1 set','err');btn.closest('.set-row').remove();[...sl.children].forEach((r,i)=>r.querySelector('.set-lbl').textContent='S'+(i+1));}
 function delExBlock(btn){btn.closest('.ex-block').remove();document.querySelectorAll('.ex-block-num').forEach((el,i)=>(el.textContent='EXERCISE '+(i+1)));}
@@ -1026,7 +1119,10 @@ async function saveWorkout(){
     if(!exName)return toast(`กรุณาเลือกท่า ${i+1}`,'err');
     const notes=block.querySelector('[name=notes]').value||'';
     [...block.querySelectorAll('.sets-list .set-row')].forEach((row,j)=>{
-      docs.push({date,exerciseName:exName,sets:1,reps:Number(row.querySelector('[name=reps]').value)||0,weight:Number(row.querySelector('[name=weight]').value)||0,duration:0,notes:j===0?notes:'',createdAt:TS()});
+      const repsVal=Number(row.querySelector('[name=reps]').value)||0;
+      const wVal=fromDisplay(row.querySelector('[name=weight]').value);
+      const mode=row.dataset.mode||'reps';
+      docs.push({date,exerciseName:exName,sets:1,reps:repsVal,weight:wVal,duration:mode==='sec'?repsVal:0,notes:j===0?notes:'',mode,unit:S.unit,createdAt:TS()});
     });
   }
   if(!docs.length)return toast('ไม่มีข้อมูล','err');
@@ -1093,7 +1189,7 @@ function renderHist(list){
             <button class="wo-del-btn" onclick="confirmDelWOs(${JSON.stringify(sets.map(s=>s._idx))},'${esc(exName)}')" title="ลบ" style="flex-shrink:0"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg></button>
           </div>
           <div style="padding-left:12px">
-            ${sets.map((s,si)=>`<div class="hist-set-row"><span class="hist-set-lbl">S${si+1}</span><span class="hist-set-val">${s.reps||0} reps${Number(s.weight)?` × ${s.weight} kg`:''}</span>${s.notes?`<span style="color:var(--td);font-size:11px;margin-left:6px">· ${esc(s.notes)}</span>`:''}</div>`).join('')}
+            ${sets.map((s,si)=>{const isSec=s.mode==='sec';const valLbl=isSec?`${s.reps||0} วิ`:`${s.reps||0} reps`;const wDisp=toDisplay(s.weight||0);const wStr=Number(s.weight)?` × ${wDisp} ${unitLabel()}`:'';return`<div class="hist-set-row" style="justify-content:space-between"><span class="hist-set-lbl">S${si+1}</span><span class="hist-set-val">${valLbl}${wStr}</span>${s.notes?`<span style="color:var(--td);font-size:11px">· ${esc(s.notes)}</span>`:''}<button class="icon-btn" style="padding:3px 7px;font-size:10px;margin-left:auto;flex-shrink:0" onclick="openEditHist('${s.workoutId}',${s._idx})">แก้ไข</button></div>`;}).join('')}
           </div>
         </div>`).join('')}
     </div>`).join('');
@@ -1128,7 +1224,11 @@ function loadSettings(){
   document.getElementById('profile-name-display').textContent=name;
   document.getElementById('profile-username-display').textContent=user.username?`@${user.username}`:'';
   document.getElementById('edit-display-name').value=user.displayName||'';
-  document.getElementById('new-ex-bp').innerHTML=`<option value="">— เลือก —</option>`+BODY_PARTS.map(b=>`<option value="${b}">${b}</option>`).join('');
+  // unit state
+  document.getElementById('unit-kg').classList.toggle('active',S.unit==='kg');
+  document.getElementById('unit-lbs').classList.toggle('active',S.unit==='lbs');
+  renderBPList();
+  document.getElementById('new-ex-bp').innerHTML=`<option value="">— เลือก —</option>`+getBodyParts().map(b=>`<option value="${b}">${b}</option>`).join('');
   renderExList('');
 }
 function toggleEditProfile(){
@@ -1460,7 +1560,7 @@ function applyPlan(id){
       const rows=[...sl.querySelectorAll('.set-row')];
       const row=rows[rows.length-1];
       row.querySelector('[name=reps]').value=ex.reps||10;
-      row.querySelector('[name=weight]').value=ex.weight||'';
+      row.querySelector('[name=weight]').value=ex.weight?toDisplay(ex.weight):'';
     }
   });
   // Update banner
@@ -1474,12 +1574,115 @@ function startFromPlan(id){
   setTab('log');
 }
 
+
+// ── Edit History ───────────────────────────────────
+function openEditHist(workoutId, idx){
+  const w=S._hd[idx];if(!w)return;
+  S.editingHistId=workoutId;
+  S._editHistIdx=idx;
+  const isSec=w.mode==='sec';
+  document.getElementById('edit-hist-title').textContent='แก้ไขเซต';
+  document.getElementById('eh-date').value=w.date||'';
+  document.getElementById('eh-ex').value=w.exerciseName||'';
+  document.getElementById('eh-reps').value=w.reps||0;
+  document.getElementById('eh-reps').placeholder=isSec?'วินาที':'Reps';
+  document.getElementById('eh-val-lbl').textContent=isSec?'วินาที':'Reps';
+  document.getElementById('eh-weight').value=toDisplay(w.weight||0);
+  document.getElementById('eh-wt-lbl').textContent=`น้ำหนัก (${unitLabel()})`;
+  document.getElementById('eh-notes').value=w.notes||'';
+  document.getElementById('edit-hist-modal').classList.add('show');
+}
+function closeEditHist(e){
+  if(e&&e.target!==document.getElementById('edit-hist-modal'))return;
+  document.getElementById('edit-hist-modal').classList.remove('show');
+}
+async function saveEditHist(){
+  const w=S._hd[S._editHistIdx];if(!w)return;
+  const updates={
+    date:document.getElementById('eh-date').value,
+    exerciseName:document.getElementById('eh-ex').value.trim(),
+    reps:Number(document.getElementById('eh-reps').value)||0,
+    weight:fromDisplay(document.getElementById('eh-weight').value),
+    notes:document.getElementById('eh-notes').value||'',
+  };
+  if(!updates.exerciseName||!updates.date)return toast('กรอกข้อมูลให้ครบ','err');
+  try{
+    await woCol().doc(w.workoutId).update(updates);
+    S._hd[S._editHistIdx]={...w,...updates};
+    S._pc=null;
+    closeEditHist();
+    renderHist(S._hd);
+    toast('แก้ไขสำเร็จ','ok');
+  }catch(err){toast(err.message||'แก้ไขไม่สำเร็จ','err');}
+}
+
 // ── Helpers ────────────────────────────────────────
 const todayStr  =()=>new Date().toISOString().slice(0,10);
 function metaStr(w){const p=[];if(w.reps)p.push(`${w.reps} reps`);if(Number(w.weight))p.push(`${w.weight} kg`);return p.join(' × ')||'—';}
 function relDate(d){const diff=Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5);if(diff===0)return'วันนี้';if(diff===1)return'เมื่อวาน';if(diff<7)return`${diff} วันก่อน`;return formatDate(d);}
 function formatDate(d){if(!d)return'';const dt=new Date(d+'T00:00:00');return`${DAYS_TH[dt.getDay()]} ${dt.getDate()} ${MONTHS_TH[dt.getMonth()]} ${dt.getFullYear()+543}`;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+// ── Unit helpers ───────────────────────────────────
+const KG2LBS = 2.2046;
+function toDisplay(kg){ return S.unit==='lbs'?Math.round(Number(kg)*KG2LBS*10)/10:Number(kg); }
+function fromDisplay(val){ return S.unit==='lbs'?Math.round(Number(val)/KG2LBS*100)/100:Number(val); }
+function unitLabel(){ return S.unit==='lbs'?'lbs':'kg'; }
+function setUnit(u){
+  S.unit=u;localStorage.setItem('lift_unit',u);
+  document.getElementById('unit-kg').classList.toggle('active',u==='kg');
+  document.getElementById('unit-lbs').classList.toggle('active',u==='lbs');
+  // refresh header labels in log blocks
+  document.querySelectorAll('.sets-header').forEach(h=>{
+    const cols=[...h.querySelectorAll('.sets-col-lbl')];
+    if(cols[2])cols[2].textContent=unitLabel().toUpperCase();
+  });
+  toast(`เปลี่ยนหน่วยเป็น ${u}`,'ok');
+}
+
+// ── Body Part management ────────────────────────────
+function toggleAddBPForm(){
+  const f=document.getElementById('add-bp-form');
+  f.classList.toggle('hidden');
+  if(!f.classList.contains('hidden'))document.getElementById('new-bp-name').focus();
+}
+function addBodyPart(){
+  const name=document.getElementById('new-bp-name').value.trim();
+  if(!name)return toast('กรุณากรอกชื่อ','err');
+  const arr=getBodyParts();
+  if(arr.find(b=>b.toLowerCase()===name.toLowerCase()))return toast('มีอยู่แล้ว','err');
+  arr.splice(arr.length-1,0,name); // insert before 'อื่นๆ'
+  saveBodyParts(arr);
+  document.getElementById('new-bp-name').value='';
+  toggleAddBPForm();
+  renderBPList();
+  document.getElementById('new-ex-bp').innerHTML=`<option value="">— เลือก —</option>`+getBodyParts().map(b=>`<option value="${b}">${b}</option>`).join('');
+  toast(`เพิ่ม "${name}" สำเร็จ`,'ok');
+}
+function confirmDeleteBP(name){
+  if(DEFAULT_BODY_PARTS.includes(name))return toast('ลบ Body Part เริ่มต้นไม่ได้','err');
+  showConfirm('ลบ Body Part?',`"${name}" จะถูกลบออก`,()=>deleteBP(name));
+}
+function deleteBP(name){
+  const arr=getBodyParts().filter(b=>b!==name);
+  saveBodyParts(arr);
+  renderBPList();
+  document.getElementById('new-ex-bp').innerHTML=`<option value="">— เลือก —</option>`+getBodyParts().map(b=>`<option value="${b}">${b}</option>`).join('');
+  toast('ลบเรียบร้อย','ok');
+}
+function renderBPList(){
+  const arr=getBodyParts();
+  const el=document.getElementById('bp-list');
+  el.innerHTML=arr.map(b=>{
+    const isDefault=DEFAULT_BODY_PARTS.includes(b);
+    const safe=esc(b).replace(/'/g,"&#39;");
+    return`<div class="bp-item">
+      <div class="bp-item-name">${esc(b)}</div>
+      ${isDefault?`<span style="font-size:10px;color:var(--td)">เริ่มต้น</span>`:`<button class="icon-btn del" onclick="confirmDeleteBP('${safe}')">✕</button>`}
+    </div>`;
+  }).join('');
+}
+
 
 init();
 </script>
