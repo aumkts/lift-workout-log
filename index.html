@@ -33,85 +33,167 @@ body{background:var(--bg);color:var(--t);font-family:'Barlow',-apple-system,sans
 input,select,button,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:0;height:0}
 .hidden{display:none!important}
-#app{max-width:480px;margin:0 auto;min-height:100svh;position:relative}
+#app{max-width:480px;margin:0 auto;min-height:100svh}
 
-/* ── Desktop: phone frame ── */
-@media(min-width:600px){
-  html{background:#0a0a0e}
+/* ══════════════════════════════════════
+   DESKTOP PHONE FRAME (≥ 768px)
+   Strategy: #app becomes a fixed phone
+   frame. #v-main is flex column.
+   .bottom-nav becomes position:static
+   so it sits naturally at the bottom.
+══════════════════════════════════════ */
+@media(min-width:768px){
+  /* Dark textured background */
+  html,body{height:100%;overflow:hidden}
   body{
-    background:radial-gradient(ellipse at 60% 20%,rgba(200,255,60,.04) 0%,transparent 60%),
-               radial-gradient(ellipse at 20% 80%,rgba(56,189,248,.03) 0%,transparent 55%),
-               #0a0a0e;
-    display:flex;align-items:flex-start;justify-content:center;
-    min-height:100svh;padding:28px 0 28px;
+    background:
+      radial-gradient(ellipse 60% 50% at 65% 15%, rgba(200,255,60,.05) 0%, transparent 100%),
+      radial-gradient(ellipse 50% 60% at 20% 85%, rgba(56,189,248,.04) 0%, transparent 100%),
+      #0a0a10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
   }
+
+  /* Phone shell */
   #app{
-    max-width:393px; /* iPhone 15 Pro width */
+    width:393px;
+    max-width:393px;
+    height:852px; /* iPhone 15 logical height */
+    max-height:calc(100vh - 40px);
     min-height:0;
-    height:calc(100svh - 56px);
-    border-radius:44px;
+    margin:0;
+    border-radius:50px;
     overflow:hidden;
-    box-shadow:
-      0 0 0 1px rgba(255,255,255,.08),
-      0 0 0 10px #1a1a22,
-      0 0 0 11px rgba(255,255,255,.06),
-      0 32px 80px rgba(0,0,0,.8),
-      0 0 120px rgba(200,255,60,.06);
     position:relative;
-    display:flex;flex-direction:column;
+
+    /* Metal frame shadow */
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,.12),   /* inner bright edge */
+      0 0 0 10px #18181f,                 /* metal band */
+      0 0 0 11px rgba(255,255,255,.07),   /* outer edge */
+      0 40px 100px rgba(0,0,0,.85),
+      0  8px  30px rgba(0,0,0,.5),
+      0  0px  80px rgba(200,255,60,.07);
+
+    /* Flex column so v-main fills remaining space */
+    display:flex;
+    flex-direction:column;
   }
-  /* Notch bar at top of frame */
+
+  /* Fake status bar / dynamic island notch */
   #app::before{
-    content:'';display:block;flex-shrink:0;
-    height:12px;background:#0f0f14;
-    border-radius:44px 44px 0 0;
+    content:'';
+    display:block;
+    height:54px;          /* status bar zone */
+    background:#0a0a10;
+    flex-shrink:0;
+    position:relative;
+    z-index:10;
   }
   /* Dynamic island pill */
   #app::after{
     content:'';
-    position:absolute;top:6px;left:50%;transform:translateX(-50%);
-    width:120px;height:34px;
-    background:#000;border-radius:20px;
-    z-index:9999;pointer-events:none;
+    position:absolute;
+    top:13px;left:50%;transform:translateX(-50%);
+    width:126px;height:36px;
+    background:#000;
+    border-radius:20px;
+    z-index:20;
+    pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,255,255,.06);
   }
-  #v-main,#v-auth{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-  #v-main{min-height:0;}
-  /* Header needs no safe-area padding on desktop frame */
-  .header{padding-top:14px!important;border-radius:0;}
-  /* Nav stays inside the frame */
-  .bottom-nav{
-    position:static!important;transform:none!important;
-    width:100%!important;max-width:100%!important;
-    border-radius:0 0 32px 32px;
-    height:var(--nav)!important;
-    flex-shrink:0;
-  }
-  .nav-btn,.nav-center{height:var(--nav)!important;}
-  /* Tab panes scroll inside the frame */
-  .tab-pane{
+
+  /* Auth view fills frame */
+  #v-auth{
     flex:1;overflow-y:auto;
-    padding-bottom:28px!important;
-    height:0; /* force flex child to scroll */
+    min-height:0;
+    border-radius:0;
   }
-  /* Modals and toasts contained inside frame */
-  .modal-overlay,.plan-modal,.pick-plan-sheet{
-    position:absolute!important;border-radius:0 0 44px 44px;
+
+  /* Main view = flex column, fills frame below notch */
+  #v-main{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+    min-height:0;
   }
-  #toast{
-    position:absolute!important;
-    bottom:calc(var(--nav) + 12px)!important;
+
+  /* Header sits at top — no safe-area needed on desktop */
+  .header{padding-top:14px!important;flex-shrink:0;}
+
+  /* Tab panes scroll inside frame */
+  .tab-pane{
+    flex:1;
+    overflow-y:auto;
+    min-height:0;
+    padding-bottom:20px!important; /* nav is static, no need for extra space */
+    /* thin scrollbar */
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,.08) transparent;
   }
-  #loader{position:absolute!important;border-radius:44px;}
-  /* Thin scrollbar inside frame on desktop */
   .tab-pane::-webkit-scrollbar{width:3px}
   .tab-pane::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
-  /* Desktop watermark */
+
+  /* Nav becomes static — no longer fixed to viewport */
+  .bottom-nav{
+    position:static !important;
+    transform:none !important;
+    width:100% !important;
+    max-width:100% !important;
+    height:var(--nav) !important;
+    flex-shrink:0;
+    border-radius:0 0 40px 40px;
+    /* Home indicator line */
+    padding-bottom:8px;
+  }
+  .nav-btn{height:var(--nav) !important;}
+  .nav-center{height:var(--nav) !important;}
+
+  /* Home indicator bar at very bottom of nav */
+  .bottom-nav::after{
+    content:'';
+    position:absolute;
+    bottom:6px;left:50%;transform:translateX(-50%);
+    width:134px;height:5px;
+    background:rgba(255,255,255,.25);
+    border-radius:3px;
+    pointer-events:none;
+  }
+
+  /* Modals contained in frame */
+  .modal-overlay,.plan-modal,.pick-plan-sheet{
+    position:absolute !important;
+    border-radius:0 0 50px 50px;
+  }
+  #toast{
+    position:absolute !important;
+    bottom:calc(var(--nav) + 12px) !important;
+    left:50% !important;
+    transform:translateX(-50%) translateY(14px) !important;
+  }
+  #toast.show{transform:translateX(-50%) translateY(0) !important;}
+  #loader{
+    position:absolute !important;
+    inset:0;
+    border-radius:50px;
+  }
+
+  /* Desktop label below frame */
+  body::before{
+    content:'';
+    position:fixed;inset:0;pointer-events:none;
+    background:inherit;z-index:-1;
+  }
   body::after{
     content:'LIFT · Workout Tracker';
-    position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
-    font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;
-    letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.1);
-    pointer-events:none;
+    position:fixed;
+    bottom:14px;left:50%;transform:translateX(-50%);
+    font-family:'Barlow Condensed',sans-serif;
+    font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;
+    color:rgba(255,255,255,.12);pointer-events:none;
+    white-space:nowrap;
   }
 }
 #v-auth{display:flex;align-items:center;justify-content:center;min-height:100svh;padding:28px 22px}
