@@ -30,8 +30,24 @@
   --sab:env(safe-area-inset-bottom,0px);
   --ease:cubic-bezier(.4,0,.2,1);--spring:cubic-bezier(.34,1.56,.64,1);
 }
-html{background:var(--bg)}
-body{background:var(--bg);color:var(--t);font-family:'Barlow',-apple-system,sans-serif;font-size:16px;min-height:100svh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+html{background:#000} /* พื้นหลังสีดำสำหรับคอมพิวเตอร์ */
+body{
+  background:var(--bg);
+  color:var(--t);
+  font-family:'Barlow',-apple-system,sans-serif;
+  font-size:16px;
+  width:100%;
+  max-width:480px; /* ล็อกความกว้างเป็นขนาดมือถือ */
+  margin:0 auto; /* จัดกึ่งกลางจอ */
+  min-height:100svh;
+  position:relative;
+  overflow-x:hidden;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-font-smoothing:antialiased;
+  box-shadow:0 0 50px rgba(0,0,0,0.6); /* เงารอบตัวแอป */
+  border-left:1px solid var(--s3);
+  border-right:1px solid var(--s3);
+}
 input,select,button,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:0;height:0}
 .hidden{display:none!important}
@@ -165,11 +181,45 @@ select.input{cursor:pointer}
 .no-data{text-align:center;padding:36px 0;font-size:13px;color:var(--ts);line-height:2.2}
 .skel{background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:200% 100%;border-radius:6px;animation:shimmer 1.5s ease-in-out infinite}
 @keyframes shimmer{to{background-position:-200% 0}}
-#toast{position:fixed;bottom:calc(var(--nav) + 14px);left:50%;transform:translateX(-50%) translateY(14px);background:var(--s3);border:1px solid var(--bd2);color:var(--t);padding:10px 18px;border-radius:100px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s,transform .22s var(--spring);max-width:calc(100vw - 40px);text-align:center;z-index:999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+#toast{
+  position:fixed;
+  bottom:calc(var(--nav) + 14px);
+  left:50%;
+  transform:translateX(-50%) translateY(14px);
+  background:var(--s3);
+  border:1px solid var(--bd2);
+  color:var(--t);
+  padding:10px 18px;
+  border-radius:100px;
+  font-size:13px;
+  font-weight:600;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s,transform .22s var(--spring);
+  max-width:min(100vw - 40px, 440px);
+  text-align:center;
+  z-index:999;
+  white-space:nowrap;
+  box-shadow:0 4px 16px rgba(0,0,0,.4)
+}
 #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 #toast.err{border-color:var(--err);color:var(--err);background:rgba(255,79,90,.08)}
 #toast.ok{border-color:var(--ok);color:var(--ok);background:rgba(61,232,122,.08)}
-#loader{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .35s}
+#loader{
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:480px;
+  background:var(--bg);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  transition:opacity .35s
+}
 #loader.fade{opacity:0;pointer-events:none}
 .loader-logo{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:72px;color:var(--a);letter-spacing:3px;animation:logoPulse 1.2s ease-in-out infinite;display:block;filter:drop-shadow(0 0 24px rgba(200,255,60,.4))}
 .loader-bar{width:72px;height:2px;background:var(--s3);border-radius:1px;margin:14px auto 0;overflow:hidden}
@@ -192,7 +242,26 @@ select.input{cursor:pointer}
 .bp-sel{background:var(--s3);border:1px solid var(--bd);color:var(--t);font-size:12px;border-radius:7px;padding:5px 10px;cursor:pointer;-webkit-appearance:none;appearance:none;max-width:110px}
 .search-wrap{position:relative}
 .search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--ts);pointer-events:none}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:0 12px 12px}
+
+/* จัดการ Modal Overlay ทั้งหมดให้มีขนาดกว้างเท่าแอปและจัดกึ่งกลาง */
+.modal-overlay{
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:480px;
+  background:rgba(0,0,0,.7);
+  z-index:500;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+  padding:0 12px 12px
+}
 .modal-overlay.show{opacity:1;pointer-events:auto}
 .modal-sheet{background:var(--s2);border:1px solid var(--bd2);border-radius:20px;padding:20px 18px;width:100%;max-width:440px;transform:translateY(18px);transition:transform .25s var(--spring)}
 .modal-overlay.show .modal-sheet{transform:translateY(0)}
@@ -208,8 +277,26 @@ select.input{cursor:pointer}
 /* sec badge on set row */
 .set-mode-btn{width:36px;height:36px;border-radius:8px;background:var(--s3);border:1px solid var(--bd2);color:var(--ts);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;letter-spacing:0;line-height:1}
 .set-mode-btn.sec{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8}
+
 /* edit-hist modal */
-.edit-hist-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:700;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;padding:0 12px 12px}
+.edit-hist-modal{
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:480px;
+  background:rgba(0,0,0,.75);
+  z-index:700;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+  padding:0 12px 12px
+}
 .edit-hist-modal.show{opacity:1;pointer-events:auto}
 .edit-hist-inner{background:var(--s2);border:1px solid var(--bd2);border-radius:20px;padding:20px 18px;width:100%;max-width:440px;transform:translateY(18px);transition:transform .25s var(--spring)}
 .edit-hist-modal.show .edit-hist-inner{transform:translateY(0)}
@@ -243,8 +330,24 @@ select.input{cursor:pointer}
 .plan-ex-detail{font-size:13px;color:var(--ts);text-align:right;white-space:nowrap}
 .plan-actions{display:flex;gap:10px;padding:14px 16px;background:var(--s3);border-top:1px solid var(--bd)}
 .plan-actions .btn{font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;padding:12px}
+
 /* Plan editor modal */
-.plan-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:600;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .2s}
+.plan-modal{
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:480px;
+  background:rgba(0,0,0,.75);
+  z-index:600;
+  display:flex;
+  flex-direction:column;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s
+}
 .plan-modal.show{opacity:1;pointer-events:auto}
 .plan-modal-inner{background:var(--s1);margin-top:auto;border-radius:22px 22px 0 0;max-height:92svh;display:flex;flex-direction:column;transform:translateY(30px);transition:transform .28s var(--spring);padding-bottom:env(safe-area-inset-bottom)}
 .plan-modal.show .plan-modal-inner{transform:translateY(0)}
@@ -265,8 +368,26 @@ select.input{cursor:pointer}
 .use-plan-btn-text{flex:1;text-align:left}
 .use-plan-btn-title{font-size:15px;font-weight:600;margin-bottom:2px}
 .use-plan-btn-sub{font-size:12px;color:var(--ts)}
+
 /* Pick-plan sheet */
-.pick-plan-sheet{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;display:flex;flex-direction:column;justify-content:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;padding:0 12px 12px}
+.pick-plan-sheet{
+  position:fixed;
+  top:0;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:480px;
+  background:rgba(0,0,0,.7);
+  z-index:600;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .2s;
+  padding:0 12px 12px
+}
 .pick-plan-sheet.show{opacity:1;pointer-events:auto}
 .pick-plan-inner{background:var(--s2);border-radius:20px;max-height:70svh;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s var(--spring);padding-bottom:env(safe-area-inset-bottom)}
 .pick-plan-sheet.show .pick-plan-inner{transform:translateY(0)}
