@@ -12,168 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- Firebase SDK (compat v10) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js">
-
-function normalizeNumber(n){ return Number.isFinite(Number(n)) ? Number(n) : 0; }
-
-function getWorkoutTimestamp(w){
-  const raw = w?.date || w?.createdAt || w?.updatedAt || w?.ts || w?.timestamp || null;
-  if (!raw) return null;
-  if (typeof raw === 'number') return raw;
-  if (typeof raw === 'string') {
-    const t = new Date(raw).getTime();
-    return Number.isFinite(t) ? t : null;
-  }
-  if (raw && typeof raw.toDate === 'function') {
-    const d = raw.toDate();
-    return d ? d.getTime() : null;
-  }
-  if (raw && typeof raw.seconds === 'number') return raw.seconds * 1000;
-  return null;
-}
-
-function getWorkoutExercises(w){
-  if (Array.isArray(w?.exercises)) return w.exercises;
-  if (Array.isArray(w?.items)) return w.items;
-  return [];
-}
-
-function getSetWeight(setObj){
-  const raw = setObj?.kg ?? setObj?.weight ?? setObj?.load ?? 0;
-  return normalizeNumber(raw);
-}
-
-function getSetReps(setObj){
-  const raw = setObj?.reps ?? setObj?.rep ?? setObj?.count ?? 0;
-  return normalizeNumber(raw);
-}
-
-function getExerciseSets(ex){
-  if (Array.isArray(ex?.sets)) return ex.sets;
-  const single = [];
-  const reps = normalizeNumber(ex?.reps);
-  const kg = normalizeNumber(ex?.kg ?? ex?.weight);
-  if (reps || kg) single.push({ reps, kg });
-  return single;
-}
-
-function calcWorkoutVolume(w){
-  return getWorkoutExercises(w).reduce((sum, ex) => {
-    return sum + getExerciseSets(ex).reduce((s, setObj) => s + (getSetWeight(setObj) * getSetReps(setObj)), 0);
-  }, 0);
-}
-
-function getExerciseBestSet(ex){
-  let best = null;
-  getExerciseSets(ex).forEach(setObj => {
-    const reps = getSetReps(setObj);
-    const kg = getSetWeight(setObj);
-    if (!reps) return;
-    if (!best || reps > best.reps || (reps === best.reps && kg > best.kg)) {
-      best = { reps, kg };
-    }
-  });
-  return best;
-}
-
-function summarizePreviousExerciseHistory(workouts){
-  const map = new Map();
-  workouts.forEach(w => {
-    getWorkoutExercises(w).forEach(ex => {
-      const name = (ex?.name || ex?.exercise || '').trim();
-      if (!name) return;
-      const best = getExerciseBestSet(ex);
-      const prev = map.get(name);
-      if (!prev || (best && (!prev.best || best.reps > prev.best.reps || (best.reps === prev.best.reps && best.kg > prev.best.kg)))) {
-        map.set(name, { best, count: (prev?.count || 0) + 1 });
-      } else {
-        prev.count += 1;
-      }
-    });
-  });
-  return map;
-}
-
-function getNextProgressionCandidate(workouts){
-  const ordered = [...workouts].sort((a,b) => (getWorkoutTimestamp(b) || 0) - (getWorkoutTimestamp(a) || 0));
-  const history = summarizePreviousExerciseHistory(ordered.slice(1));
-  for (const w of ordered) {
-    for (const ex of getWorkoutExercises(w)) {
-      const name = (ex?.name || ex?.exercise || '').trim();
-      if (!name) continue;
-      const sets = getExerciseSets(ex);
-      if (!sets.length) continue;
-      const target = normalizeNumber(ex?.targetReps || ex?.target || ex?.goalReps || 12);
-      const allReached = sets.every(s => getSetReps(s) >= target && target > 0);
-      if (!allReached) continue;
-      const best = getExerciseBestSet(ex) || { reps: 0, kg: 0 };
-      const previous = history.get(name)?.best;
-      return {
-        name,
-        text: name,
-        sub: previous
-          ? `ล่าสุดครบเป้า ${sets.length}/${sets.length} เซต • จาก ${previous.kg || 0}${state.unit} x ${previous.reps} reps`
-          : `ล่าสุดครบเป้า ${sets.length}/${sets.length} เซต`,
-      };
-    }
-  }
-  return null;
-}
-
-function startOfDay(ts){
-  const d = new Date(ts);
-  d.setHours(0,0,0,0);
-  return d.getTime();
-}
-
-function getWeeklyVolumeInsight(workouts){
-  const now = Date.now();
-  const today = startOfDay(now);
-  const weekMs = 7 * 24 * 60 * 60 * 1000;
-  const currentStart = today - 6 * 24 * 60 * 60 * 1000;
-  const prevStart = currentStart - weekMs;
-  const prevEnd = currentStart - 1;
-  let current = 0;
-  let previous = 0;
-
-  workouts.forEach(w => {
-    const ts = getWorkoutTimestamp(w);
-    if (!ts) return;
-    const vol = calcWorkoutVolume(w);
-    if (ts >= currentStart && ts <= now) current += vol;
-    else if (ts >= prevStart && ts <= prevEnd) previous += vol;
-  });
-
-  const percent = previous > 0 ? ((current - previous) / previous) * 100 : (current > 0 ? 100 : 0);
-  return {
-    current,
-    previous,
-    percent,
-    sub: previous > 0
-      ? `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}% จากสัปดาห์ก่อน`
-      : (current > 0 ? 'เริ่มมี volume ในสัปดาห์นี้' : 'ยังไม่มีข้อมูลสัปดาห์นี้')
-  };
-}
-
-function updateHomeActionableCards(){
-  const nextEl = document.getElementById('home-next-progression');
-  const nextSubEl = document.getElementById('home-next-progression-sub');
-  const volEl = document.getElementById('home-weekly-volume');
-  const volUnitEl = document.getElementById('home-weekly-volume-unit');
-  const volSubEl = document.getElementById('home-weekly-volume-sub');
-  const workouts = Array.isArray(state?.history) ? state.history : (Array.isArray(state?.workouts) ? state.workouts : []);
-
-  const progression = getNextProgressionCandidate(workouts);
-  if (nextEl) nextEl.textContent = progression?.text || 'ยังไม่มีข้อมูล';
-  if (nextSubEl) nextSubEl.textContent = progression?.sub || 'เมื่อครบ reps เป้าทุกเซต ระบบจะแนะนำท่านี้';
-
-  const weekly = getWeeklyVolumeInsight(workouts);
-  if (volEl) volEl.textContent = Math.round(weekly.current).toLocaleString();
-  if (volUnitEl) volUnitEl.textContent = state?.unit || 'kg';
-  if (volSubEl) volSubEl.textContent = weekly.sub;
-}
-
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
 <style>
@@ -2309,5 +2148,821 @@ function saveBPEdit(oldName,eid){
 
 init();
 </script>
+
+<script>
+/* === LIFT v6 enhancements === */
+(function(){
+  const DAY_KEYS = ['sun','mon','tue','wed','thu','fri','sat'];
+  const DAY_LABELS = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+
+  function ensureStyles(){
+    if(document.getElementById('v6-enhance-style')) return;
+    const style = document.createElement('style');
+    style.id = 'v6-enhance-style';
+    style.textContent = `
+      .tiny-muted{font-size:12px;color:var(--ts)}
+      .meta-chip-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+      .meta-chip{padding:5px 9px;border-radius:999px;border:1px solid var(--bd);font-size:11px;color:var(--ts);background:var(--s2)}
+      .meta-chip.active{border-color:rgba(200,255,60,.3);background:rgba(200,255,60,.08);color:var(--a)}
+      .plan-day-wrap{margin-bottom:12px}
+      .plan-day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+      .day-pill{height:38px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);color:var(--ts);font-size:13px;font-weight:600;cursor:pointer}
+      .day-pill.active{background:rgba(200,255,60,.12);color:var(--a);border-color:rgba(200,255,60,.3)}
+      .range-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:8px}
+      .summary-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:800;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .18s}
+      .summary-modal.show{opacity:1;pointer-events:auto}
+      .summary-inner{width:min(100%,480px);background:var(--s1);border-radius:22px 22px 0 0;padding:18px;transform:translateY(24px);transition:transform .22s var(--spring)}
+      .summary-modal.show .summary-inner{transform:translateY(0)}
+      .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+      .summary-box{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:12px}
+      .summary-k{font-size:10px;font-weight:700;color:var(--ts);text-transform:uppercase;letter-spacing:.11em;margin-bottom:4px}
+      .summary-v{font-family:'Barlow Condensed',sans-serif;font-size:28px;line-height:1;color:var(--a);font-weight:700}
+      .summary-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+      .summary-pill{background:rgba(200,255,60,.08);border:1px solid rgba(200,255,60,.16);padding:10px 12px;border-radius:12px;font-size:13px}
+      .rest-card{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin:0 0 16px}
+      .rest-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+      .rest-time{font-family:'Barlow Condensed',sans-serif;font-size:34px;line-height:1;color:var(--a);font-weight:700}
+      .rest-controls{display:flex;gap:8px;margin-top:10px}
+      .rest-btn{flex:1;background:var(--s3);border:1px solid var(--bd);color:var(--t);border-radius:12px;padding:10px 12px;font-size:13px;font-weight:600}
+      .rest-btn.primary{border-color:rgba(200,255,60,.3);background:rgba(200,255,60,.08);color:var(--a)}
+      .rest-progress{height:6px;border-radius:999px;background:var(--s3);overflow:hidden;margin-top:10px}
+      .rest-progress > span{display:block;height:100%;width:0%;background:var(--a);transition:width .4s linear}
+      .coach-card{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+      .coach-title{font-size:10px;color:var(--a);text-transform:uppercase;letter-spacing:.12em;font-weight:700;margin-bottom:8px}
+      .coach-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}
+      .coach-row:last-child{border-bottom:none;padding-bottom:0}
+      .coach-row span:last-child{text-align:right;font-weight:600}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function ensurePlanScheduleUI(){
+    const planNameField = document.getElementById('plan-name-inp')?.closest('.field');
+    if(!planNameField || document.getElementById('plan-day-grid')) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'plan-day-wrap';
+    wrap.innerHTML = `
+      <label style="display:block;font-size:12px;color:var(--ts);margin-bottom:8px">วันเล่น</label>
+      <div class="plan-day-grid" id="plan-day-grid">
+        ${DAY_LABELS.map((d,i)=>`<button type="button" class="day-pill" data-day="${DAY_KEYS[i]}" onclick="togglePlanDay('${DAY_KEYS[i]}', this)">${d}</button>`).join('')}
+      </div>
+      <div class="tiny-muted" style="margin-top:8px">เลือกวันเพื่อให้หน้า Home แนะนำแผนตามตารางได้</div>
+    `;
+    planNameField.insertAdjacentElement('afterend', wrap);
+  }
+
+  function ensureRestTimerUI(){
+    const logTab = document.getElementById('tab-log');
+    const summary = logTab?.querySelector('.log-summary');
+    if(!summary || document.getElementById('rest-timer-card')) return;
+    const card = document.createElement('div');
+    card.id = 'rest-timer-card';
+    card.className = 'rest-card';
+    card.innerHTML = `
+      <div class="rest-row">
+        <div>
+          <div class="summary-k">Rest Timer</div>
+          <div class="tiny-muted" id="rest-timer-note">ใช้ค่าเริ่มต้นจาก Preferences</div>
+        </div>
+        <div class="rest-time" id="rest-timer-time">01:30</div>
+      </div>
+      <div class="rest-progress"><span id="rest-timer-bar"></span></div>
+      <div class="rest-controls">
+        <button type="button" class="rest-btn primary" onclick="startRestTimer()">เริ่มพัก</button>
+        <button type="button" class="rest-btn" onclick="pauseRestTimer()">พักไว้</button>
+        <button type="button" class="rest-btn" onclick="resetRestTimer()">รีเซ็ต</button>
+      </div>
+    `;
+    summary.insertAdjacentElement('afterend', card);
+  }
+
+  function ensureSummaryModal(){
+    if(document.getElementById('workout-summary-modal')) return;
+    const modal = document.createElement('div');
+    modal.id = 'workout-summary-modal';
+    modal.className = 'summary-modal';
+    modal.onclick = (e)=>{ if(e.target === modal) closeWorkoutSummary(); };
+    modal.innerHTML = `
+      <div class="summary-inner">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <div class="coach-title">Workout Complete</div>
+            <div style="font-size:22px;font-weight:700">สรุปการฝึกวันนี้</div>
+          </div>
+          <button class="plan-modal-close" onclick="closeWorkoutSummary()">×</button>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-box"><div class="summary-k">Exercises</div><div class="summary-v" id="sum-ex">0</div></div>
+          <div class="summary-box"><div class="summary-k">Sets</div><div class="summary-v" id="sum-sets">0</div></div>
+          <div class="summary-box"><div class="summary-k">Volume</div><div class="summary-v" id="sum-vol">0</div></div>
+          <div class="summary-box"><div class="summary-k">Minutes</div><div class="summary-v" id="sum-mins">0</div></div>
+        </div>
+        <div id="sum-pr-wrap" class="summary-list"></div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn" onclick="closeWorkoutSummary();setTab('prog')">ดู Progress</button>
+          <button class="btn btn-ghost" onclick="closeWorkoutSummary()">ปิด</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  function openWorkoutSummary(data){
+    ensureSummaryModal();
+    document.getElementById('sum-ex').textContent = data.exercises;
+    document.getElementById('sum-sets').textContent = data.sets;
+    document.getElementById('sum-vol').textContent = `${Math.round(data.volume).toLocaleString()} ${unitLabel()}`;
+    document.getElementById('sum-mins').textContent = data.minutes;
+    const prWrap = document.getElementById('sum-pr-wrap');
+    const items = (data.prs || []).slice(0, 4);
+    prWrap.innerHTML = items.length
+      ? items.map(t => `<div class="summary-pill">🎉 PR ใหม่ — ${esc(t)}</div>`).join('')
+      : `<div class="summary-pill">บันทึกสำเร็จ ✓ ไม่มี PR ใหม่รอบนี้ แต่ข้อมูลถูกเพิ่มเข้า Progress แล้ว</div>`;
+    document.getElementById('workout-summary-modal').classList.add('show');
+  }
+  window.closeWorkoutSummary = function(){
+    document.getElementById('workout-summary-modal')?.classList.remove('show');
+  };
+
+  function setPlanDayUI(days){
+    ensurePlanScheduleUI();
+    const selected = new Set(days || []);
+    document.querySelectorAll('#plan-day-grid .day-pill').forEach(btn=>{
+      btn.classList.toggle('active', selected.has(btn.dataset.day));
+    });
+  }
+  window.togglePlanDay = function(day, btn){
+    btn.classList.toggle('active');
+  };
+  function getSelectedPlanDays(){
+    return [...document.querySelectorAll('#plan-day-grid .day-pill.active')].map(b=>b.dataset.day);
+  }
+
+  function workoutSummaryMap(workouts){
+    const byEx = {};
+    (workouts || []).forEach(w=>{
+      const ex = w.exerciseName || '';
+      if(!ex) return;
+      const reps = Number(w.reps)||0;
+      const weight = Number(w.weight)||0;
+      const volume = reps * weight;
+      if(!byEx[ex]) byEx[ex] = { maxWeight: 0, maxReps: 0, maxVolume: 0 };
+      byEx[ex].maxWeight = Math.max(byEx[ex].maxWeight, weight);
+      byEx[ex].maxReps = Math.max(byEx[ex].maxReps, reps);
+      byEx[ex].maxVolume = Math.max(byEx[ex].maxVolume, volume);
+    });
+    return byEx;
+  }
+
+  function getThisWeekBounds(){
+    const now = new Date();
+    const end = new Date(now); end.setHours(23,59,59,999);
+    const start = new Date(now); start.setDate(now.getDate()-6); start.setHours(0,0,0,0);
+    return {start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10)};
+  }
+
+  function getPrevWeekBounds(){
+    const now = new Date();
+    const end = new Date(now); end.setDate(now.getDate()-7); end.setHours(23,59,59,999);
+    const start = new Date(end); start.setDate(end.getDate()-6); start.setHours(0,0,0,0);
+    return {start: start.toISOString().slice(0,10), end: end.toISOString().slice(0,10)};
+  }
+
+  function calcWeeklyVolume(workouts, bounds){
+    return (workouts || []).filter(w=>w.date>=bounds.start && w.date<=bounds.end)
+      .reduce((s,w)=>s+((Number(w.reps)||0)*(Number(w.weight)||0)),0);
+  }
+
+  function getProgressionCandidate(workouts){
+    const grouped = {};
+    (workouts || []).forEach(w=>{
+      if(!grouped[w.exerciseName]) grouped[w.exerciseName] = [];
+      grouped[w.exerciseName].push(w);
+    });
+    const ranked = Object.entries(grouped).map(([name, rows])=>{
+      const dates = [...new Set(rows.map(r=>r.date))].sort();
+      const lastDate = dates[dates.length-1];
+      const lastRows = rows.filter(r=>r.date===lastDate);
+      const lastReps = lastRows.map(r=>Number(r.reps)||0);
+      const maxWeight = Math.max(...lastRows.map(r=>Number(r.weight)||0),0);
+      const targetMax = Math.max(...lastRows.map(r=>Number(r.targetMaxReps||r.targetReps||12)||12),12);
+      const allHit = lastRows.length && lastRows.every(r=>(Number(r.reps)||0) >= (Number(r.targetMaxReps||r.targetReps||12)||12));
+      return {name, allHit, maxWeight, sets:lastRows.length, targetMax, lastDate};
+    }).filter(x=>x.allHit).sort((a,b)=> b.lastDate.localeCompare(a.lastDate));
+    return ranked[0] || null;
+  }
+
+  const originalComputeStats = window.computeStats;
+  window.computeStats = function(workouts){
+    const base = originalComputeStats ? originalComputeStats(workouts) : {};
+    const thisWeek = getThisWeekBounds();
+    const prevWeek = getPrevWeekBounds();
+    const currentWeekVolume = calcWeeklyVolume(workouts, thisWeek);
+    const prevWeekVolume = calcWeeklyVolume(workouts, prevWeek);
+    const nextProgression = getProgressionCandidate(workouts);
+    const uniqueDates = [...new Set((workouts||[]).map(w=>w.date))].sort();
+    const lastWorkoutDate = uniqueDates[uniqueDates.length-1] || '';
+    const daysSince = lastWorkoutDate ? Math.floor((Date.now()-new Date(lastWorkoutDate+'T00:00:00').getTime())/86400000) : null;
+    return {...base, currentWeekVolume, prevWeekVolume, nextProgression, lastWorkoutDate, daysSince};
+  };
+
+  window.chooseSuggestedPlan = function(){
+    if(!S.plans.length) return null;
+    const today = DAY_KEYS[new Date().getDay()];
+    const scheduled = S.plans.find(p => Array.isArray(p.scheduleDays) && p.scheduleDays.includes(today));
+    if(scheduled) return scheduled;
+    return S.plans[0];
+  };
+
+  window.renderStats = function(d){
+    const streak = d.weeklyStreak || 0;
+    const sc = streak>=4?'#c8ff3c':streak>=2?'#38bdf8':'#7a7a96';
+    const flames = streak>=8?'🔥🔥🔥':streak>=4?'🔥🔥':streak>=1?'🔥':'';
+    const bars = Array.from({length:Math.min(streak,8)},(_,i)=>`<div style="height:5px;flex:1;border-radius:3px;background:${sc};opacity:${0.4+0.075*i}"></div>`).join('');
+    const empties = streak<8?Array.from({length:8-streak},()=>`<div style="height:5px;flex:1;border-radius:3px;background:var(--s3)"></div>`).join(''):'';
+    const diff = d.prevWeekVolume > 0 ? ((d.currentWeekVolume - d.prevWeekVolume)/d.prevWeekVolume)*100 : (d.currentWeekVolume > 0 ? 100 : 0);
+    const prog = d.nextProgression;
+    const progressionTitle = prog ? prog.name : 'ยังไม่มีข้อมูล';
+    const progressionSub = prog
+      ? `ครบเป้า ${prog.sets}/${prog.sets} เซต · ครั้งหน้าลอง +${S.prefs.defaultIncrement || 2.5}${unitLabel()}`
+      : 'เมื่อครบ reps เป้าทุกเซต ระบบจะแนะนำท่านี้';
+    document.getElementById('stats-wrap').innerHTML = `
+      <div class="stats-grid">
+        <div class="stat-card" style="animation:countUp .35s ease"><div class="stat-num accent">${d.weekSessions || 0}</div><div class="stat-lbl">สัปดาห์นี้</div></div>
+        <div class="stat-card" style="animation:countUp .35s .06s ease both"><div class="stat-num">${d.totalSessions || 0}</div><div class="stat-lbl">ทั้งหมด</div></div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--bd);border-radius:var(--r2);padding:15px 17px;margin-bottom:10px;display:flex;align-items:center;gap:16px;animation:countUp .35s .09s ease both">
+        <div style="text-align:center;flex-shrink:0">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:700;line-height:1;color:var(--a)">${streak || 0}</div>
+          <div style="font-size:10px;letter-spacing:.14em;color:var(--ts)">WEEKS</div>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:20px;font-weight:700;margin-bottom:4px">Weekly Streak ${flames}</div>
+          <div style="font-size:11px;color:var(--ts);margin-bottom:8px">${streak?`${streak} สัปดาห์ติดต่อกัน`:'เริ่ม streak สัปดาห์นี้เลย!'}</div>
+          <div style="display:flex;gap:3px">${bars}${empties}</div>
+        </div>
+      </div>
+      <div class="stat-wide" style="animation:countUp .35s .13s ease both">
+        <div class="stat-wide-lbl">ควรเพิ่มน้ำหนัก</div>
+        <div class="stat-wide-val" id="home-next-progression">${esc(progressionTitle)}</div>
+        <div class="tiny-muted" id="home-next-progression-sub" style="margin-top:6px">${progressionSub}</div>
+      </div>
+      <div class="stat-wide" style="animation:countUp .35s .17s ease both">
+        <div class="stat-wide-lbl">Volume สัปดาห์นี้</div>
+        <div class="stat-big"><span id="home-weekly-volume">${Math.round(d.currentWeekVolume || 0).toLocaleString()}</span><span class="stat-unit" id="home-weekly-volume-unit">${unitLabel()}</span></div>
+        <div class="tiny-muted" id="home-weekly-volume-sub" style="margin-top:6px">${d.prevWeekVolume ? `${diff>=0?'+':''}${diff.toFixed(0)}% จากสัปดาห์ก่อน` : (d.currentWeekVolume ? 'เริ่มมี volume ในสัปดาห์นี้' : 'ยังไม่มีข้อมูลสัปดาห์นี้')}</div>
+      </div>
+    `;
+  };
+
+  window.renderDashInsights = function(statsData, allWO=[]){
+    const wrap = document.getElementById('dash-insights-wrap');
+    const goal = Number(S.prefs.goalSessions || 4);
+    const left = Math.max(goal - (statsData.weekSessions || 0), 0);
+    const leastBP = (() => {
+      const weekAgo = new Date(Date.now()-14*864e5).toISOString().slice(0,10);
+      const bpMap = {};
+      allWO.filter(w=>w.date>=weekAgo).forEach(w=>{
+        const bp = getExCat(w.exerciseName);
+        bpMap[bp] = (bpMap[bp] || 0) + 1;
+      });
+      const entries = Object.entries(bpMap).sort((a,b)=>a[1]-b[1]);
+      return entries[0]?.[0] || '—';
+    })();
+    const recoveryTxt = statsData.daysSince == null ? 'ยังไม่มีประวัติการฝึก' : statsData.daysSince===0 ? 'เล่นแล้ววันนี้' : statsData.daysSince===1 ? 'พักมา 1 วัน' : `พักมา ${statsData.daysSince} วัน`;
+    wrap.innerHTML = `
+      <div class="insight-card">
+        <div class="insight-eyebrow">Coach Insights</div>
+        <div class="insight-list">
+          <div class="insight-row"><div class="insight-label">เป้าหมายสัปดาห์นี้</div><div class="insight-value">${left===0?'ครบเป้าแล้ว ✓':`อีก ${left} session`}</div></div>
+          <div class="insight-row"><div class="insight-label">Recovery</div><div class="insight-value">${recoveryTxt}</div></div>
+          <div class="insight-row"><div class="insight-label">Body part ที่ฝึกน้อยสุด 14 วันล่าสุด</div><div class="insight-value">${esc(leastBP)}</div></div>
+          <div class="insight-row"><div class="insight-label">ครั้งล่าสุดที่เล่น</div><div class="insight-value">${statsData.lastWorkoutDate ? esc(relDate(statsData.lastWorkoutDate)) : '—'}</div></div>
+        </div>
+      </div>`;
+  };
+
+  window.compareProgressBlocks = function(cur, prev){
+    const s = (arr)=>({
+      sessions:[...new Set(arr.map(w=>w.date))].length,
+      volume:arr.reduce((x,w)=>x+(Number(w.reps)||0)*(Number(w.weight)||0),0),
+      maxWeight:Math.max(0,...arr.map(w=>Number(w.weight)||0)),
+    });
+    const c=s(cur), p=s(prev);
+    const delta=(a,b)=> b?(((a-b)/b)*100):0;
+    const stale = (() => {
+      const dates = {};
+      cur.forEach(w=>{ dates[w.exerciseName] = w.date; });
+      const first = Object.entries(dates).sort((a,b)=>a[1].localeCompare(b[1]))[0];
+      return first ? first[0] : '—';
+    })();
+    const lowBp = (() => {
+      const map = {};
+      cur.forEach(w=>{
+        const bp = getExCat(w.exerciseName);
+        map[bp] = (map[bp] || 0) + 1;
+      });
+      const ent = Object.entries(map).sort((a,b)=>a[1]-b[1])[0];
+      return ent ? ent[0] : '—';
+    })();
+    document.getElementById('prog-insight-wrap').innerHTML = `
+      <div class="coach-card">
+        <div class="coach-title">สรุปเทียบช่วงก่อนหน้า</div>
+        <div class="coach-row"><span>Sessions</span><span class="${c.sessions>=p.sessions?'delta-up':'delta-down'}">${c.sessions} ${p.sessions?`(${delta(c.sessions,p.sessions)>=0?'+':''}${delta(c.sessions,p.sessions).toFixed(0)}%)`:'(ใหม่)'}</span></div>
+        <div class="coach-row"><span>Volume รวม</span><span class="${c.volume>=p.volume?'delta-up':'delta-down'}">${Math.round(c.volume).toLocaleString()} ${unitLabel()}</span></div>
+        <div class="coach-row"><span>น้ำหนักสูงสุด</span><span>${fmt(toDisplay(c.maxWeight))} ${unitLabel()}</span></div>
+        <div class="coach-row"><span>ท่าที่เก่าสุดในช่วงนี้</span><span>${esc(stale)}</span></div>
+        <div class="coach-row"><span>Body part ที่ข้อมูลน้อยสุด</span><span>${esc(lowBp)}</span></div>
+      </div>`;
+  };
+
+  window.refreshLogSummary = function(){
+    const blocks=[...document.querySelectorAll('#log-exercises .ex-block')];
+    const totalSets=blocks.reduce((sum,block)=>sum+block.querySelectorAll('.set-row').length,0);
+    const volume = blocks.reduce((sum,block)=>sum+[...block.querySelectorAll('.set-row')].reduce((s,row)=>{
+      return s + ((Number(row.querySelector('[name=reps]')?.value)||0) * fromDisplay(row.querySelector('[name=weight]')?.value||0));
+    },0),0);
+    const exEl=document.getElementById('log-summary-ex');
+    const setEl=document.getElementById('log-summary-set');
+    if(exEl)exEl.textContent=String(blocks.length||0);
+    if(setEl)setEl.textContent=String(totalSets||0);
+    const note=document.getElementById('rest-timer-note');
+    if(note) note.textContent = `Volume ตอนนี้ ${Math.round(volume).toLocaleString()} ${unitLabel()} · พัก ${S.prefs.defaultRest || 90} วิ`;
+  };
+
+  function applyRepRangeState(row){
+    const block = row.closest('.ex-block');
+    const min = Number(block.dataset.targetMin || 0);
+    const max = Number(block.dataset.targetMax || 0);
+    if(!min && !max) return;
+    const repsInput = row.querySelector('[name=reps]');
+    const reps = Number(repsInput.value || 0);
+    if(!reps) {
+      repsInput.style.borderColor = '';
+      return;
+    }
+    if(reps >= min && reps <= max) repsInput.style.borderColor = 'rgba(61,232,122,.35)';
+    else if(reps > max) repsInput.style.borderColor = 'rgba(200,255,60,.35)';
+    else repsInput.style.borderColor = 'rgba(255,79,90,.28)';
+  }
+
+  function attachRowEvents(row){
+    const reps = row.querySelector('[name=reps]');
+    const weight = row.querySelector('[name=weight]');
+    [reps, weight].forEach(inp => {
+      inp?.addEventListener('change', ()=>{
+        applyRepRangeState(row);
+        if((Number(reps.value)||0) > 0) autoStartRestTimer();
+        refreshLogSummary();
+      });
+      inp?.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){
+          e.preventDefault();
+          const all = [...row.closest('.ex-block').querySelectorAll('.set-row input')];
+          const idx = all.indexOf(inp);
+          if(all[idx+1]) all[idx+1].focus();
+        }
+      });
+    });
+    applyRepRangeState(row);
+  }
+
+  window.addExBlock = function(){
+    const container=document.getElementById('log-exercises'),idx=container.children.length;
+    const div=document.createElement('div');div.className='ex-block';
+    div.innerHTML=`
+      <div class="ex-block-head">
+        <span class="ex-block-num">EXERCISE ${idx+1}</span>
+        <button type="button" class="ex-block-del" onclick="delExBlock(this)" aria-label="ลบท่า">×</button>
+      </div>
+      <div class="ex-sel-wrap"><div class="field" style="margin-bottom:0">
+        <label>ท่าออกกำลังกาย</label>
+        <select class="input ex-sel" onchange="onExSel(this)"><option value="">— เลือกท่า —</option></select>
+        <input type="text" class="input custom-ex" style="display:none;margin-top:8px" placeholder="พิมพ์ชื่อท่า...">
+      </div></div>
+      <div class="sets-table">
+        <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl">REPS / SEC</div><div class="sets-col-lbl">${unitLabel().toUpperCase()}</div><div style="width:40px"></div></div>
+        <div class="sets-list"></div>
+      </div>
+      <div class="target-hint" style="display:none"></div>
+      <div class="set-toolbar" style="display:none">
+        <button type="button" class="mini-chip" onclick="copyLastSet(this)">ใช้ค่าครั้งก่อน</button>
+        <button type="button" class="mini-chip" onclick="copyPreviousSet(this)">เหมือนเซตก่อน</button>
+        <button type="button" class="mini-chip" onclick="addSuggestedWeight(this)">+${S.prefs.defaultIncrement||2.5}${unitLabel()}</button>
+        <button type="button" class="mini-chip" onclick="decRep(this)">-1 rep</button>
+      </div>
+      <button type="button" class="add-set-btn" onclick="addSetToBlock(this)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>เพิ่ม Set
+      </button>
+      <div class="ex-notes-row"><input type="text" class="input" name="notes" placeholder="หมายเหตุ (ไม่บังคับ)" style="font-size:13px;padding:8px 12px"></div>`;
+    container.appendChild(div);
+    populateSel(div.querySelector('.ex-sel'));
+    addSetRow(div.querySelector('.sets-list'),1);
+    refreshLogEditor();
+    if(idx>0)div.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+
+  window.addSetToBlock = function(btn){
+    const sl = btn.closest('.ex-block').querySelector('.sets-list');
+    const last = sl.lastElementChild;
+    const prefill = last ? {
+      reps: last.querySelector('[name=reps]')?.value || '',
+      weight: fromDisplay(last.querySelector('[name=weight]')?.value || 0),
+      mode: last.dataset.mode || 'reps'
+    } : null;
+    addSetRow(sl, sl.children.length+1, prefill);
+    refreshLogSummary();
+  };
+
+  window.addSetRow = function(sl, n, prefill=null){
+    const prev=sl.lastElementChild;
+    const prevMode=prev?prev.dataset.mode:'reps';
+    const mode=prefill?.mode||prevMode||'reps';
+    const pR=prefill!=null?prefill.reps:(prev?prev.querySelector('[name=reps]').value:'10');
+    const pW=prefill!=null?(prefill.weight?toDisplay(prefill.weight):''):(prev?prev.querySelector('[name=weight]').value:'');
+    const row=document.createElement('div');row.className='set-row';row.dataset.mode=mode;
+    const isSec=mode==='sec';
+    row.innerHTML=`<span class="set-lbl">S${n}</span>
+      <input class="set-inp" type="number" name="reps" min="0" inputmode="numeric" placeholder="${isSec?'วิ':'Reps'}" value="${pR}">
+      <input class="set-inp" type="number" name="weight" min="0" step="0.5" inputmode="decimal" placeholder="${unitLabel()}" value="${pW}">
+      <button type="button" class="set-mode-btn${isSec?' sec':''}" onclick="toggleSetMode(this)" title="สลับ Reps/Sec">${isSec?'SEC':'REP'}</button>
+      <button type="button" class="set-del" onclick="delSetRow(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+    sl.appendChild(row);
+    row.style.cssText='opacity:0;transform:translateX(-6px)';
+    requestAnimationFrame(()=>{row.style.cssText='transition:opacity .14s,transform .14s;opacity:1;transform:translateX(0)';});
+    attachRowEvents(row);
+  };
+
+  window.copyPreviousSet = function(btn){
+    const rows = [...btn.closest('.ex-block').querySelectorAll('.set-row')];
+    if(rows.length < 2) return toast('ต้องมีอย่างน้อย 2 เซต','err');
+    const prev = rows[rows.length-2], last = rows[rows.length-1];
+    last.querySelector('[name=reps]').value = prev.querySelector('[name=reps]').value;
+    last.querySelector('[name=weight]').value = prev.querySelector('[name=weight]').value;
+    applyRepRangeState(last);
+    refreshLogSummary();
+  };
+  window.decRep = function(btn){
+    const rows = [...btn.closest('.ex-block').querySelectorAll('.set-row')];
+    rows.forEach(r=>{
+      const inp = r.querySelector('[name=reps]');
+      inp.value = Math.max((Number(inp.value)||0)-1, 0);
+      applyRepRangeState(r);
+    });
+    refreshLogSummary();
+  };
+
+  const originalOnExSel = window.onExSel;
+  window.onExSel = function(sel){
+    if(originalOnExSel) originalOnExSel(sel);
+    const block = sel.closest('.ex-block');
+    const exName = sel.value;
+    if(!exName || exName === '__custom') return;
+    const last = S.lastByExercise[exName];
+    if(last){
+      [...block.querySelectorAll('.set-row')].forEach(row=>{
+        if(!row.querySelector('[name=weight]').value) row.querySelector('[name=weight]').value = fmt(toDisplay(last.weight||0));
+        if(!row.querySelector('[name=reps]').value) row.querySelector('[name=reps]').value = last.reps || 0;
+        applyRepRangeState(row);
+      });
+      const firstInput = block.querySelector('.set-row [name=weight]') || block.querySelector('.set-row [name=reps]');
+      setTimeout(()=>firstInput?.focus(), 60);
+    }
+  };
+
+  window.initLog = (function(orig){
+    return function(){
+      ensureRestTimerUI();
+      if(orig) orig();
+      S.logStartedAt = Date.now();
+      resetRestTimer();
+      refreshLogSummary();
+    };
+  })(window.initLog);
+
+  window.openNewPlan = (function(orig){
+    return function(){
+      if(orig) orig();
+      ensurePlanScheduleUI();
+      setPlanDayUI([]);
+    };
+  })(window.openNewPlan);
+
+  window.openEditPlan = function(id){
+    const plan=S.plans.find(p=>p.id===id);
+    if(!plan)return;
+    S.editingPlanId=id;
+    document.getElementById('plan-modal-title').textContent='แก้ไขแผน';
+    document.getElementById('plan-name-inp').value=plan.name||'';
+    ensurePlanScheduleUI();
+    setPlanDayUI(plan.scheduleDays || []);
+    const list=document.getElementById('plan-ex-list');
+    list.innerHTML='';
+    (plan.exercises||[]).forEach(e=>addPlanExBlock(e));
+    if(!(plan.exercises||[]).length)addPlanExBlock();
+    document.getElementById('plan-modal').classList.add('show');
+  };
+
+  window.addPlanExBlock = function(prefill=null){
+    const list=document.getElementById('plan-ex-list');
+    const div=document.createElement('div');
+    div.className='plan-ex-block';
+    const minVal = Number(prefill?.targetMinReps ?? Math.max((Number(prefill?.reps)||10)-2, 1));
+    const maxVal = Number(prefill?.targetMaxReps ?? prefill?.reps ?? 10);
+    const restVal = Number(prefill?.restSec ?? S.prefs.defaultRest ?? 90);
+    div.innerHTML=`
+      <div class="plan-ex-num">EXERCISE ${list.children.length+1}</div>
+      <button type="button" class="plan-ex-block-del" onclick="delPlanExBlock(this)">×</button>
+      <div class="field" style="margin-bottom:0">
+        <label>ท่าออกกำลังกาย</label>
+        <select class="input plan-ex-sel" style="font-size:16px"><option value="">— เลือกท่า —</option></select>
+      </div>
+      <div class="range-row" style="margin-top:10px">
+        <div class="field" style="margin-bottom:0"><label>Sets</label><input class="input plan-sets" type="number" min="1" value="${prefill?.sets||3}" inputmode="numeric" style="text-align:center"></div>
+        <div class="field" style="margin-bottom:0"><label>Rep ต่ำสุด</label><input class="input plan-reps-min" type="number" min="1" value="${minVal}" inputmode="numeric" style="text-align:center"></div>
+        <div class="field" style="margin-bottom:0"><label>Rep สูงสุด</label><input class="input plan-reps-max" type="number" min="1" value="${maxVal}" inputmode="numeric" style="text-align:center"></div>
+        <div class="field" style="margin-bottom:0"><label>${unitLabel()}</label><input class="input plan-weight" type="number" min="0" step="0.5" value="${prefill?.weight?toDisplay(prefill.weight):''}" inputmode="decimal" placeholder="0" style="text-align:center"></div>
+        <div class="field" style="margin-bottom:0"><label>พัก(วิ)</label><input class="input plan-rest" type="number" min="0" value="${restVal}" inputmode="numeric" style="text-align:center"></div>
+      </div>`;
+    list.appendChild(div);
+    const sel=div.querySelector('.plan-ex-sel');
+    sel.innerHTML=`<option value="">— เลือกท่า —</option>${S.exOpts}`;
+    if(prefill?.exerciseName)sel.value=prefill.exerciseName;
+    refreshPlanExNums();
+  };
+
+  window.refreshPlanExNums = function(){
+    [...document.querySelectorAll('#plan-ex-list .plan-ex-block')].forEach((b,i)=>{
+      const n = b.querySelector('.plan-ex-num');
+      if(n) n.textContent = 'EXERCISE ' + (i+1);
+      const del = b.querySelector('.plan-ex-block-del');
+      if(del) del.style.display = document.querySelectorAll('#plan-ex-list .plan-ex-block').length > 1 ? 'inline-flex' : 'none';
+    });
+  };
+
+  window.delPlanExBlock = function(btn){
+    const blocks = document.querySelectorAll('#plan-ex-list .plan-ex-block');
+    if(blocks.length <= 1) return toast('ต้องมีอย่างน้อย 1 ท่า','err');
+    btn.closest('.plan-ex-block').remove();
+    refreshPlanExNums();
+  };
+
+  window.savePlan = async function(){
+    const name=document.getElementById('plan-name-inp').value.trim();
+    if(!name)return toast('กรุณาใส่ชื่อแผน','err');
+    const blocks=[...document.querySelectorAll('#plan-ex-list .plan-ex-block')];
+    const exercises=[];
+    for(let i=0;i<blocks.length;i++){
+      const exName=blocks[i].querySelector('.plan-ex-sel').value;
+      if(!exName)return toast(`กรุณาเลือกท่า ${i+1}`,'err');
+      const targetMinReps = Number(blocks[i].querySelector('.plan-reps-min').value)||1;
+      const targetMaxReps = Number(blocks[i].querySelector('.plan-reps-max').value)||targetMinReps;
+      exercises.push({
+        exerciseName: exName,
+        sets: Number(blocks[i].querySelector('.plan-sets').value)||3,
+        reps: targetMaxReps,
+        targetMinReps,
+        targetMaxReps,
+        weight: Number(fromDisplay(blocks[i].querySelector('.plan-weight').value||0))||0,
+        restSec: Number(blocks[i].querySelector('.plan-rest').value)||Number(S.prefs.defaultRest||90),
+      });
+    }
+    const scheduleDays = getSelectedPlanDays();
+    const btn=document.getElementById('btn-save-plan');
+    btn.disabled=true;btn.textContent='กำลังบันทึก...';
+    try{
+      const payload = {name, exercises, scheduleDays, updatedAt:TS()};
+      if(S.editingPlanId){
+        await planCol().doc(S.editingPlanId).update(payload);
+        toast('อัปเดตแผนสำเร็จ ✓','ok');
+      }else{
+        await planCol().add({...payload, createdAt:TS()});
+        toast(`สร้าง "${name}" สำเร็จ ✓`,'ok');
+      }
+      await loadPlans();
+      closePlanModal();
+      renderPlans();
+    }catch(err){
+      toast(err.message||'บันทึกไม่สำเร็จ','err');
+    }finally{
+      btn.disabled=false;btn.textContent='บันทึกแผน';
+    }
+  };
+
+  window.renderPlans = function(){
+    const el=document.getElementById('plans-list');
+    if(!S.plans.length){
+      el.innerHTML=`<div style="text-align:center;padding:48px 20px;color:var(--ts)">
+        <div style="font-size:44px;margin-bottom:12px">📋</div>
+        <div style="font-size:17px;font-weight:600;margin-bottom:8px;color:var(--t)">ยังไม่มีแผน</div>
+        <div style="font-size:14px;line-height:1.8">วางแผนล่วงหน้าว่าจะออกท่าอะไร<br>น้ำหนักเท่าไหร่ กี่ rep</div>
+      </div>`;
+      return;
+    }
+    const today = DAY_KEYS[new Date().getDay()];
+    el.innerHTML = S.plans.map((p,idx)=>{
+      const totalSets=(p.exercises||[]).reduce((s,e)=>s+(Number(e.sets)||0),0);
+      const schedule = (p.scheduleDays||[]).map(d=>DAY_LABELS[DAY_KEYS.indexOf(d)]).filter(Boolean);
+      const preview = (p.exercises||[]).slice(0,3).map(ex=>{
+        const min = Number(ex.targetMinReps ?? Math.max((Number(ex.reps)||10)-2,1));
+        const max = Number(ex.targetMaxReps ?? ex.reps ?? 10);
+        return `${ex.exerciseName} · ${ex.sets||1}x${min}-${max}`;
+      }).join(' · ');
+      const isToday = (p.scheduleDays||[]).includes(today);
+      return `
+        <div class="plan-card ${idx===0?'open':''}" id="pc-${esc(p.id)}" style="margin-bottom:12px">
+          <div class="plan-head" onclick="togglePlanCard('${esc(p.id)}')">
+            <div>
+              <div class="plan-title">${esc(p.name||'ไม่มีชื่อแผน')}</div>
+              <div class="plan-sub">${(p.exercises||[]).length} ท่า · ${totalSets} เซต · ${estimatePlanMinutes(p)} นาที${isToday?' · วันนี้':''}</div>
+            </div>
+            <div class="plan-meta-right">${schedule.length ? schedule.join(' / ') : 'ไม่กำหนดวัน'}</div>
+          </div>
+          <div class="plan-body">
+            <div class="tiny-muted" style="line-height:1.7">${esc(preview || 'ยังไม่มีท่าในแผน')}</div>
+            <div class="meta-chip-row">
+              ${(p.scheduleDays||[]).length ? (p.scheduleDays||[]).map(d=>`<span class="meta-chip ${d===today?'active':''}">${DAY_LABELS[DAY_KEYS.indexOf(d)]}</span>`).join('') : '<span class="meta-chip">ไม่มี schedule</span>'}
+            </div>
+            <div style="display:flex;gap:10px;margin-top:14px">
+              <button class="btn" style="flex:1;padding:12px" onclick="startFromPlan('${esc(p.id)}')">เริ่ม Workout</button>
+              <button class="btn btn-ghost" style="flex:1;padding:12px" onclick="openEditPlan('${esc(p.id)}')">แก้ไข</button>
+              <button class="btn btn-ghost" style="flex:1;padding:12px;color:var(--err);border-color:rgba(255,79,90,.22)" onclick="confirmDeletePlan('${esc(p.id)}','${esc(p.name||'').replace(/'/g,'&#39;')}')">ลบ</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('') + `<div style="height:14px"></div>`;
+  };
+
+  window.applyPlan = function(id){
+    const plan=S.plans.find(p=>p.id===id);
+    if(!plan)return;
+    S.activePlanId = id;
+    document.getElementById('log-exercises').innerHTML='';
+    (plan.exercises||[]).forEach((ex)=>{
+      addExBlock();
+      const blocks=[...document.querySelectorAll('.ex-block')];
+      const block=blocks[blocks.length-1];
+      block.dataset.targetMin = Number(ex.targetMinReps ?? Math.max((Number(ex.reps)||10)-2,1));
+      block.dataset.targetMax = Number(ex.targetMaxReps ?? ex.reps ?? 10);
+      block.dataset.restSec = Number(ex.restSec ?? S.prefs.defaultRest ?? 90);
+      const sel=block.querySelector('.ex-sel');
+      sel.value=ex.exerciseName;
+      block.querySelector('.set-toolbar').style.display='flex';
+      const hint=block.querySelector('.target-hint');
+      const min = Number(block.dataset.targetMin||0);
+      const max = Number(block.dataset.targetMax||0);
+      hint.style.display='block';
+      hint.innerHTML=`เป้าหมาย <strong>${ex.sets||1}</strong> เซต × <strong>${min}-${max}</strong> reps${Number(ex.weight)?` · <strong>${fmt(toDisplay(ex.weight))}</strong> ${unitLabel()}`:''}${Number(block.dataset.restSec)?` · พัก <strong>${block.dataset.restSec}</strong> วิ`:''}`;
+      const sl=block.querySelector('.sets-list');
+      sl.innerHTML='';
+      const sets=Number(ex.sets)||1;
+      for(let s=1;s<=sets;s++){
+        addSetRow(sl,s,{ reps:max || 10, weight: Number(ex.weight)||0, mode:'reps' });
+      }
+    });
+    refreshLogEditor();
+    document.getElementById('use-plan-title').textContent=plan.name;
+    document.getElementById('use-plan-sub').textContent=`${(plan.exercises||[]).length} ท่า · โหลดแล้ว ✓`;
+    toast(`โหลดแผน "${plan.name}" แล้ว 💪`,'ok');
+  };
+
+  window.startFromPlan = function(id){
+    applyPlan(id);
+    setTab('log');
+  };
+
+  window.saveWorkout = async function(){
+    const date=document.getElementById('log-date').value;
+    if(!date)return toast('กรุณาเลือกวันที่','err');
+    const blocks=[...document.querySelectorAll('.ex-block')];
+    const docs=[];
+    const activePlan = S.plans.find(p=>p.id===S.activePlanId);
+    for(let i=0;i<blocks.length;i++){
+      const block=blocks[i],sel=block.querySelector('.ex-sel'),cust=block.querySelector('.custom-ex');
+      const exName=sel.value==='__custom'?cust.value.trim():sel.value;
+      if(!exName)return toast(`กรุณาเลือกท่า ${i+1}`,'err');
+      const notes=block.querySelector('[name=notes]').value||'';
+      const min = Number(block.dataset.targetMin || 0);
+      const max = Number(block.dataset.targetMax || 0);
+      const restSec = Number(block.dataset.restSec || S.prefs.defaultRest || 90);
+      [...block.querySelectorAll('.sets-list .set-row')].forEach((row,j)=>{
+        const repsVal=Number(row.querySelector('[name=reps]').value)||0;
+        const wVal=fromDisplay(row.querySelector('[name=weight]').value);
+        const mode=row.dataset.mode||'reps';
+        docs.push({
+          date, exerciseName:exName, sets:1, reps:repsVal, weight:wVal,
+          duration:mode==='sec'?repsVal:0, notes:j===0?notes:'', mode, unit:S.unit,
+          targetMinReps:min || null, targetMaxReps:max || null, restSec,
+          planId: activePlan?.id || null, createdAt:TS()
+        });
+      });
+    }
+    if(!docs.length)return toast('ไม่มีข้อมูล','err');
+
+    const prevSnap = await woCol().get();
+    const prevRows = prevSnap.docs.map(d=>({...d.data(), workoutId:d.id}));
+    const prevMap = workoutSummaryMap(prevRows);
+
+    const btn=document.getElementById('btn-save');
+    btn.disabled=true;btn.textContent='กำลังบันทึก...';
+    try{
+      const batch=db.batch();
+      docs.forEach(d=>batch.set(woCol().doc(),d));
+      await batch.commit();
+      S._pc=null;
+      await primeLastExerciseMap();
+
+      const currMap = workoutSummaryMap(docs);
+      const prs = [];
+      Object.entries(currMap).forEach(([name, stats])=>{
+        const old = prevMap[name] || {maxWeight:0,maxReps:0,maxVolume:0};
+        if(stats.maxWeight > old.maxWeight) prs.push(`${name} · น้ำหนักสูงสุด ${fmt(toDisplay(stats.maxWeight))} ${unitLabel()}`);
+        else if(stats.maxVolume > old.maxVolume) prs.push(`${name} · volume ดีสุด ${Math.round(stats.maxVolume).toLocaleString()} ${unitLabel()}`);
+      });
+
+      const volume = docs.reduce((s,d)=>s+((Number(d.reps)||0)*(Number(d.weight)||0)),0);
+      const minutes = Math.max(1, Math.round(((Date.now() - (S.logStartedAt || Date.now()))/60000)));
+      toast('บันทึกสำเร็จ 💪','ok');
+      openWorkoutSummary({
+        exercises: new Set(docs.map(d=>d.exerciseName)).size,
+        sets: docs.length,
+        volume,
+        minutes,
+        prs
+      });
+      initLog();
+    }catch(err){
+      toast(err.message||'บันทึกไม่สำเร็จ','err');
+    }finally{
+      btn.disabled=false;btn.textContent='บันทึก Workout 💪';
+    }
+  };
+
+  S.restTimer = { total: Number(S.prefs.defaultRest||90), remain: Number(S.prefs.defaultRest||90), int: null, running: false };
+
+  function formatMMSS(sec){
+    const m = String(Math.floor(sec/60)).padStart(2,'0');
+    const s = String(Math.max(sec%60,0)).padStart(2,'0');
+    return `${m}:${s}`;
+  }
+  function updateRestUI(){
+    ensureRestTimerUI();
+    const t = document.getElementById('rest-timer-time');
+    const b = document.getElementById('rest-timer-bar');
+    const note = document.getElementById('rest-timer-note');
+    if(t) t.textContent = formatMMSS(S.restTimer.remain);
+    if(b) b.style.width = `${S.restTimer.total ? ((S.restTimer.total - S.restTimer.remain)/S.restTimer.total)*100 : 0}%`;
+    if(note) note.textContent = S.restTimer.running ? 'กำลังพัก...' : `พัก ${S.restTimer.total} วิ จาก Preferences`;
+  }
+  window.startRestTimer = function(sec){
+    const target = Number(sec || S.restTimer.total || S.prefs.defaultRest || 90);
+    clearInterval(S.restTimer.int);
+    S.restTimer.total = target;
+    S.restTimer.remain = target;
+    S.restTimer.running = true;
+    updateRestUI();
+    S.restTimer.int = setInterval(()=>{
+      S.restTimer.remain -= 1;
+      updateRestUI();
+      if(S.restTimer.remain <= 0){
+        clearInterval(S.restTimer.int);
+        S.restTimer.running = false;
+        S.restTimer.remain = 0;
+        updateRestUI();
+        toast('พักครบแล้ว ✓','ok');
+      }
+    }, 1000);
+  };
+  window.pauseRestTimer = function(){
+    clearInterval(S.restTimer.int);
+    S.restTimer.running = false;
+    updateRestUI();
+  };
+  window.resetRestTimer = function(){
+    clearInterval(S.restTimer.int);
+    S.restTimer.total = Number(S.prefs.defaultRest || 90);
+    S.restTimer.remain = S.restTimer.total;
+    S.restTimer.running = false;
+    updateRestUI();
+  };
+  window.autoStartRestTimer = function(){
+    const activeBlock = document.activeElement?.closest?.('.ex-block');
+    const sec = Number(activeBlock?.dataset?.restSec || S.prefs.defaultRest || 90);
+    startRestTimer(sec);
+  };
+
+  function initEnhancements(){
+    ensureStyles();
+    ensurePlanScheduleUI();
+    ensureRestTimerUI();
+    ensureSummaryModal();
+    updateRestUI();
+  }
+
+  document.addEventListener('DOMContentLoaded', initEnhancements);
+  setTimeout(initEnhancements, 50);
+})();
+</script>
+
 </body>
 </html>
