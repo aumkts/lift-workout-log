@@ -489,6 +489,82 @@ select.input{cursor:pointer}
   min-height:44px;
 }
 
+
+/* v6.4 replace activity graph with recent summary card */
+.recent-summary-card{
+  background:var(--s1);
+  border:1px solid var(--bd);
+  border-radius:var(--r2);
+  padding:16px;
+  margin-top:10px;
+}
+.recent-summary-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+.recent-summary-box{
+  background:var(--s2);
+  border:1px solid var(--bd);
+  border-radius:14px;
+  padding:12px 14px;
+}
+.recent-summary-k{
+  font-size:10px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--ts);
+  margin-bottom:6px;
+}
+.recent-summary-v{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:34px;
+  line-height:1;
+  color:var(--a);
+  font-weight:700;
+}
+.recent-summary-sub{
+  font-size:12px;
+  color:var(--ts);
+  margin-top:4px;
+}
+.recent-insight-list{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:12px;
+}
+.recent-insight-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:10px;
+  padding:8px 0;
+  border-bottom:1px solid var(--bd);
+}
+.recent-insight-row:last-child{border-bottom:none;padding-bottom:0}
+.recent-insight-label{
+  font-size:12px;
+  color:var(--ts);
+}
+.recent-insight-value{
+  font-size:13px;
+  font-weight:600;
+  text-align:right;
+}
+
+
+/* v6.4.1 force replace old home activity graph */
+#activity-chart,
+canvas#activity-chart,
+.chart-card,
+.home-activity-card,
+.activity-card,
+.activity-graph-card{
+  display:none !important;
+}
+
 </style>
 </head>
 <body>
@@ -563,6 +639,50 @@ select.input{cursor:pointer}
     <div id="today-action-wrap"></div>
     <div id="stats-wrap"></div>
     <div id="dash-insights-wrap"></div>
+
+<div class="recent-summary-card" id="recent-summary-card" style="margin-top:14px">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+    <div style="font-size:12px;color:var(--ts)">7 วันล่าสุด</div>
+    <div style="font-size:12px;color:var(--a)" id="recent-summary-range">สรุปการฝึกล่าสุด</div>
+  </div>
+  <div class="recent-summary-grid">
+    <div class="recent-summary-box">
+      <div class="recent-summary-k">Sessions</div>
+      <div class="recent-summary-v" id="recent-sessions">0</div>
+      <div class="recent-summary-sub">จำนวนวันที่ฝึก</div>
+    </div>
+    <div class="recent-summary-box">
+      <div class="recent-summary-k">Sets</div>
+      <div class="recent-summary-v" id="recent-sets">0</div>
+      <div class="recent-summary-sub">จำนวนเซตรวม</div>
+    </div>
+    <div class="recent-summary-box">
+      <div class="recent-summary-k">Volume</div>
+      <div class="recent-summary-v" id="recent-volume">0</div>
+      <div class="recent-summary-sub" id="recent-volume-unit">kg</div>
+    </div>
+    <div class="recent-summary-box">
+      <div class="recent-summary-k">Recovery</div>
+      <div class="recent-summary-v" id="recent-rest-days">0</div>
+      <div class="recent-summary-sub">วันพักล่าสุด</div>
+    </div>
+  </div>
+  <div class="recent-insight-list">
+    <div class="recent-insight-row">
+      <div class="recent-insight-label">Body part ที่ฝึกน้อยสุด</div>
+      <div class="recent-insight-value" id="recent-least-bodypart">—</div>
+    </div>
+    <div class="recent-insight-row">
+      <div class="recent-insight-label">ควรทำต่อ</div>
+      <div class="recent-insight-value" id="recent-next-focus">—</div>
+    </div>
+    <div class="recent-insight-row">
+      <div class="recent-insight-label">เป้าสัปดาห์นี้</div>
+      <div class="recent-insight-value" id="recent-goal-status">—</div>
+    </div>
+  </div>
+</div>
+
     <div class="sec-head" style="margin-top:4px">
       <div class="sec-title">30 วันที่ผ่านมา</div>
       <span id="dash-meta" style="font-size:11px;color:var(--ts)"></span>
@@ -3036,6 +3156,247 @@ init();
 
   document.addEventListener('DOMContentLoaded', initEnhancements);
   setTimeout(initEnhancements, 50);
+})();
+</script>
+
+
+<script>
+/* v6.4 recent summary replacement for activity graph */
+(function(){
+  function recent7Stats(rows){
+    const now = new Date();
+    const end = new Date(now); end.setHours(23,59,59,999);
+    const start = new Date(now); start.setDate(now.getDate()-6); start.setHours(0,0,0,0);
+    const startStr = start.toISOString().slice(0,10);
+    const endStr = end.toISOString().slice(0,10);
+    const recent = (rows || []).filter(w => w.date >= startStr && w.date <= endStr);
+    const sessions = [...new Set(recent.map(w => w.date))].length;
+    const sets = recent.length;
+    const volume = recent.reduce((s,w)=>s+((Number(w.reps)||0)*(Number(w.weight)||0)),0);
+
+    const uniqueDates = [...new Set((rows || []).map(w => w.date))].sort();
+    const lastDate = uniqueDates[uniqueDates.length-1] || null;
+    let restDays = 0;
+    if(lastDate){
+      restDays = Math.max(0, Math.floor((Date.now() - new Date(lastDate+'T00:00:00').getTime())/86400000));
+    }
+
+    const bpMap = {};
+    recent.forEach(w=>{
+      const bp = typeof getExCat === 'function' ? getExCat(w.exerciseName) : '—';
+      bpMap[bp] = (bpMap[bp] || 0) + 1;
+    });
+    const leastBodyPart = Object.entries(bpMap).sort((a,b)=>a[1]-b[1])[0]?.[0] || '—';
+
+    let nextFocus = '—';
+    if(typeof chooseSuggestedPlan === 'function'){
+      const p = chooseSuggestedPlan();
+      if(p?.name) nextFocus = p.name;
+    }
+    if(nextFocus === '—' && leastBodyPart !== '—') nextFocus = leastBodyPart;
+
+    const goal = Number((window.S && S.prefs && S.prefs.goalSessions) || 4);
+    const left = Math.max(goal - sessions, 0);
+    const goalStatus = left === 0 ? 'ครบเป้าแล้ว ✓' : `อีก ${left} session`;
+
+    return { startStr, endStr, sessions, sets, volume, restDays, leastBodyPart, nextFocus, goalStatus };
+  }
+
+  window.renderRecentSummaryCard = function(rows){
+    const card = document.getElementById('recent-summary-card');
+    if(!card) return;
+    const d = recent7Stats(rows || []);
+    const rangeEl = document.getElementById('recent-summary-range');
+    const sessionsEl = document.getElementById('recent-sessions');
+    const setsEl = document.getElementById('recent-sets');
+    const volumeEl = document.getElementById('recent-volume');
+    const volumeUnitEl = document.getElementById('recent-volume-unit');
+    const restEl = document.getElementById('recent-rest-days');
+    const leastEl = document.getElementById('recent-least-bodypart');
+    const nextEl = document.getElementById('recent-next-focus');
+    const goalEl = document.getElementById('recent-goal-status');
+
+    if(rangeEl) rangeEl.textContent = `${d.startStr.slice(5).replace('-', '/')} - ${d.endStr.slice(5).replace('-', '/')}`;
+    if(sessionsEl) sessionsEl.textContent = String(d.sessions || 0);
+    if(setsEl) setsEl.textContent = String(d.sets || 0);
+    if(volumeEl) volumeEl.textContent = Math.round(d.volume || 0).toLocaleString();
+    if(volumeUnitEl) volumeUnitEl.textContent = (typeof unitLabel === 'function' ? unitLabel() : 'kg');
+    if(restEl) restEl.textContent = String(d.restDays || 0);
+    if(leastEl) leastEl.textContent = d.leastBodyPart || '—';
+    if(nextEl) nextEl.textContent = d.nextFocus || '—';
+    if(goalEl) goalEl.textContent = d.goalStatus || '—';
+  };
+
+  const _origRenderStats = window.renderStats;
+  if(typeof _origRenderStats === 'function'){
+    window.renderStats = function(d){
+      _origRenderStats(d);
+      try { renderRecentSummaryCard((window.S && S._pc) || []); } catch(e) { console.warn('recent summary', e); }
+    };
+  }
+
+  const _origLoadWO = window.loadWorkouts;
+  if(typeof _origLoadWO === 'function'){
+    window.loadWorkouts = async function(){
+      const res = await _origLoadWO();
+      try { renderRecentSummaryCard((window.S && S._pc) || []); } catch(e) { console.warn('recent summary', e); }
+      return res;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    try { renderRecentSummaryCard((window.S && S._pc) || []); } catch(e) {}
+  });
+})();
+</script>
+
+
+<script>
+/* v6.4.1 force render recent summary card */
+(function(){
+  function recent7Stats(rows){
+    const now = new Date();
+    const end = new Date(now); end.setHours(23,59,59,999);
+    const start = new Date(now); start.setDate(now.getDate()-6); start.setHours(0,0,0,0);
+    const startStr = start.toISOString().slice(0,10);
+    const endStr = end.toISOString().slice(0,10);
+    const recent = (rows || []).filter(w => w.date >= startStr && w.date <= endStr);
+    const sessions = [...new Set(recent.map(w => w.date))].length;
+    const sets = recent.length;
+    const volume = recent.reduce((s,w)=>s+((Number(w.reps)||0)*(Number(w.weight)||0)),0);
+
+    const uniqueDates = [...new Set((rows || []).map(w => w.date))].sort();
+    const lastDate = uniqueDates[uniqueDates.length-1] || null;
+    let restDays = 0;
+    if(lastDate){
+      restDays = Math.max(0, Math.floor((Date.now() - new Date(lastDate+'T00:00:00').getTime())/86400000));
+    }
+
+    const bpMap = {};
+    recent.forEach(w=>{
+      const bp = typeof getExCat === 'function' ? getExCat(w.exerciseName) : '—';
+      bpMap[bp] = (bpMap[bp] || 0) + 1;
+    });
+    const leastBodyPart = Object.entries(bpMap).sort((a,b)=>a[1]-b[1])[0]?.[0] || '—';
+
+    let nextFocus = '—';
+    if(typeof chooseSuggestedPlan === 'function'){
+      const p = chooseSuggestedPlan();
+      if(p && p.name) nextFocus = p.name;
+    }
+    if(nextFocus === '—' && leastBodyPart !== '—') nextFocus = leastBodyPart;
+
+    const goal = Number((window.S && S.prefs && S.prefs.goalSessions) || 4);
+    const left = Math.max(goal - sessions, 0);
+    const goalStatus = left === 0 ? 'ครบเป้าแล้ว ✓' : `อีก ${left} session`;
+
+    return { startStr, endStr, sessions, sets, volume, restDays, leastBodyPart, nextFocus, goalStatus };
+  }
+
+  window.renderRecentSummaryCard = function(rows){
+    const card = document.getElementById('recent-summary-card');
+    if(!card) return;
+    const d = recent7Stats(rows || []);
+    const unit = (typeof unitLabel === 'function' ? unitLabel() : 'kg');
+
+    const setText = (id, value) => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = value;
+    };
+
+    setText('recent-summary-range', `${d.startStr.slice(5).replace('-', '/')} - ${d.endStr.slice(5).replace('-', '/')}`);
+    setText('recent-sessions', String(d.sessions || 0));
+    setText('recent-sets', String(d.sets || 0));
+    setText('recent-volume', Math.round(d.volume || 0).toLocaleString());
+    setText('recent-volume-unit', unit);
+    setText('recent-rest-days', String(d.restDays || 0));
+    setText('recent-least-bodypart', d.leastBodyPart || '—');
+    setText('recent-next-focus', d.nextFocus || '—');
+    setText('recent-goal-status', d.goalStatus || '—');
+  };
+
+  function triggerRecentCard(){
+    try {
+      const rows = (window.S && (S._pc || S.workouts || [])) || [];
+      window.renderRecentSummaryCard(rows);
+    } catch(e) {
+      console.warn('recent summary render failed', e);
+    }
+  }
+
+  const wrap = (name) => {
+    const orig = window[name];
+    if(typeof orig !== 'function') return;
+    window[name] = async function(...args){
+      const out = await orig.apply(this, args);
+      triggerRecentCard();
+      return out;
+    };
+  };
+
+  wrap('loadWorkouts');
+  wrap('loadStats');
+  wrap('renderStats');
+  wrap('renderDashInsights');
+
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(triggerRecentCard, 100);
+    setTimeout(triggerRecentCard, 600);
+  });
+})();
+</script>
+
+
+<script>
+/* v6.4.2 fix recent summary data source */
+(function(){
+  function hideLegacyDashChartBits(){
+    const meta = document.getElementById('dash-meta');
+    const chart = document.getElementById('dash-chart');
+    if(meta) meta.style.display = 'none';
+    if(chart && chart.parentElement) chart.parentElement.style.display = 'none';
+  }
+
+  const _origLoadDash = window.loadDash;
+  if(typeof _origLoadDash === 'function'){
+    window.loadDash = async function(...args){
+      const out = await _origLoadDash.apply(this, args);
+      try{
+        const snap = await woCol().get();
+        const rows = snap.docs.map(d=>({...d.data(), workoutId:d.id}));
+        if(window.S) S._dashWO = rows;
+        if(typeof renderRecentSummaryCard === 'function') renderRecentSummaryCard(rows);
+      }catch(e){
+        console.warn('recent summary dash reload failed', e);
+      }
+      hideLegacyDashChartBits();
+      return out;
+    };
+  }
+
+  const _origRenderRecentSummaryCard = window.renderRecentSummaryCard;
+  if(typeof _origRenderRecentSummaryCard === 'function'){
+    window.renderRecentSummaryCard = function(rows){
+      const actualRows = Array.isArray(rows) && rows.length
+        ? rows
+        : ((window.S && Array.isArray(S._dashWO)) ? S._dashWO : []);
+      return _origRenderRecentSummaryCard(actualRows);
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    setTimeout(hideLegacyDashChartBits, 100);
+    setTimeout(async ()=>{
+      try{
+        const snap = await woCol().get();
+        const rows = snap.docs.map(d=>({...d.data(), workoutId:d.id}));
+        if(window.S) S._dashWO = rows;
+        if(typeof renderRecentSummaryCard === 'function') renderRecentSummaryCard(rows);
+      }catch(e){
+        console.warn('recent summary initial load failed', e);
+      }
+    }, 500);
+  });
 })();
 </script>
 
