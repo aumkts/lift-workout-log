@@ -2556,9 +2556,13 @@ init();
     const reps = row.querySelector('[name=reps]');
     const weight = row.querySelector('[name=weight]');
     [reps, weight].forEach(inp => {
+      inp?.addEventListener('focus', ()=>{
+        setRestTimerFromBlock(row.closest('.ex-block'));
+      });
       inp?.addEventListener('change', ()=>{
         applyRepRangeState(row);
-        if((Number(reps.value)||0) > 0) autoStartRestTimer();
+        setRestTimerFromBlock(row.closest('.ex-block'));
+        if((Number(reps.value)||0) > 0) autoStartRestTimer(row);
         refreshLogSummary();
       });
       inp?.addEventListener('keydown', (e)=>{
@@ -2602,8 +2606,10 @@ init();
       </button>
       <div class="ex-notes-row"><input type="text" class="input" name="notes" placeholder="หมายเหตุ (ไม่บังคับ)" style="font-size:13px;padding:8px 12px"></div>`;
     container.appendChild(div);
+    div.addEventListener('click', ()=>setRestTimerFromBlock(div));
     populateSel(div.querySelector('.ex-sel'));
     addSetRow(div.querySelector('.sets-list'),1);
+    setRestTimerFromBlock(div, idx===0);
     refreshLogEditor();
     if(idx>0)div.scrollIntoView({behavior:'smooth',block:'nearest'});
   };
@@ -2664,6 +2670,7 @@ init();
     const block = sel.closest('.ex-block');
     const exName = sel.value;
     if(!exName || exName === '__custom') return;
+    setRestTimerFromBlock(block);
     const last = S.lastByExercise[exName];
     if(last){
       [...block.querySelectorAll('.set-row')].forEach(row=>{
@@ -2867,6 +2874,7 @@ init();
       }
     });
     refreshLogEditor();
+    setRestTimerFromBlock(document.querySelector('#log-exercises .ex-block'), true);
     document.getElementById('use-plan-title').textContent=plan.name;
     document.getElementById('use-plan-sub').textContent=`${(plan.exercises||[]).length} ท่า · โหลดแล้ว ✓`;
     toast(`โหลดแผน "${plan.name}" แล้ว 💪`,'ok');
@@ -2951,6 +2959,22 @@ init();
     const s = String(Math.max(sec%60,0)).padStart(2,'0');
     return `${m}:${s}`;
   }
+  function getRestSecFromBlock(block){
+    const raw = Number(block?.dataset?.restSec);
+    return Number.isFinite(raw) && raw > 0 ? raw : Number(S.prefs.defaultRest || 90);
+  }
+
+  function setRestTimerFromBlock(block, forceReset=false){
+    if(!block) return;
+    S.restTimer.activeBlock = block;
+    const sec = getRestSecFromBlock(block);
+    if(forceReset || !S.restTimer.running){
+      S.restTimer.total = sec;
+      S.restTimer.remain = sec;
+      updateRestUI();
+    }
+  }
+
   function updateRestUI(){
     ensureRestTimerUI();
     const t = document.getElementById('rest-timer-time');
@@ -2958,10 +2982,14 @@ init();
     const note = document.getElementById('rest-timer-note');
     if(t) t.textContent = formatMMSS(S.restTimer.remain);
     if(b) b.style.width = `${S.restTimer.total ? ((S.restTimer.total - S.restTimer.remain)/S.restTimer.total)*100 : 0}%`;
-    if(note) note.textContent = S.restTimer.running ? 'กำลังพัก...' : `พัก ${S.restTimer.total} วิ จาก Preferences`;
+    if(note) {
+      const currentSec = getRestSecFromBlock(S.restTimer.activeBlock);
+      note.textContent = S.restTimer.running ? `กำลังพัก... (${S.restTimer.total} วิ)` : `เวลาพักท่าปัจจุบัน ${currentSec} วิ`;
+    }
   }
   window.startRestTimer = function(sec){
-    const target = Number(sec || S.restTimer.total || S.prefs.defaultRest || 90);
+    const activeSec = getRestSecFromBlock(S.restTimer.activeBlock);
+    const target = Number(sec || activeSec || S.restTimer.total || S.prefs.defaultRest || 90);
     clearInterval(S.restTimer.int);
     S.restTimer.total = target;
     S.restTimer.remain = target;
@@ -2991,9 +3019,10 @@ init();
     S.restTimer.running = false;
     updateRestUI();
   };
-  window.autoStartRestTimer = function(){
-    const activeBlock = document.activeElement?.closest?.('.ex-block');
-    const sec = Number(activeBlock?.dataset?.restSec || S.prefs.defaultRest || 90);
+  window.autoStartRestTimer = function(source){
+    const activeBlock = source?.closest?.('.ex-block') || source || S.restTimer.activeBlock || document.activeElement?.closest?.('.ex-block');
+    setRestTimerFromBlock(activeBlock);
+    const sec = getRestSecFromBlock(activeBlock);
     startRestTimer(sec);
   };
 
