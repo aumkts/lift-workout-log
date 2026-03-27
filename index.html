@@ -565,6 +565,84 @@ canvas#activity-chart,
   display:none !important;
 }
 
+
+/* v6.5 cleanup old activity labels */
+#dash-meta,
+#dash-chart,
+#activity-chart,
+canvas#activity-chart,
+.chart-card,
+.home-activity-card,
+.activity-card,
+.activity-graph-card{
+  display:none !important;
+}
+
+
+/* v6.5 workout heatmap */
+.heatmap-card{
+  background:var(--s1);
+  border:1px solid var(--bd);
+  border-radius:var(--r2);
+  padding:16px;
+  margin-top:12px;
+}
+.heatmap-legend{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:6px;
+  margin-top:10px;
+  font-size:11px;
+  color:var(--ts);
+}
+.heatmap-legend-box{
+  width:12px;
+  height:12px;
+  border-radius:4px;
+  border:1px solid var(--bd);
+  background:var(--s2);
+}
+.heatmap-legend-box.level-1{ background:rgba(200,255,60,.18); border-color:rgba(200,255,60,.10); }
+.heatmap-legend-box.level-2{ background:rgba(200,255,60,.42); border-color:rgba(200,255,60,.18); }
+.heatmap-legend-box.level-3{ background:rgba(200,255,60,.78); border-color:rgba(200,255,60,.26); }
+.heatmap-grid{
+  display:grid;
+  grid-template-columns:repeat(10, 1fr);
+  gap:8px;
+  margin-top:14px;
+}
+.heatmap-cell{
+  aspect-ratio:1/1;
+  border-radius:8px;
+  background:var(--s2);
+  border:1px solid var(--bd);
+  position:relative;
+}
+.heatmap-cell.level-1{ background:rgba(200,255,60,.18); border-color:rgba(200,255,60,.10); }
+.heatmap-cell.level-2{ background:rgba(200,255,60,.42); border-color:rgba(200,255,60,.18); }
+.heatmap-cell.level-3{ background:rgba(200,255,60,.78); border-color:rgba(200,255,60,.26); }
+.heatmap-cell.today{
+  box-shadow:0 0 0 1px rgba(255,255,255,.55) inset;
+}
+.heatmap-cell::after{
+  content:attr(data-day);
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  font-size:9px;
+  color:rgba(255,255,255,.72);
+  pointer-events:none;
+}
+.heatmap-week-labels{
+  display:flex;
+  justify-content:space-between;
+  margin-top:10px;
+  color:var(--ts);
+  font-size:11px;
+}
+
 </style>
 </head>
 <body>
@@ -645,6 +723,27 @@ canvas#activity-chart,
     <div style="font-size:12px;color:var(--ts)">7 วันล่าสุด</div>
     <div style="font-size:12px;color:var(--a)" id="recent-summary-range">สรุปการฝึกล่าสุด</div>
   </div>
+
+<div class="heatmap-card" id="workout-heatmap-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+    <div style="font-size:12px;color:var(--ts)">Workout Heatmap</div>
+    <div style="font-size:12px;color:var(--a)">30 วันล่าสุด</div>
+  </div>
+  <div class="heatmap-legend">
+    <span>น้อย</span>
+    <div class="heatmap-legend-box level-0"></div>
+    <div class="heatmap-legend-box level-1"></div>
+    <div class="heatmap-legend-box level-2"></div>
+    <div class="heatmap-legend-box level-3"></div>
+    <span>มาก</span>
+  </div>
+  <div class="heatmap-grid" id="workout-heatmap-grid"></div>
+  <div class="heatmap-week-labels">
+    <span>4 สัปดาห์ก่อน</span>
+    <span>วันนี้</span>
+  </div>
+</div>
+
   <div class="recent-summary-grid">
     <div class="recent-summary-box">
       <div class="recent-summary-k">Sessions</div>
@@ -684,7 +783,7 @@ canvas#activity-chart,
 </div>
 
     <div class="sec-head" style="margin-top:4px">
-      <div class="sec-title">30 วันที่ผ่านมา</div>
+      <div class="sec-title"></div>
       <span id="dash-meta" style="font-size:11px;color:var(--ts)"></span>
     </div>
     <div class="chart-card">
@@ -3397,6 +3496,286 @@ init();
       }
     }, 500);
   });
+})();
+</script>
+
+
+<script>
+/* v6.5 workout heatmap */
+(function(){
+  function buildHeatmapData(rows){
+    const now = new Date();
+    now.setHours(0,0,0,0);
+    const days = [];
+    for(let i=29;i>=0;i--){
+      const d = new Date(now);
+      d.setDate(now.getDate()-i);
+      const key = d.toISOString().slice(0,10);
+      days.push({ key, date: d, volume: 0, sets: 0 });
+    }
+    const map = Object.fromEntries(days.map(d => [d.key, d]));
+    (rows || []).forEach(w=>{
+      const key = w.date;
+      if(!map[key]) return;
+      map[key].sets += 1;
+      map[key].volume += ((Number(w.reps)||0) * (Number(w.weight)||0));
+    });
+    const maxSets = Math.max(0, ...days.map(d=>d.sets));
+    days.forEach(d=>{
+      if(d.sets <= 0) d.level = 0;
+      else if(maxSets <= 1) d.level = 3;
+      else {
+        const ratio = d.sets / maxSets;
+        d.level = ratio >= 0.75 ? 3 : ratio >= 0.4 ? 2 : 1;
+      }
+    });
+    return days;
+  }
+
+  window.renderWorkoutHeatmap = function(rows){
+    const grid = document.getElementById('workout-heatmap-grid');
+    if(!grid) return;
+    const days = buildHeatmapData(rows || []);
+    const todayKey = new Date().toISOString().slice(0,10);
+    grid.innerHTML = days.map(d=>{
+      const dayNum = String(d.date.getDate());
+      const title = `${d.key} • ${d.sets} sets • ${Math.round(d.volume).toLocaleString()} ${(typeof unitLabel === 'function' ? unitLabel() : 'kg')}`;
+      return `<div class="heatmap-cell level-${d.level} ${d.key===todayKey?'today':''}" data-day="${dayNum}" title="${title}"></div>`;
+    }).join('');
+  };
+
+  function triggerHeatmap(){
+    try{
+      const rows = (window.S && (S._dashWO || S._pc || S.workouts || [])) || [];
+      renderWorkoutHeatmap(rows);
+    }catch(e){
+      console.warn('heatmap render failed', e);
+    }
+  }
+
+  const wrap = (name) => {
+    const orig = window[name];
+    if(typeof orig !== 'function') return;
+    window[name] = async function(...args){
+      const out = await orig.apply(this, args);
+      triggerHeatmap();
+      return out;
+    };
+  };
+
+  wrap('loadDash');
+  wrap('loadWorkouts');
+  wrap('renderRecentSummaryCard');
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    setTimeout(triggerHeatmap, 200);
+    setTimeout(triggerHeatmap, 800);
+  });
+})();
+</script>
+
+
+<script>
+/* v6.5.1 fix heatmap data source */
+(function(){
+  async function fetchDashWorkoutRows(){
+    try{
+      const snap = await woCol().get();
+      const rows = snap.docs.map(d=>({...d.data(), workoutId:d.id}));
+      if(window.S) S._dashWO = rows;
+      return rows;
+    }catch(e){
+      console.warn('heatmap fetch failed', e);
+      return (window.S && (S._dashWO || S._pc || S.workouts || [])) || [];
+    }
+  }
+
+  const _origLoadDashV651 = window.loadDash;
+  if(typeof _origLoadDashV651 === 'function'){
+    window.loadDash = async function(...args){
+      const out = await _origLoadDashV651.apply(this, args);
+      const rows = await fetchDashWorkoutRows();
+      try{
+        if(typeof renderWorkoutHeatmap === 'function') renderWorkoutHeatmap(rows);
+        if(typeof renderRecentSummaryCard === 'function') renderRecentSummaryCard(rows);
+      }catch(e){
+        console.warn('dash widgets refresh failed', e);
+      }
+      return out;
+    };
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    setTimeout(async ()=>{
+      const rows = await fetchDashWorkoutRows();
+      try{
+        if(typeof renderWorkoutHeatmap === 'function') renderWorkoutHeatmap(rows);
+        if(typeof renderRecentSummaryCard === 'function') renderRecentSummaryCard(rows);
+      }catch(e){
+        console.warn('initial widgets refresh failed', e);
+      }
+    }, 600);
+  });
+})();
+</script>
+
+
+<script>
+/* v6.5.2 normalize workout dates for summary + heatmap */
+(function(){
+  function normalizeWorkoutDate(value){
+    if(!value) return '';
+    if(typeof value === 'string'){
+      const m = value.match(/^\d{4}-\d{2}-\d{2}/);
+      if(m) return m[0];
+      const t = new Date(value);
+      return isNaN(t.getTime()) ? '' : t.toISOString().slice(0,10);
+    }
+    if(typeof value === 'number'){
+      const t = new Date(value);
+      return isNaN(t.getTime()) ? '' : t.toISOString().slice(0,10);
+    }
+    if(value && typeof value.toDate === 'function'){
+      const d = value.toDate();
+      return d ? d.toISOString().slice(0,10) : '';
+    }
+    if(value && typeof value.seconds === 'number'){
+      return new Date(value.seconds * 1000).toISOString().slice(0,10);
+    }
+    try{
+      const t = new Date(value);
+      return isNaN(t.getTime()) ? '' : t.toISOString().slice(0,10);
+    }catch(e){
+      return '';
+    }
+  }
+
+  function normalizeWorkoutRows(rows){
+    return (rows || []).map(w => ({...w, _normDate: normalizeWorkoutDate(w.date || w.createdAt || w.updatedAt)}));
+  }
+
+  if(typeof window.renderRecentSummaryCard === 'function'){
+    const _origRecent = window.renderRecentSummaryCard;
+    window.renderRecentSummaryCard = function(rows){
+      const normalized = normalizeWorkoutRows(rows);
+      const now = new Date();
+      const end = new Date(now); end.setHours(23,59,59,999);
+      const start = new Date(now); start.setDate(now.getDate()-6); start.setHours(0,0,0,0);
+      const startStr = start.toISOString().slice(0,10);
+      const endStr = end.toISOString().slice(0,10);
+
+      const recent = normalized.filter(w => w._normDate && w._normDate >= startStr && w._normDate <= endStr);
+      const sessions = [...new Set(recent.map(w => w._normDate))].length;
+      const sets = recent.length;
+      const volume = recent.reduce((s,w)=>s+((Number(w.reps)||0)*(Number(w.weight)||0)),0);
+
+      const uniqueDates = [...new Set(normalized.map(w => w._normDate).filter(Boolean))].sort();
+      const lastDate = uniqueDates[uniqueDates.length-1] || null;
+      let restDays = 0;
+      if(lastDate){
+        restDays = Math.max(0, Math.floor((Date.now() - new Date(lastDate+'T00:00:00').getTime())/86400000));
+      }
+
+      const bpMap = {};
+      recent.forEach(w=>{
+        const bp = typeof getExCat === 'function' ? getExCat(w.exerciseName) : '—';
+        bpMap[bp] = (bpMap[bp] || 0) + 1;
+      });
+      const leastBodyPart = Object.entries(bpMap).sort((a,b)=>a[1]-b[1])[0]?.[0] || '—';
+      let nextFocus = '—';
+      if(typeof chooseSuggestedPlan === 'function'){
+        const p = chooseSuggestedPlan();
+        if(p && p.name) nextFocus = p.name;
+      }
+      if(nextFocus === '—' && leastBodyPart !== '—') nextFocus = leastBodyPart;
+      const goal = Number((window.S && S.prefs && S.prefs.goalSessions) || 4);
+      const left = Math.max(goal - sessions, 0);
+      const goalStatus = left === 0 ? 'ครบเป้าแล้ว ✓' : `อีก ${left} session`;
+
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if(el) el.textContent = value;
+      };
+
+      setText('recent-summary-range', `${startStr.slice(5).replace('-', '/')} - ${endStr.slice(5).replace('-', '/')}`);
+      setText('recent-sessions', String(sessions || 0));
+      setText('recent-sets', String(sets || 0));
+      setText('recent-volume', Math.round(volume || 0).toLocaleString());
+      setText('recent-volume-unit', (typeof unitLabel === 'function' ? unitLabel() : 'kg'));
+      setText('recent-rest-days', String(restDays || 0));
+      setText('recent-least-bodypart', leastBodyPart || '—');
+      setText('recent-next-focus', nextFocus || '—');
+      setText('recent-goal-status', goalStatus || '—');
+    };
+  }
+
+  if(typeof window.renderWorkoutHeatmap === 'function'){
+    window.renderWorkoutHeatmap = function(rows){
+      const grid = document.getElementById('workout-heatmap-grid');
+      if(!grid) return;
+
+      const normalized = normalizeWorkoutRows(rows);
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      const days = [];
+      for(let i=29;i>=0;i--){
+        const d = new Date(now);
+        d.setDate(now.getDate()-i);
+        const key = d.toISOString().slice(0,10);
+        days.push({ key, date: d, volume: 0, sets: 0 });
+      }
+      const map = Object.fromEntries(days.map(d => [d.key, d]));
+      normalized.forEach(w=>{
+        const key = w._normDate;
+        if(!key || !map[key]) return;
+        map[key].sets += 1;
+        map[key].volume += ((Number(w.reps)||0) * (Number(w.weight)||0));
+      });
+
+      const maxSets = Math.max(0, ...days.map(d=>d.sets));
+      const todayKey = now.toISOString().slice(0,10);
+
+      grid.innerHTML = days.map(d=>{
+        let level = 0;
+        if(d.sets > 0){
+          if(maxSets <= 1) level = 3;
+          else {
+            const ratio = d.sets / maxSets;
+            level = ratio >= 0.75 ? 3 : ratio >= 0.4 ? 2 : 1;
+          }
+        }
+        const dayNum = String(d.date.getDate());
+        const title = `${d.key} • ${d.sets} sets • ${Math.round(d.volume).toLocaleString()} ${(typeof unitLabel === 'function' ? unitLabel() : 'kg')}`;
+        return `<div class="heatmap-cell level-${level} ${d.key===todayKey?'today':''}" data-day="${dayNum}" title="${title}"></div>`;
+      }).join('');
+    };
+  }
+
+  async function refreshWidgetsWithNormalizedRows(){
+    try{
+      const snap = await woCol().get();
+      const rows = snap.docs.map(d=>({...d.data(), workoutId:d.id}));
+      if(window.S) S._dashWO = rows;
+      if(typeof renderRecentSummaryCard === 'function') renderRecentSummaryCard(rows);
+      if(typeof renderWorkoutHeatmap === 'function') renderWorkoutHeatmap(rows);
+    }catch(e){
+      console.warn('normalized widget refresh failed', e);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    setTimeout(refreshWidgetsWithNormalizedRows, 500);
+    setTimeout(refreshWidgetsWithNormalizedRows, 1200);
+  });
+
+  const _origLoadDashV652 = window.loadDash;
+  if(typeof _origLoadDashV652 === 'function'){
+    window.loadDash = async function(...args){
+      const out = await _origLoadDashV652.apply(this, args);
+      await refreshWidgetsWithNormalizedRows();
+      return out;
+    };
+  }
 })();
 </script>
 
