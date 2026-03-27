@@ -2026,8 +2026,8 @@ function applyPlan(id){
 }
 
 function startFromPlan(id){
-  applyPlan(id);
   setTab('log');
+  requestAnimationFrame(()=>applyPlan(id));
 }
 
 
@@ -2881,8 +2881,8 @@ init();
   };
 
   window.startFromPlan = function(id){
-    applyPlan(id);
     setTab('log');
+    requestAnimationFrame(()=>applyPlan(id));
   };
 
   window.saveWorkout = async function(){
