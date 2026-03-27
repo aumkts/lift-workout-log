@@ -308,6 +308,42 @@ select.input{cursor:pointer}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes tabIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Enhanced dashboard / insights ── */
+.action-card,.insight-card,.prefs-card{
+  background:linear-gradient(180deg,rgba(200,255,60,.08),rgba(200,255,60,.03));
+  border:1px solid rgba(200,255,60,.16);
+  border-radius:var(--r2);
+  padding:16px;
+  margin-bottom:12px;
+}
+.action-eyebrow,.insight-eyebrow,.prefs-eyebrow{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--a);margin-bottom:8px}
+.action-title{font-size:20px;font-weight:700;line-height:1.15;margin-bottom:4px}
+.action-sub{font-size:13px;color:var(--ts);margin-bottom:14px;line-height:1.5}
+.action-meta-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.action-mini{background:rgba(255,255,255,.03);border:1px solid var(--bd);border-radius:10px;padding:10px}
+.action-mini-k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ts);margin-bottom:3px}
+.action-mini-v{font-size:14px;font-weight:600}
+.action-btn-row{display:flex;gap:10px}
+.action-btn-row .btn{flex:1}
+.insight-list{display:grid;gap:8px}
+.insight-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd)}
+.insight-row:last-child{border-bottom:none;padding-bottom:0}
+.insight-label{font-size:13px;color:var(--ts)}
+.insight-value{font-size:14px;font-weight:600;text-align:right}
+.delta-up{color:var(--ok)}
+.delta-down{color:#ff9d66}
+.plan-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:var(--s3);border:1px solid var(--bd);font-size:11px;font-weight:600;color:var(--ts);margin:4px 6px 0 0}
+.plan-preview{padding:0 16px 12px;display:flex;flex-wrap:wrap}
+.pref-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pref-item{background:var(--s3);border:1px solid var(--bd);border-radius:10px;padding:12px}
+.pref-item-k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ts);margin-bottom:5px}
+.set-toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 10px}
+.mini-chip{background:var(--s3);border:1px solid var(--bd2);color:var(--ts);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.mini-chip:active{transform:scale(.97)}
+.target-hint{padding:0 14px 10px;font-size:12px;color:var(--ts)}
+.target-hint strong{color:var(--a);font-weight:700}
+
 /* ── Planner ── */
 .subtab-row{display:flex;background:var(--s2);border-radius:var(--r);padding:4px;gap:4px;margin-bottom:18px;border:1px solid var(--bd)}
 .subtab{flex:1;padding:11px;text-align:center;background:none;border:none;color:var(--ts);font-size:15px;font-weight:600;border-radius:8px;cursor:pointer;transition:all .18s var(--ease)}
@@ -471,7 +507,9 @@ select.input{cursor:pointer}
     <div class="header-right"><span class="header-user" id="u-name"></span><button class="header-out" onclick="doLogout()">ออก</button></div>
   </header>
   <div id="tab-dash" class="tab-pane">
+    <div id="today-action-wrap"></div>
     <div id="stats-wrap"></div>
+    <div id="dash-insights-wrap"></div>
     <div class="sec-head" style="margin-top:4px">
       <div class="sec-title">30 วันที่ผ่านมา</div>
       <span id="dash-meta" style="font-size:11px;color:var(--ts)"></span>
@@ -505,6 +543,7 @@ select.input{cursor:pointer}
         <button class="metric-tab"        data-m="sessions" onclick="setMetric('sessions')">Sessions</button>
       </div>
     </div>
+    <div id="prog-insight-wrap"></div>
     <div class="prog-kpi-row" id="prog-kpi"></div>
     <div class="chart-card">
       <div class="chart-label"><span id="prog-chart-label">กราฟ</span><span class="chart-label-r" id="prog-chart-range"></span></div>
@@ -620,6 +659,18 @@ select.input{cursor:pointer}
         <div style="margin-top:8px;font-size:12px;color:var(--ts)">1 kg = 2.2046 lbs · ค่าจะถูกแสดงในหน่วยที่เลือก</div>
       </div>
     </div>
+    <div class="settings-card">
+      <div class="settings-hd"><div class="settings-hd-title">Training Preferences</div></div>
+      <div style="padding:14px 16px">
+        <div class="pref-grid">
+          <div class="pref-item"><div class="pref-item-k">เป้าหมายต่อสัปดาห์</div><input id="goal-sessions" class="input" type="number" min="1" max="7" value="4" style="padding:10px 12px;font-size:15px"></div>
+          <div class="pref-item"><div class="pref-item-k">พักระหว่างเซต</div><input id="default-rest" class="input" type="number" min="15" step="15" value="90" style="padding:10px 12px;font-size:15px"></div>
+          <div class="pref-item"><div class="pref-item-k">เพิ่มน้ำหนักครั้งละ</div><input id="default-inc" class="input" type="number" min="0.5" step="0.5" value="2.5" style="padding:10px 12px;font-size:15px"></div>
+          <div class="pref-item"><div class="pref-item-k">หน่วยปัจจุบัน</div><div id="pref-unit-label" style="font-size:15px;font-weight:600">kg</div></div>
+        </div>
+        <button class="btn" style="margin-top:12px;font-size:16px;font-family:'Barlow',sans-serif;font-weight:600;letter-spacing:0" onclick="savePrefs()">บันทึก Preferences</button>
+      </div>
+    </div>
     <!-- Version -->
     <div style="text-align:center;padding:16px 0 4px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--a);letter-spacing:2px">LIFT</div>
@@ -711,6 +762,8 @@ const S = {
   _hd:       [],
   unit:      localStorage.getItem('lift_unit')||'kg', // 'kg'|'lbs'
   editingHistId: null,
+  lastByExercise: {},
+  prefs: JSON.parse(localStorage.getItem('lift_prefs')||'{"goalSessions":4,"defaultRest":90,"defaultIncrement":2.5}'),
 };
 
 const DEFAULT_BODY_PARTS = ['อก','หลัง','ไหล่','แขน','ขา','Core','Cardio','Full Body','อื่นๆ'];
@@ -739,6 +792,26 @@ async function loadExercises(){
   buildExOpts();
 }
 
+
+function savePrefsState(){localStorage.setItem('lift_prefs',JSON.stringify(S.prefs));}
+function estimatePlanMinutes(plan){
+  const totalSets=(plan.exercises||[]).reduce((s,e)=>s+(Number(e.sets)||0),0);
+  const rest=Number(S.prefs.defaultRest||90);
+  return Math.max(20,Math.round((totalSets*45 + Math.max(totalSets-1,0)*rest)/60));
+}
+async function primeLastExerciseMap(){
+  const snap=await woCol().get();
+  const arr=snap.docs.map(d=>({...d.data(),workoutId:d.id}));
+  arr.sort((a,b)=>{
+    if(a.date!==b.date)return b.date.localeCompare(a.date);
+    return (b.createdAt?.seconds||0)-(a.createdAt?.seconds||0);
+  });
+  const map={};
+  arr.forEach(w=>{
+    if(!map[w.exerciseName]) map[w.exerciseName]={reps:Number(w.reps)||0,weight:Number(w.weight)||0,mode:w.mode||'reps',date:w.date||'',notes:w.notes||''};
+  });
+  S.lastByExercise=map;
+}
 // ── Toast ──────────────────────────────────────────
 let _tt;
 function toast(msg,type=''){
@@ -784,6 +857,7 @@ function init(){
       };
       await loadExercises();
       await loadPlans();
+      await primeLastExerciseMap();
       showMain();
     } else {
       hideSplash();
@@ -901,7 +975,9 @@ async function loadDash(){
   const allWO    = allSnap.docs.map(d=>({...d.data(),workoutId:d.id}));
   const statsData= computeStats(allWO);
 
+  renderTodayActionCard(allWO);
   renderStats(statsData);
+  renderDashInsights(statsData, allWO);
   renderDashChart(recent);
 }
 
@@ -987,6 +1063,60 @@ function renderDashChart(workouts){
     ${dots}${xLabels}</svg>`;
 }
 
+
+function chooseSuggestedPlan(){
+  if(!S.plans.length) return null;
+  return S.plans[0];
+}
+function renderTodayActionCard(allWO=[]){
+  const wrap=document.getElementById('today-action-wrap');
+  const plan=chooseSuggestedPlan();
+  const lastWorkoutDate=[...new Set(allWO.map(w=>w.date))].sort().pop()||'';
+  const daysSince=lastWorkoutDate?Math.floor((Date.now()-new Date(lastWorkoutDate+'T00:00:00').getTime())/86400000):null;
+  const recoveryTxt=daysSince==null?'ยังไม่มีประวัติการฝึก':daysSince===0?'เล่นแล้ววันนี้':daysSince===1?'พักมา 1 วัน':`พักมา ${daysSince} วัน`;
+  if(!plan){
+    wrap.innerHTML=`<div class="action-card"><div class="action-eyebrow">Today’s Action</div><div class="action-title">เริ่มต้นด้วยแผนแรกของคุณ</div><div class="action-sub">สร้างแผนก่อน แล้วหน้าแรกจะช่วยดึง workout ที่ควรทำวันนี้ขึ้นมาให้อัตโนมัติ</div><div class="action-btn-row"><button class="btn" onclick="setTab('plan')">ไปสร้างแผน</button><button class="btn btn-ghost" onclick="setTab('log')">บันทึกแบบเร็ว</button></div></div>`;
+    return;
+  }
+  const totalSets=(plan.exercises||[]).reduce((s,e)=>s+(Number(e.sets)||0),0);
+  wrap.innerHTML=`<div class="action-card">
+    <div class="action-eyebrow">Today’s Action</div>
+    <div class="action-title">${esc(plan.name)}</div>
+    <div class="action-sub">แนะนำให้เล่นแผนนี้วันนี้เพื่อรักษาความต่อเนื่องและเริ่มบันทึกได้ทันที</div>
+    <div class="action-meta-row">
+      <div class="action-mini"><div class="action-mini-k">จำนวนท่า</div><div class="action-mini-v">${(plan.exercises||[]).length} ท่า</div></div>
+      <div class="action-mini"><div class="action-mini-k">เวลาประมาณ</div><div class="action-mini-v">${estimatePlanMinutes(plan)} นาที</div></div>
+      <div class="action-mini"><div class="action-mini-k">จำนวนเซต</div><div class="action-mini-v">${totalSets} เซต</div></div>
+      <div class="action-mini"><div class="action-mini-k">Recovery</div><div class="action-mini-v">${recoveryTxt}</div></div>
+    </div>
+    <div class="action-btn-row">
+      <button class="btn" onclick="startFromPlan('${esc(plan.id)}')">เริ่ม Workout</button>
+      <button class="btn btn-ghost" onclick="setTab('plan')">ดูรายละเอียดแผน</button>
+    </div>
+  </div>`;
+}
+function renderDashInsights(statsData, allWO=[]){
+  const wrap=document.getElementById('dash-insights-wrap');
+  const uniqueDates=[...new Set(allWO.map(w=>w.date))].sort();
+  const lastWorkoutDate=uniqueDates[uniqueDates.length-1]||'—';
+  const goal=Number(S.prefs.goalSessions||4);
+  const left=Math.max(goal-(statsData.weekSessions||0),0);
+  const leastBP = (()=> {
+    const weekAgo=new Date(Date.now()-14*864e5).toISOString().slice(0,10);
+    const bpMap={};
+    allWO.filter(w=>w.date>=weekAgo).forEach(w=>{const bp=getExCat(w.exerciseName);bpMap[bp]=(bpMap[bp]||0)+1;});
+    const entries=Object.entries(bpMap).sort((a,b)=>a[1]-b[1]);
+    return entries[0]?.[0]||'—';
+  })();
+  wrap.innerHTML=`<div class="insight-card">
+    <div class="insight-eyebrow">Quick Insights</div>
+    <div class="insight-list">
+      <div class="insight-row"><div class="insight-label">เหลืออีกกี่ session ถึงเป้าสัปดาห์นี้</div><div class="insight-value">${left===0?'ครบเป้าแล้ว ✓':`อีก ${left} session`}</div></div>
+      <div class="insight-row"><div class="insight-label">ครั้งล่าสุดที่เล่น</div><div class="insight-value">${lastWorkoutDate==='—'?'—':esc(relDate(lastWorkoutDate))}</div></div>
+      <div class="insight-row"><div class="insight-label">Body part ที่ฝึกน้อยสุดช่วง 14 วัน</div><div class="insight-value">${esc(leastBP)}</div></div>
+    </div>
+  </div>`;
+}
 // ═══════════════ PROGRESS ═════════════════════════
 async function loadProg(){populateProgFilters();await renderProg();}
 function setProgPeriod(p){S.pf.period=p;S._pc=null;document.querySelectorAll('#period-chips .chip').forEach(c=>c.classList.toggle('active',c.dataset.p===p));renderProg();}
@@ -1046,6 +1176,22 @@ async function renderProg(){
   if(bp&&!exName)filt=workouts.filter(w=>getExCat(w.exerciseName)===bp);
   if(exName)     filt=workouts.filter(w=>w.exerciseName===exName);
 
+  let prevFilt=[];
+  if(S.pf.period!=='all' && from && to){
+    const fullSnap=await woCol().get();
+    const allWO=fullSnap.docs.map(d=>({...d.data(),workoutId:d.id}));
+    const endDate=new Date(to+'T00:00:00');
+    const startDate=new Date(from+'T00:00:00');
+    const diff=Math.round((endDate-startDate)/86400000)+1;
+    const prevTo=new Date(startDate); prevTo.setDate(prevTo.getDate()-1);
+    const prevFrom=new Date(prevTo); prevFrom.setDate(prevFrom.getDate()-(diff-1));
+    const prevStart=prevFrom.toISOString().slice(0,10), prevEnd=prevTo.toISOString().slice(0,10);
+    prevFilt=allWO.filter(w=>w.date>=prevStart && w.date<=prevEnd);
+    if(bp&&!exName) prevFilt=prevFilt.filter(w=>getExCat(w.exerciseName)===bp);
+    if(exName) prevFilt=prevFilt.filter(w=>w.exerciseName===exName);
+  }
+  compareProgressBlocks(filt, prevFilt);
+
   if(exName){
     const ld=buildLineData(filt,metric);
     renderKPIs(calcKPIs(filt,metric),metric);
@@ -1101,6 +1247,24 @@ function renderKPIsOv(ws){
   const sessions=[...new Set(ws.map(w=>w.date))].length,exCount=[...new Set(ws.map(w=>w.exerciseName))].length;
   const vol=ws.reduce((s,w)=>s+(Number(w.reps)||0)*(Number(w.weight)||0),0);
   document.getElementById('prog-kpi').innerHTML=`<div class="prog-kpi"><span class="prog-kpi-val">${sessions}</span><div class="prog-kpi-lbl">Sessions</div></div><div class="prog-kpi"><span class="prog-kpi-val">${exCount}</span><div class="prog-kpi-lbl">ท่า</div></div><div class="prog-kpi"><span class="prog-kpi-val">${vol>=1000?(vol/1000).toFixed(1)+'k':Math.round(vol)}</span><div class="prog-kpi-lbl">Volume</div></div>`;
+}
+
+function compareProgressBlocks(cur, prev){
+  const s=(arr)=>({
+    sessions:[...new Set(arr.map(w=>w.date))].length,
+    volume:arr.reduce((x,w)=>x+(Number(w.reps)||0)*(Number(w.weight)||0),0),
+    maxWeight:Math.max(0,...arr.map(w=>Number(w.weight)||0)),
+  });
+  const c=s(cur),p=s(prev);
+  const delta=(a,b)=> b?(((a-b)/b)*100):0;
+  document.getElementById('prog-insight-wrap').innerHTML=`<div class="insight-card" style="margin-bottom:10px">
+    <div class="insight-eyebrow">สรุปเทียบช่วงก่อนหน้า</div>
+    <div class="insight-list">
+      <div class="insight-row"><div class="insight-label">Sessions</div><div class="insight-value ${c.sessions>=p.sessions?'delta-up':'delta-down'}">${c.sessions} (${p.sessions?`${delta(c.sessions,p.sessions)>=0?'+':''}${delta(c.sessions,p.sessions).toFixed(0)}%`:'ใหม่'})</div></div>
+      <div class="insight-row"><div class="insight-label">Volume รวม</div><div class="insight-value ${c.volume>=p.volume?'delta-up':'delta-down'}">${Math.round(c.volume)} (${p.volume?`${delta(c.volume,p.volume)>=0?'+':''}${delta(c.volume,p.volume).toFixed(0)}%`:'ใหม่'})</div></div>
+      <div class="insight-row"><div class="insight-label">น้ำหนักสูงสุด</div><div class="insight-value ${c.maxWeight>=p.maxWeight?'delta-up':'delta-down'}">${fmt(toDisplay(c.maxWeight))} ${unitLabel()}</div></div>
+    </div>
+  </div>`;
 }
 function renderTopEx(ws){
   const grp={};ws.forEach(w=>{grp[w.exerciseName]=(grp[w.exerciseName]||0)+1;});
@@ -1173,7 +1337,7 @@ function svgBar(data){
 }
 
 // ═══════════════ LOG — SET BY SET ════════════════
-function initLog(){document.getElementById('log-date').value=todayStr();document.getElementById('log-exercises').innerHTML='';addExBlock();}
+function initLog(){document.getElementById('log-date').value=todayStr();document.getElementById('log-exercises').innerHTML='';document.getElementById('use-plan-title').textContent='เลือกแผน Workout';document.getElementById('use-plan-sub').textContent='โหลดท่าจาก Planner ของคุณ';addExBlock();}
 function addExBlock(){
   const container=document.getElementById('log-exercises'),idx=container.children.length;
   const div=document.createElement('div');div.className='ex-block';
@@ -1190,6 +1354,11 @@ function addExBlock(){
     <div class="sets-table">
       <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl" id="sh-val">REPS / SEC</div><div class="sets-col-lbl" id="sh-wt">KG</div><div style="width:40px"></div></div>
       <div class="sets-list"></div>
+    </div>
+    <div class="target-hint" style="display:none"></div>
+    <div class="set-toolbar" style="display:none">
+      <button type="button" class="mini-chip" onclick="copyLastSet(this)">ใช้ค่าครั้งก่อน</button>
+      <button type="button" class="mini-chip" onclick="addSuggestedWeight(this)">+${S.prefs.defaultIncrement||2.5}${unitLabel()}</button>
     </div>
     <button type="button" class="add-set-btn" onclick="addSetToBlock(this)">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>เพิ่ม Set
@@ -1228,7 +1397,49 @@ function toggleSetMode(btn){
 }
 function delSetRow(btn){const sl=btn.closest('.sets-list');if(sl.children.length<=1)return toast('ต้องมีอย่างน้อย 1 set','err');btn.closest('.set-row').remove();[...sl.children].forEach((r,i)=>r.querySelector('.set-lbl').textContent='S'+(i+1));}
 function delExBlock(btn){btn.closest('.ex-block').remove();document.querySelectorAll('.ex-block-num').forEach((el,i)=>(el.textContent='EXERCISE '+(i+1)));}
-function onExSel(sel){const cust=sel.closest('.ex-block').querySelector('.custom-ex');const isCust=sel.value==='__custom';cust.style.display=isCust?'block':'none';if(isCust)cust.focus();}
+function onExSel(sel){
+  const block=sel.closest('.ex-block');
+  const cust=block.querySelector('.custom-ex');
+  const isCust=sel.value==='__custom';
+  cust.style.display=isCust?'block':'none';
+  block.querySelector('.set-toolbar').style.display=sel.value && !isCust?'flex':'none';
+  if(isCust){cust.focus();return;}
+  const exName=sel.value;
+  const last=S.lastByExercise[exName];
+  const hint=block.querySelector('.target-hint');
+  if(last){
+    hint.style.display='block';
+    hint.innerHTML=`ครั้งล่าสุด <strong>${last.reps||0}</strong> ${last.mode==='sec'?'วินาที':'reps'} × <strong>${fmt(toDisplay(last.weight||0))}</strong> ${unitLabel()} · ${esc(relDate(last.date||todayStr()))}`;
+  }else{
+    hint.style.display='none';
+    hint.textContent='';
+  }
+}
+function copyLastSet(btn){
+  const block=btn.closest('.ex-block');
+  const exName=block.querySelector('.ex-sel').value;
+  const last=S.lastByExercise[exName];
+  if(!last) return toast('ยังไม่มีข้อมูลครั้งก่อนของท่านี้','err');
+  [...block.querySelectorAll('.set-row')].forEach(row=>{
+    row.dataset.mode=last.mode||'reps';
+    row.querySelector('[name=reps]').value=last.reps||0;
+    row.querySelector('[name=weight]').value=fmt(toDisplay(last.weight||0));
+    const modeBtn=row.querySelector('.set-mode-btn');
+    modeBtn.textContent=(last.mode==='sec'?'SEC':'REP');
+    modeBtn.classList.toggle('sec',last.mode==='sec');
+    row.querySelector('[name=reps]').placeholder=last.mode==='sec'?'วิ':'Reps';
+  });
+  const notesInput=block.querySelector('[name=notes]');
+  if(!notesInput.value && last.notes) notesInput.value=last.notes;
+  toast('เติมค่าจากครั้งก่อนแล้ว','ok');
+}
+function addSuggestedWeight(btn){
+  const inc=Number(S.prefs.defaultIncrement||2.5);
+  [...btn.closest('.ex-block').querySelectorAll('.set-row [name=weight]')].forEach(inp=>{
+    const cur=Number(inp.value)||0;
+    inp.value=fmt(cur+inc);
+  });
+}
 function populateSel(sel){if(!sel)return;const v=sel.value;sel.innerHTML=`<option value="">— เลือกท่า —</option>${S.exOpts}<option value="__custom">อื่นๆ (พิมพ์เอง)</option>`;if(v)sel.value=v;}
 
 async function saveWorkout(){
@@ -1257,6 +1468,7 @@ async function saveWorkout(){
     docs.forEach(d=>batch.set(woCol().doc(),d));
     await batch.commit();
     S._pc=null;
+    await primeLastExerciseMap();
     toast('บันทึกสำเร็จ 💪','ok');
     initLog();
   }catch(err){toast(err.message||'บันทึกไม่สำเร็จ','err');}
@@ -1353,6 +1565,15 @@ function loadSettings(){
   renderBPList();
   document.getElementById('new-ex-bp').innerHTML=`<option value="">— เลือก —</option>`+getBodyParts().map(b=>`<option value="${b}">${b}</option>`).join('');
   renderExList('');
+}
+
+function savePrefs(){
+  S.prefs.goalSessions=Number(document.getElementById('goal-sessions').value)||4;
+  S.prefs.defaultRest=Number(document.getElementById('default-rest').value)||90;
+  S.prefs.defaultIncrement=Number(document.getElementById('default-inc').value)||2.5;
+  savePrefsState();
+  toast('บันทึก preferences แล้ว','ok');
+  if(S.tab==='dash') loadDash();
 }
 function toggleEditProfile(){
   const form=document.getElementById('profile-edit-form'),btn=document.getElementById('btn-edit-profile');
@@ -1498,11 +1719,12 @@ function renderPlans(){
         <div class="plan-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/></svg></div>
         <div style="flex:1;min-width:0">
           <div class="plan-card-name">${esc(p.name||'ไม่มีชื่อ')}</div>
-          <div class="plan-card-meta">${exCount} ท่า · ${totalSets} เซต</div>
+          <div class="plan-card-meta">${exCount} ท่า · ${totalSets} เซต · ~${estimatePlanMinutes(p)} นาที</div>
         </div>
         <svg class="plan-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="6,9 12,15 18,9"/></svg>
       </div>
       <div class="plan-body">
+        <div class="plan-preview">${ex.slice(0,4).map(e=>`<span class="plan-pill">${esc(e.exerciseName)}</span>`).join('')}</div>
         ${exRows}
         <div class="plan-actions">
           <button class="btn" style="font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;letter-spacing:0;padding:12px;flex:2" onclick="startFromPlan('${sid}')">
@@ -1674,6 +1896,10 @@ function applyPlan(id){
     const block=blocks[blocks.length-1];
     const sel=block.querySelector('.ex-sel');
     sel.value=ex.exerciseName;
+    block.querySelector('.set-toolbar').style.display='flex';
+    const hint=block.querySelector('.target-hint');
+    hint.style.display='block';
+    hint.innerHTML=`เป้าหมาย <strong>${ex.sets||1}</strong> เซต × <strong>${ex.reps||0}</strong> reps${Number(ex.weight)?` · <strong>${fmt(toDisplay(ex.weight))}</strong> ${unitLabel()}`:''}`;
     // Fill set rows with target weight
     const sl=block.querySelector('.sets-list');
     sl.innerHTML='';
