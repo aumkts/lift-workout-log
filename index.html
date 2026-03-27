@@ -12,7 +12,168 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <!-- Firebase SDK (compat v10) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-app-compat.js">
+
+function normalizeNumber(n){ return Number.isFinite(Number(n)) ? Number(n) : 0; }
+
+function getWorkoutTimestamp(w){
+  const raw = w?.date || w?.createdAt || w?.updatedAt || w?.ts || w?.timestamp || null;
+  if (!raw) return null;
+  if (typeof raw === 'number') return raw;
+  if (typeof raw === 'string') {
+    const t = new Date(raw).getTime();
+    return Number.isFinite(t) ? t : null;
+  }
+  if (raw && typeof raw.toDate === 'function') {
+    const d = raw.toDate();
+    return d ? d.getTime() : null;
+  }
+  if (raw && typeof raw.seconds === 'number') return raw.seconds * 1000;
+  return null;
+}
+
+function getWorkoutExercises(w){
+  if (Array.isArray(w?.exercises)) return w.exercises;
+  if (Array.isArray(w?.items)) return w.items;
+  return [];
+}
+
+function getSetWeight(setObj){
+  const raw = setObj?.kg ?? setObj?.weight ?? setObj?.load ?? 0;
+  return normalizeNumber(raw);
+}
+
+function getSetReps(setObj){
+  const raw = setObj?.reps ?? setObj?.rep ?? setObj?.count ?? 0;
+  return normalizeNumber(raw);
+}
+
+function getExerciseSets(ex){
+  if (Array.isArray(ex?.sets)) return ex.sets;
+  const single = [];
+  const reps = normalizeNumber(ex?.reps);
+  const kg = normalizeNumber(ex?.kg ?? ex?.weight);
+  if (reps || kg) single.push({ reps, kg });
+  return single;
+}
+
+function calcWorkoutVolume(w){
+  return getWorkoutExercises(w).reduce((sum, ex) => {
+    return sum + getExerciseSets(ex).reduce((s, setObj) => s + (getSetWeight(setObj) * getSetReps(setObj)), 0);
+  }, 0);
+}
+
+function getExerciseBestSet(ex){
+  let best = null;
+  getExerciseSets(ex).forEach(setObj => {
+    const reps = getSetReps(setObj);
+    const kg = getSetWeight(setObj);
+    if (!reps) return;
+    if (!best || reps > best.reps || (reps === best.reps && kg > best.kg)) {
+      best = { reps, kg };
+    }
+  });
+  return best;
+}
+
+function summarizePreviousExerciseHistory(workouts){
+  const map = new Map();
+  workouts.forEach(w => {
+    getWorkoutExercises(w).forEach(ex => {
+      const name = (ex?.name || ex?.exercise || '').trim();
+      if (!name) return;
+      const best = getExerciseBestSet(ex);
+      const prev = map.get(name);
+      if (!prev || (best && (!prev.best || best.reps > prev.best.reps || (best.reps === prev.best.reps && best.kg > prev.best.kg)))) {
+        map.set(name, { best, count: (prev?.count || 0) + 1 });
+      } else {
+        prev.count += 1;
+      }
+    });
+  });
+  return map;
+}
+
+function getNextProgressionCandidate(workouts){
+  const ordered = [...workouts].sort((a,b) => (getWorkoutTimestamp(b) || 0) - (getWorkoutTimestamp(a) || 0));
+  const history = summarizePreviousExerciseHistory(ordered.slice(1));
+  for (const w of ordered) {
+    for (const ex of getWorkoutExercises(w)) {
+      const name = (ex?.name || ex?.exercise || '').trim();
+      if (!name) continue;
+      const sets = getExerciseSets(ex);
+      if (!sets.length) continue;
+      const target = normalizeNumber(ex?.targetReps || ex?.target || ex?.goalReps || 12);
+      const allReached = sets.every(s => getSetReps(s) >= target && target > 0);
+      if (!allReached) continue;
+      const best = getExerciseBestSet(ex) || { reps: 0, kg: 0 };
+      const previous = history.get(name)?.best;
+      return {
+        name,
+        text: name,
+        sub: previous
+          ? `ล่าสุดครบเป้า ${sets.length}/${sets.length} เซต • จาก ${previous.kg || 0}${state.unit} x ${previous.reps} reps`
+          : `ล่าสุดครบเป้า ${sets.length}/${sets.length} เซต`,
+      };
+    }
+  }
+  return null;
+}
+
+function startOfDay(ts){
+  const d = new Date(ts);
+  d.setHours(0,0,0,0);
+  return d.getTime();
+}
+
+function getWeeklyVolumeInsight(workouts){
+  const now = Date.now();
+  const today = startOfDay(now);
+  const weekMs = 7 * 24 * 60 * 60 * 1000;
+  const currentStart = today - 6 * 24 * 60 * 60 * 1000;
+  const prevStart = currentStart - weekMs;
+  const prevEnd = currentStart - 1;
+  let current = 0;
+  let previous = 0;
+
+  workouts.forEach(w => {
+    const ts = getWorkoutTimestamp(w);
+    if (!ts) return;
+    const vol = calcWorkoutVolume(w);
+    if (ts >= currentStart && ts <= now) current += vol;
+    else if (ts >= prevStart && ts <= prevEnd) previous += vol;
+  });
+
+  const percent = previous > 0 ? ((current - previous) / previous) * 100 : (current > 0 ? 100 : 0);
+  return {
+    current,
+    previous,
+    percent,
+    sub: previous > 0
+      ? `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}% จากสัปดาห์ก่อน`
+      : (current > 0 ? 'เริ่มมี volume ในสัปดาห์นี้' : 'ยังไม่มีข้อมูลสัปดาห์นี้')
+  };
+}
+
+function updateHomeActionableCards(){
+  const nextEl = document.getElementById('home-next-progression');
+  const nextSubEl = document.getElementById('home-next-progression-sub');
+  const volEl = document.getElementById('home-weekly-volume');
+  const volUnitEl = document.getElementById('home-weekly-volume-unit');
+  const volSubEl = document.getElementById('home-weekly-volume-sub');
+  const workouts = Array.isArray(state?.history) ? state.history : (Array.isArray(state?.workouts) ? state.workouts : []);
+
+  const progression = getNextProgressionCandidate(workouts);
+  if (nextEl) nextEl.textContent = progression?.text || 'ยังไม่มีข้อมูล';
+  if (nextSubEl) nextSubEl.textContent = progression?.sub || 'เมื่อครบ reps เป้าทุกเซต ระบบจะแนะนำท่านี้';
+
+  const weekly = getWeeklyVolumeInsight(workouts);
+  if (volEl) volEl.textContent = Math.round(weekly.current).toLocaleString();
+  if (volUnitEl) volUnitEl.textContent = state?.unit || 'kg';
+  if (volSubEl) volSubEl.textContent = weekly.sub;
+}
+
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.2/firebase-firestore-compat.js"></script>
 <style>
@@ -1049,8 +1210,8 @@ function renderStats(d){
         <div style="display:flex;gap:3px">${bars}${empties}</div>
       </div>
     </div>
-    <div class="stat-wide" style="animation:countUp .35s .13s ease both"><div class="stat-wide-lbl">ท่าที่ชอบ</div><div class="stat-wide-val">${esc(d.favoriteExercise||'—')}</div></div>
-    <div class="stat-wide" style="animation:countUp .35s .17s ease both"><div class="stat-wide-lbl">น้ำหนักรวมที่ยก</div><div class="stat-big"><span>${d.totalWeight.toLocaleString()}</span><span class="stat-unit" id="stat-unit-lbl">kg</span></div></div>`;
+    <div class="stat-wide" style="animation:countUp .35s .13s ease both"><div class="stat-wide-lbl">ควรเพิ่มน้ำหนัก</div><div class="stat-wide-val">${esc(d.favoriteExercise||'—')}</div></div>
+    <div class="stat-wide" style="animation:countUp .35s .17s ease both"><div class="stat-wide-lbl">Volume สัปดาห์นี้</div><div class="stat-big"><span>${d.totalWeight.toLocaleString()}</span><span class="stat-unit" id="stat-unit-lbl">kg</span></div></div>`;
 }
 
 function renderDashChart(workouts){
@@ -2054,6 +2215,9 @@ function setUnit(u){
   });
   // update unit labels in plan weight label
   document.querySelectorAll('.plan-weight-lbl').forEach(el=>el.textContent=unitLabel());
+  // update preferences current unit label
+  const pul=document.getElementById('pref-unit-label');
+  if(pul)pul.textContent=unitLabel();
   // update dashboard stat unit
   const sul=document.getElementById('stat-unit-lbl');
   if(sul)sul.textContent=unitLabel();
