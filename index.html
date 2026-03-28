@@ -4503,3 +4503,348 @@ init();
 </script>
 </body>
 </html>
+
+<script>
+/* v7.3 post-save insights */
+(function(){
+  function ensurePostSaveInsightStyles(){
+    if(document.getElementById('v73-postsave-style')) return;
+    const style=document.createElement('style');
+    style.id='v73-postsave-style';
+    style.textContent=`
+      .summary-modal{padding:0;align-items:flex-end}
+      .summary-inner.lift-postsave{width:min(100%,480px);background:linear-gradient(180deg,#101118 0%, #0b0d12 100%);border-radius:24px 24px 0 0;padding:18px 18px calc(18px + var(--sab));max-height:92svh;overflow-y:auto}
+      .lift-save-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:rgba(61,232,122,.1);border:1px solid rgba(61,232,122,.24);color:var(--ok);font-size:13px;font-weight:700}
+      .lift-postsave-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+      .lift-postsave-stats{padding:14px 0 8px;border-bottom:1px solid var(--bd);margin-bottom:16px}
+      .lift-postsave-main{font-size:22px;font-weight:800;line-height:1.15;letter-spacing:.01em}
+      .lift-postsave-sub{font-size:14px;color:var(--ts);margin-top:6px;line-height:1.5}
+      .lift-section{margin-top:16px;padding-top:16px;border-top:1px solid var(--bd)}
+      .lift-section:first-of-type{margin-top:0;padding-top:0;border-top:none}
+      .lift-section-title{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--a);margin-bottom:10px}
+      .lift-list{display:flex;flex-direction:column;gap:10px}
+      .lift-list-item{display:flex;gap:10px;align-items:flex-start;color:var(--t);font-size:14px;line-height:1.45}
+      .lift-list-item .dot{width:6px;height:6px;border-radius:50%;background:var(--a);margin-top:8px;flex-shrink:0}
+      .lift-chip{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;background:var(--s2);border:1px solid var(--bd);font-size:13px;line-height:1.35}
+      .lift-chip + .lift-chip{margin-top:8px}
+      .lift-highlight-name{color:var(--t);font-weight:700}
+      .lift-highlight-sub{color:var(--ts)}
+      .lift-summary-inline{margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.03);border:1px solid var(--bd)}
+      .lift-summary-inline-main{font-size:14px;font-weight:700;line-height:1.4}
+      .lift-summary-inline-sub{font-size:12px;color:var(--ts);margin-top:4px;line-height:1.4}
+      .lift-actions{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+      .lift-actions-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .btn.btn-soft{background:var(--s2);border:1px solid var(--bd2);color:var(--t);font-family:'Barlow',sans-serif;font-size:15px;font-weight:600;letter-spacing:0}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function safeNum(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+  function getMode(row){ return row?.mode==='sec' ? 'sec' : 'reps'; }
+  function workScore(row){
+    const reps=safeNum(row.reps || row.duration);
+    const weight=safeNum(row.weight);
+    const mode=getMode(row);
+    if(mode==='sec') return weight>0 ? weight*reps : reps;
+    return weight>0 ? weight*reps : reps;
+  }
+  function weightVolume(row){
+    const reps=safeNum(row.reps || row.duration);
+    const weight=safeNum(row.weight);
+    return weight>0 ? weight*reps : 0;
+  }
+  function timeSeconds(row){ return getMode(row)==='sec' ? safeNum(row.duration || row.reps) : 0; }
+  function uniq(arr){ return [...new Set(arr.filter(Boolean))]; }
+  function fmtPct(n){ return `${n>=0?'+':''}${Math.round(n)}%`; }
+  function titleCaseBodyPart(s){
+    const map={อก:'Chest',หลัง:'Back',ไหล่:'Shoulders',แขน:'Arms',ขา:'Legs',Core:'Core',Cardio:'Cardio','Full Body':'Full Body','อื่นๆ':'Other'};
+    return map[s] || s || '—';
+  }
+  function bodyPartRestHint(bodyPart){
+    const map={
+      'อก':'พัก Chest/Triceps 48 ชม.',
+      'Chest':'พัก Chest/Triceps 48 ชม.',
+      'หลัง':'พัก Back/Biceps 48 ชม.',
+      'Back':'พัก Back/Biceps 48 ชม.',
+      'ไหล่':'พัก Shoulders 48 ชม.',
+      'Shoulders':'พัก Shoulders 48 ชม.',
+      'แขน':'พัก Arms 24–48 ชม.',
+      'Arms':'พัก Arms 24–48 ชม.',
+      'ขา':'พัก Legs 48–72 ชม.',
+      'Legs':'พัก Legs 48–72 ชม.',
+      'Core':'พัก Core 24 ชม.',
+      'Cardio':'สลับ cardio เบา / recovery ได้',
+      'Full Body':'จัด recovery ทั้งตัว 48 ชม.'
+    };
+    return map[bodyPart] || `พัก ${titleCaseBodyPart(bodyPart)} 48 ชม.`;
+  }
+  function summarizeExerciseRows(rows){
+    const mode = rows.some(r=>getMode(r)==='sec') ? 'sec' : 'reps';
+    const bestWeight = Math.max(0, ...rows.map(r=>safeNum(r.weight)));
+    const bestReps = Math.max(0, ...rows.filter(r=>getMode(r)==='reps').map(r=>safeNum(r.reps)));
+    const bestSec = Math.max(0, ...rows.filter(r=>getMode(r)==='sec').map(r=>safeNum(r.duration || r.reps)));
+    const totalWork = rows.reduce((s,r)=>s+workScore(r),0);
+    const totalWeightVol = rows.reduce((s,r)=>s+weightVolume(r),0);
+    const allHit = rows.length && rows.every(r=>{
+      const target = safeNum(r.targetMaxReps || r.targetMinReps || 0);
+      const actual = safeNum(getMode(r)==='sec' ? (r.duration || r.reps) : r.reps);
+      return target > 0 ? actual >= target : false;
+    });
+    return { mode, bestWeight, bestReps, bestSec, totalWork, totalWeightVol, allHit, sets: rows.length };
+  }
+  function computePostSaveInsights(currentDocs, prevRows, date){
+    const todayRows = currentDocs || [];
+    const allRows = [...(prevRows||[]), ...todayRows];
+    const weekStart = new Date(date+'T00:00:00');
+    weekStart.setDate(weekStart.getDate()-6);
+    const weekStartStr = weekStart.toISOString().slice(0,10);
+    const weekDates = new Set(allRows.filter(r=>r.date>=weekStartStr && r.date<=date).map(r=>r.date));
+    const goal = Number(S.prefs.goalSessions||4);
+    const prevDates = uniq((prevRows||[]).map(r=>r.date).filter(d=>d<date)).sort();
+    const prevDate = prevDates[prevDates.length-1] || '';
+    const previousSessionRows = prevDate ? prevRows.filter(r=>r.date===prevDate) : [];
+
+    const currentWeightVol = todayRows.reduce((s,r)=>s+weightVolume(r),0);
+    const previousWeightVol = previousSessionRows.reduce((s,r)=>s+weightVolume(r),0);
+    const currentWork = todayRows.reduce((s,r)=>s+workScore(r),0);
+    const previousWork = previousSessionRows.reduce((s,r)=>s+workScore(r),0);
+    const currentSecs = todayRows.reduce((s,r)=>s+timeSeconds(r),0);
+    const previousSecs = previousSessionRows.reduce((s,r)=>s+timeSeconds(r),0);
+
+    const exGroups = {};
+    todayRows.forEach(r=>{ (exGroups[r.exerciseName]=exGroups[r.exerciseName]||[]).push(r); });
+    const prevExGroups = {};
+    (prevRows||[]).forEach(r=>{ (prevExGroups[r.exerciseName]=prevExGroups[r.exerciseName]||[]).push(r); });
+
+    const prs=[];
+    const highlights=[];
+    let nextSteps=[];
+    Object.entries(exGroups).forEach(([name, rows])=>{
+      const curr = summarizeExerciseRows(rows);
+      const prev = summarizeExerciseRows(prevExGroups[name] || []);
+      const prevBestWeight = prev.bestWeight || 0;
+      const prevBestReps = prev.bestReps || 0;
+      const prevBestSec = prev.bestSec || 0;
+      const prevBestWork = prev.totalWork || 0;
+      if(curr.mode==='sec'){
+        if(curr.bestSec > prevBestSec) prs.push(`${name} — hold ${curr.bestSec} sec`);
+        else if(curr.bestWeight > prevBestWeight) prs.push(`${name} — ${fmt(toDisplay(curr.bestWeight))} ${unitLabel()} hold`);
+        else if(curr.totalWork > prevBestWork && curr.bestSec>0) prs.push(`${name} — time under tension ดีสุด`);
+      }else{
+        if(curr.bestWeight > prevBestWeight) prs.push(`${name} — ${fmt(toDisplay(curr.bestWeight))} × ${curr.bestReps||safeNum(rows[0]?.reps)}`);
+        else if(curr.bestReps > prevBestReps && curr.bestWeight >= prevBestWeight && curr.bestWeight>0) prs.push(`${name} — ${fmt(toDisplay(curr.bestWeight))} × ${curr.bestReps}`);
+        else if(curr.totalWeightVol > (prev.totalWeightVol||0) && curr.totalWeightVol>0) prs.push(`${name} — volume ดีสุด`);
+      }
+      if(curr.mode==='sec'){
+        highlights.push({score: curr.bestSec + curr.bestWeight, text:`<span class="lift-highlight-name">${esc(name)}</span> — ${curr.bestWeight>0?`${fmt(toDisplay(curr.bestWeight))} ${unitLabel()} × `:''}${curr.bestSec} sec`});
+      }else{
+        highlights.push({score: curr.bestWeight*1000 + curr.bestReps, text:`<span class="lift-highlight-name">${esc(name)}</span> — ${fmt(toDisplay(curr.bestWeight))} × ${curr.bestReps}`});
+      }
+      if(curr.allHit){
+        highlights.push({score: curr.totalWork + 0.1, text:`<span class="lift-highlight-name">${esc(name)}</span> — ครบ target ทุกเซต`});
+        if(curr.mode==='sec'){
+          const secStep = Math.max(5, Math.round((safeNum(rows[0]?.targetMaxReps || rows[0]?.targetMinReps || curr.bestSec) || 0) * 0.1 / 5) * 5 || 5);
+          nextSteps.push({priority:3, text:`ลอง ${name} +${secStep} sec ครั้งหน้า`});
+        }else if(curr.bestWeight>0){
+          const inc = Number(S.prefs.defaultIncrement||2.5);
+          nextSteps.push({priority:4, text:`ลอง ${name} ${fmt(toDisplay(curr.bestWeight + inc))} ${unitLabel()} ครั้งหน้า`});
+        }else{
+          nextSteps.push({priority:2, text:`ลอง ${name} เพิ่ม ${Math.max(1, Math.round(curr.bestReps*0.1)||1)} reps ครั้งหน้า`});
+        }
+      }
+    });
+
+    const bodyPartCount={};
+    todayRows.forEach(r=>{
+      const bp=getExCat(r.exerciseName)||'อื่นๆ';
+      bodyPartCount[bp]=(bodyPartCount[bp]||0)+1;
+    });
+    const mainBodyPart = Object.entries(bodyPartCount).sort((a,b)=>b[1]-a[1])[0]?.[0] || '';
+    if(mainBodyPart){
+      highlights.push({score:1, text:`<span class="lift-highlight-name">${esc(titleCaseBodyPart(mainBodyPart))}</span> — body part หลักของวันนี้`});
+      nextSteps.push({priority:1, text:bodyPartRestHint(mainBodyPart)});
+    }
+
+    let delta = null;
+    let deltaLabel = '';
+    if(currentWeightVol>0 && previousWeightVol>0){
+      delta = ((currentWeightVol-previousWeightVol)/previousWeightVol)*100;
+      deltaLabel = `Volume ${fmtPct(delta)} จากครั้งก่อน`;
+    }else if(currentWork>0 && previousWork>0){
+      delta = ((currentWork-previousWork)/previousWork)*100;
+      deltaLabel = `${currentSecs>0 || previousSecs>0 ? 'Workload' : 'Output'} ${fmtPct(delta)} จากครั้งก่อน`;
+    }else if(currentSecs>0 && previousSecs>0){
+      delta = ((currentSecs-previousSecs)/previousSecs)*100;
+      deltaLabel = `Time ${fmtPct(delta)} จากครั้งก่อน`;
+    }
+
+    const insights=[];
+    insights.push(prs.length ? `PR ${prs.length} รายการ` : 'ยังไม่มี PR วันนี้ แต่ consistency ยังเดินต่อ');
+    if(deltaLabel) insights.push(deltaLabel);
+    insights.push(`สัปดาห์นี้ทำแล้ว ${weekDates.size}/${goal} sessions`);
+
+    const sortedHighlights = highlights.sort((a,b)=>b.score-a.score).map(x=>x.text);
+    const finalHighlights = uniq(sortedHighlights).slice(0,3);
+    const finalNext = uniq(nextSteps.sort((a,b)=>b.priority-a.priority).map(x=>x.text)).slice(0,2);
+
+    const effortLabel = currentWeightVol>0
+      ? `${Math.round(toDisplayVolume(currentWeightVol)).toLocaleString()} ${unitLabel()}`
+      : (currentSecs>0 ? `${Math.round(currentSecs).toLocaleString()} sec total` : `${Math.round(currentWork).toLocaleString()} work`);
+    return {
+      summaryLine:`${todayRows.length} Sets · ${new Set(todayRows.map(r=>r.exerciseName)).size} Exercises · ${effortLabel}`,
+      durationLine:`${Math.max(1, Math.round(((Date.now() - (S.logStartedAt || Date.now()))/60000)))} minutes`,
+      currentWeightVol,
+      currentWork,
+      currentSecs,
+      prs,
+      insights,
+      highlights: finalHighlights,
+      nextSteps: finalNext.length ? finalNext : ['เก็บ recovery ให้พอแล้วค่อยไล่ progressive overload รอบหน้า'],
+      weekDates: weekDates.size,
+      goal,
+      deltaPercent: delta,
+      mainBodyPart
+    };
+  }
+
+  function ensureInsightSummaryModal(){
+    ensurePostSaveInsightStyles();
+    let modal=document.getElementById('workout-summary-modal');
+    if(!modal){
+      modal=document.createElement('div');
+      modal.id='workout-summary-modal';
+      modal.className='summary-modal';
+      modal.onclick=(e)=>{ if(e.target===modal) window.closeWorkoutSummary(); };
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML=`
+      <div class="summary-inner lift-postsave">
+        <div class="lift-postsave-head">
+          <div>
+            <div class="lift-save-pill">✅ Workout saved</div>
+          </div>
+          <button class="plan-modal-close" onclick="closeWorkoutSummary()">×</button>
+        </div>
+        <div class="lift-postsave-stats">
+          <div class="lift-postsave-main" id="lift-postsave-main">0 Sets · 0 Exercises · 0 ${unitLabel()}</div>
+          <div class="lift-postsave-sub" id="lift-postsave-sub">0 minutes</div>
+          <div class="lift-summary-inline">
+            <div class="lift-summary-inline-main" id="lift-summary-inline-main">บันทึกการฝึกสำเร็จ</div>
+            <div class="lift-summary-inline-sub" id="lift-summary-inline-sub">ข้อมูลถูกเพิ่มเข้า Progress แล้ว</div>
+          </div>
+        </div>
+        <div class="lift-section">
+          <div class="lift-section-title">Today’s insights</div>
+          <div class="lift-list" id="lift-insight-list"></div>
+        </div>
+        <div class="lift-section">
+          <div class="lift-section-title">Highlights</div>
+          <div id="lift-highlight-list"></div>
+        </div>
+        <div class="lift-section">
+          <div class="lift-section-title">Next step</div>
+          <div class="lift-list" id="lift-next-list"></div>
+        </div>
+        <div class="lift-actions">
+          <button class="btn btn-soft" onclick="closeWorkoutSummary()">Close</button>
+          <div class="lift-actions-row">
+            <button class="btn btn-ghost" onclick="closeWorkoutSummary(); setTab('log'); initLog();">Log another workout</button>
+            <button class="btn" onclick="closeWorkoutSummary(); setTab('prog');">View Progress</button>
+          </div>
+        </div>
+      </div>`;
+    return modal;
+  }
+
+  window.openWorkoutSummary = function(data){
+    const modal = ensureInsightSummaryModal();
+    const summaryLine = data.summaryLine || `${data.sets||0} Sets · ${data.exercises||0} Exercises · ${Math.round(toDisplayVolume(data.volume||0)).toLocaleString()} ${unitLabel()}`;
+    const durationLine = data.durationLine || `${data.minutes||0} minutes`;
+    document.getElementById('lift-postsave-main').textContent = summaryLine;
+    document.getElementById('lift-postsave-sub').textContent = durationLine;
+    document.getElementById('lift-summary-inline-main').textContent = data.inlineMain || 'สรุปการฝึกของวันนี้พร้อม insight';
+    document.getElementById('lift-summary-inline-sub').textContent = data.inlineSub || (data.deltaPercent==null ? 'ยังไม่มี session ก่อนหน้าให้เทียบ' : `เทียบ session ก่อนหน้า ${data.deltaPercent>=0?'สูงขึ้น':'ลดลง'} ${Math.abs(Math.round(data.deltaPercent))}%`);
+    document.getElementById('lift-insight-list').innerHTML = (data.insights||[]).map(t=>`<div class="lift-list-item"><span class="dot"></span><span>${esc(t)}</span></div>`).join('');
+    document.getElementById('lift-highlight-list').innerHTML = (data.highlights||[]).map(t=>`<div class="lift-chip">${t}</div>`).join('');
+    document.getElementById('lift-next-list').innerHTML = (data.nextSteps||[]).map(t=>`<div class="lift-list-item"><span class="dot"></span><span>${esc(t)}</span></div>`).join('');
+    modal.classList.add('show');
+  };
+
+  window.closeWorkoutSummary = function(){
+    document.getElementById('workout-summary-modal')?.classList.remove('show');
+  };
+
+  window.saveWorkout = async function(){
+    const date=document.getElementById('log-date').value;
+    if(!date)return toast('กรุณาเลือกวันที่','err');
+    const blocks=[...document.querySelectorAll('.ex-block')];
+    const docs=[];
+    const activePlan = S.plans.find(p=>p.id===S.activePlanId);
+    for(let i=0;i<blocks.length;i++){
+      const block=blocks[i],sel=block.querySelector('.ex-sel'),cust=block.querySelector('.custom-ex');
+      const exName=sel.value==='__custom'?cust.value.trim():sel.value;
+      if(!exName)return toast(`กรุณาเลือกท่า ${i+1}`,'err');
+      const notes=block.querySelector('[name=notes]').value||'';
+      const min = Number(block.dataset.targetMin || 0);
+      const max = Number(block.dataset.targetMax || 0);
+      const restSec = Number(block.dataset.restSec || S.prefs.defaultRest || 90);
+      [...block.querySelectorAll('.sets-list .set-row')].forEach((row,j)=>{
+        const repsVal=safeNum(row.querySelector('[name=reps]').value);
+        const wVal=fromDisplay(row.querySelector('[name=weight]').value);
+        const mode=row.dataset.mode||'reps';
+        docs.push({
+          date, exerciseName:exName, sets:1, reps:repsVal, weight:wVal,
+          duration:mode==='sec'?repsVal:0, notes:j===0?notes:'', mode, unit:S.unit,
+          targetMinReps:min || null, targetMaxReps:max || null, restSec,
+          completed: row.dataset.completed==='1',
+          planId: activePlan?.id || null, createdAt:TS()
+        });
+      });
+    }
+    if(!docs.length)return toast('ไม่มีข้อมูล','err');
+
+    const btn=document.getElementById('btn-save');
+    btn.disabled=true;btn.textContent='กำลังบันทึก...';
+    try{
+      const prevSnap = await woCol().get();
+      const prevRows = prevSnap.docs.map(d=>({...d.data(), workoutId:d.id}));
+      const computed = computePostSaveInsights(docs, prevRows, date);
+      const batch=db.batch();
+      docs.forEach(d=>batch.set(woCol().doc(),d));
+      await batch.commit();
+      S._pc=null;
+      await primeLastExerciseMap();
+      toast('บันทึกสำเร็จ 💪','ok');
+      openWorkoutSummary({
+        exercises: new Set(docs.map(d=>d.exerciseName)).size,
+        sets: docs.length,
+        volume: computed.currentWeightVol,
+        minutes: Math.max(1, Math.round(((Date.now() - (S.logStartedAt || Date.now()))/60000))),
+        summaryLine: computed.summaryLine,
+        durationLine: computed.durationLine,
+        insights: computed.insights,
+        highlights: computed.highlights,
+        nextSteps: computed.nextSteps,
+        prs: computed.prs,
+        deltaPercent: computed.deltaPercent,
+        inlineMain: computed.mainBodyPart ? `วันนี้เน้น ${titleCaseBodyPart(computed.mainBodyPart)} เป็นหลัก` : 'สรุปการฝึกของวันนี้พร้อม insight',
+        inlineSub: computed.deltaPercent==null
+          ? `สัปดาห์นี้ทำแล้ว ${computed.weekDates}/${computed.goal} sessions`
+          : `เทียบครั้งก่อน ${computed.deltaPercent>=0?'ดีขึ้น':'เบาลง'} ${Math.abs(Math.round(computed.deltaPercent))}% · สัปดาห์นี้ ${computed.weekDates}/${computed.goal} sessions`
+      });
+      initLog();
+    }catch(err){
+      console.error('saveWorkout failed:', err);
+      toast(err.message||'บันทึกไม่สำเร็จ','err');
+    }finally{
+      btn.disabled=false;btn.textContent='บันทึก Workout 💪';
+    }
+  };
+
+  function initV73(){
+    ensurePostSaveInsightStyles();
+  }
+  document.addEventListener('DOMContentLoaded', initV73);
+  setTimeout(initV73, 120);
+})();
+</script>
