@@ -178,6 +178,12 @@ select.input{cursor:pointer}
 .prog-kpi{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:12px 8px;text-align:center}
 .prog-kpi-val{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:26px;color:var(--a);display:block;margin-bottom:3px;line-height:1}
 .prog-kpi-lbl{font-size:9px;color:var(--ts);font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+.trend-mini-list{display:grid;gap:8px;margin-top:12px}
+.trend-mini-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding-top:8px;border-top:1px solid var(--bd)}
+.trend-mini-left{display:flex;align-items:center;gap:8px;min-width:0}
+.trend-mini-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.trend-mini-label{font-size:12px;color:var(--ts)}
+.trend-mini-value{font-size:13px;font-weight:600;text-align:right}
 .no-data{text-align:center;padding:36px 0;font-size:13px;color:var(--ts);line-height:2.2}
 .skel{background:linear-gradient(90deg,var(--s2) 0%,var(--s3) 50%,var(--s2) 100%);background-size:200% 100%;border-radius:6px;animation:shimmer 1.5s ease-in-out infinite}
 @keyframes shimmer{to{background-position:-200% 0}}
@@ -965,6 +971,11 @@ canvas#activity-chart,
       </div>
     </div>
     <div id="prog-insight-wrap"></div>
+    <div id="prog-trend-card" class="chart-card" style="display:none">
+      <div class="chart-label"><span>Insight Trends</span><span class="chart-label-r">น้ำหนัก · Volume · Reps</span></div>
+      <div id="prog-trend-chart"></div>
+      <div id="prog-trend-insights" class="trend-mini-list"></div>
+    </div>
     <div class="prog-kpi-row" id="prog-kpi"></div>
     <div class="chart-card">
       <div class="chart-label"><span id="prog-chart-label">กราฟ</span><span class="chart-label-r" id="prog-chart-range"></span></div>
@@ -1024,12 +1035,12 @@ canvas#activity-chart,
       <div class="filter-card">
         <div class="sec-title" style="margin-bottom:12px">กรอง</div>
         <div class="row2" style="margin-bottom:10px">
-          <div class="field" style="margin-bottom:0"><label>จากวันที่</label><input id="f-from" class="input" type="date" onchange="loadHist()"></div>
-          <div class="field" style="margin-bottom:0"><label>ถึงวันที่</label><input id="f-to" class="input" type="date" onchange="loadHist()"></div>
+          <div class="field" style="margin-bottom:0"><label>จากวันที่</label><input id="f-from" class="input" type="date" onchange="resetHistLimit();loadHist()"></div>
+          <div class="field" style="margin-bottom:0"><label>ถึงวันที่</label><input id="f-to" class="input" type="date" onchange="resetHistLimit();loadHist()"></div>
         </div>
         <div class="row2">
           <div class="field" style="margin-bottom:0"><label>Body Part</label><select id="f-bp" class="input" onchange="onHistBP()"><option value="">ทั้งหมด</option></select></div>
-          <div class="field" style="margin-bottom:0"><label>ท่า</label><select id="f-ex" class="input" onchange="loadHist()"><option value="">ทั้งหมด</option></select></div>
+          <div class="field" style="margin-bottom:0"><label>ท่า</label><select id="f-ex" class="input" onchange="resetHistLimit();loadHist()"><option value="">ทั้งหมด</option></select></div>
         </div>
       </div>
       <div id="hist-list"></div>
@@ -1195,6 +1206,7 @@ const S = {
   _hd:       [],
   unit:      localStorage.getItem('lift_unit')||'kg', // 'kg'|'lbs'
   editingHistId: null,
+  histVisible: 10,
   lastByExercise: {},
   prefs: JSON.parse(localStorage.getItem('lift_prefs')||'{"goalSessions":4,"defaultRest":90,"defaultIncrement":2.5}'),
 };
@@ -1576,6 +1588,9 @@ function getPeriodRange(){
 async function renderProg(){
   document.getElementById('prog-kpi').innerHTML=[0,1,2].map(()=>`<div class="prog-kpi"><div class="skel" style="height:24px;width:48px;margin:0 auto 5px;border-radius:5px"></div><div class="skel" style="height:8px;width:36px;margin:0 auto;border-radius:4px"></div></div>`).join('');
   document.getElementById('prog-chart').innerHTML=`<div style="height:130px;display:flex;align-items:flex-end;gap:3px">${Array(12).fill('<div class="skel" style="flex:1;border-radius:3px 3px 0 0"></div>').join('')}</div>`;
+  document.getElementById('prog-trend-card').style.display='block';
+  document.getElementById('prog-trend-chart').innerHTML=`<div style="height:150px;display:flex;align-items:flex-end;gap:3px">${Array(18).fill('<div class="skel" style="flex:1;border-radius:999px;height:55%"></div>').join('')}</div>`;
+  document.getElementById('prog-trend-insights').innerHTML='';
 
   const{from,to}=getPeriodRange();
   document.getElementById('prog-chart-range').textContent=from?`${from.slice(5).replace('-','/')} – ${to.slice(5).replace('-','/')}`:'ทั้งหมด';
@@ -1624,6 +1639,7 @@ async function renderProg(){
     if(exName) prevFilt=prevFilt.filter(w=>w.exerciseName===exName);
   }
   compareProgressBlocks(filt, prevFilt);
+  renderProgInsightTrends(filt);
 
   if(exName){
     const ld=buildLineData(filt,metric);
@@ -1682,6 +1698,90 @@ function renderKPIsOv(ws){
   const vol=toDisplayVolume(volKg);
   const volText=vol>=1000?(vol/1000).toFixed(1)+'k':Math.round(vol).toLocaleString();
   document.getElementById('prog-kpi').innerHTML=`<div class="prog-kpi"><span class="prog-kpi-val">${sessions}</span><div class="prog-kpi-lbl">Sessions</div></div><div class="prog-kpi"><span class="prog-kpi-val">${exCount}</span><div class="prog-kpi-lbl">ท่า</div></div><div class="prog-kpi"><span class="prog-kpi-val">${volText}</span><div class="prog-kpi-lbl">Volume (${unitLabel()})</div></div>`;
+}
+
+
+function renderProgInsightTrends(ws){
+  const card=document.getElementById('prog-trend-card');
+  const chart=document.getElementById('prog-trend-chart');
+  const insights=document.getElementById('prog-trend-insights');
+  const defs=[
+    {key:'weight',label:`น้ำหนัก (${unitLabel()})`,color:'#c8ff3c'},
+    {key:'volume',label:`Volume (${unitLabel()})`,color:'#38bdf8'},
+    {key:'reps',label:'Reps',color:'#fb923c'},
+  ];
+  const rawSeries=defs.map(def=>({
+    ...def,
+    raw:buildLineData(ws,def.key),
+  }));
+  const active=rawSeries.filter(s=>s.raw.length>=2 || s.raw.length===1);
+  if(!active.length){
+    card.style.display='none';
+    chart.innerHTML='';
+    insights.innerHTML='';
+    return;
+  }
+  card.style.display='block';
+  chart.innerHTML=svgInsightTriple(rawSeries);
+  insights.innerHTML=rawSeries.filter(s=>s.raw.length).map(s=>trendInsightRow(s)).join('');
+}
+function trendInsightRow(series){
+  const arr=series.raw;
+  const last=arr[arr.length-1]?.v||0;
+  const prev=arr.length>1?arr[arr.length-2].v:0;
+  const diff=last-prev;
+  const pct=prev?((diff/prev)*100):0;
+  let summary='ยังมีข้อมูลจุดเดียว';
+  let cls='';
+  if(arr.length>1){
+    if(Math.abs(diff)<0.01) summary='ทรงตัวจากครั้งก่อน';
+    else if(diff>0) { summary=`เพิ่มขึ้น ${fmt(Math.abs(diff))}${series.key==='reps'?'':' ' + (series.key==='volume'?unitLabel():unitLabel())}`.trim(); cls='delta-up'; }
+    else { summary=`ลดลง ${fmt(Math.abs(diff))}${series.key==='reps'?'':' ' + (series.key==='volume'?unitLabel():unitLabel())}`.trim(); cls='delta-down'; }
+    if(prev && Math.abs(pct)>=0.5) summary += ` · ${diff>0?'+':''}${pct.toFixed(0)}%`;
+  }
+  return `<div class="trend-mini-row">
+    <div class="trend-mini-left">
+      <span class="trend-mini-dot" style="background:${series.color}"></span>
+      <span class="trend-mini-label">${series.label}</span>
+    </div>
+    <div class="trend-mini-value ${cls}">${fmt(last)}${series.key==='reps'?'':' ' + unitLabel()}<div style="font-size:11px;color:var(--ts);font-weight:500;margin-top:3px">${summary}</div></div>
+  </div>`;
+}
+function svgInsightTriple(series){
+  const active=series.filter(s=>s.raw.length);
+  const allDates=[...new Set(active.flatMap(s=>s.raw.map(d=>d.date)))].sort();
+  if(!allDates.length)return '<div class="no-data">ยังไม่มีข้อมูลสำหรับ Insight Trends</div>';
+  const W=360,H=220,PL=20,PR=14,PT=18,PB=58,cW=W-PL-PR,cH=H-PT-PB;
+  const xs=i=>PL+(i/Math.max(allDates.length-1,1))*cW;
+  const ys=v=>PT+cH-(v/100)*cH;
+  const yLines=[0,50,100].map(v=>`<line x1="${PL}" y1="${ys(v).toFixed(1)}" x2="${W-PR}" y2="${ys(v).toFixed(1)}" stroke="rgba(255,255,255,.05)" stroke-width="1"/>`).join('');
+  const yLabels=[0,50,100].map(v=>`<text x="${PL}" y="${(ys(v)-6).toFixed(1)}" fill="#7a7a96" font-size="9" font-family="Barlow,sans-serif">${v===100?'สูง':v===50?'กลาง':'ต่ำ'}</text>`).join('');
+  const step=Math.max(1,Math.ceil(allDates.length/4));
+  const idxs=[...new Set([0,...allDates.map((_,i)=>i).filter(i=>i%step===0),allDates.length-1])];
+  const xLabels=idxs.map(i=>{const dt=new Date(allDates[i]+'T00:00:00');return `<text x="${xs(i).toFixed(1)}" y="${H-8}" text-anchor="middle" fill="#7a7a96" font-size="10" font-family="Barlow,sans-serif">${dt.getDate()} ${MONTHS_TH[dt.getMonth()]}</text>`;}).join('');
+  const lines=active.map(s=>{
+    const values=s.raw.map(d=>d.v);
+    const min=Math.min(...values), max=Math.max(...values);
+    const range=max-min||1;
+    const mapped=s.raw.map(d=>({date:d.date,norm:range?((d.v-min)/range)*100:50,v:d.v}));
+    const byDate=Object.fromEntries(mapped.map(d=>[d.date,d]));
+    const pts=allDates.map((dt,i)=>byDate[dt]?`${xs(i).toFixed(1)},${ys(byDate[dt].norm).toFixed(1)}`:null).filter(Boolean);
+    const dots=allDates.map((dt,i)=>{
+      const p=byDate[dt];
+      if(!p) return '';
+      return `<circle cx="${xs(i).toFixed(1)}" cy="${ys(p.norm).toFixed(1)}" r="3.5" fill="${s.color}" stroke="#09090d" stroke-width="1.5"/>`;
+    }).join('');
+    const last= mapped[mapped.length-1];
+    const lastX = xs(allDates.indexOf(last.date));
+    const lastY = ys(last.norm);
+    return `<polyline points="${pts.join(' ')}" fill="none" stroke="${s.color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" opacity="0.95"/>${dots}<circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="5" fill="${s.color}" fill-opacity="0.18" stroke="${s.color}" stroke-width="1.5"/>`;
+  }).join('');
+  const legend=active.map((s,i)=>{
+    const lx=PL+(i*(cW/3));
+    const ly=H-PB+24;
+    return `<circle cx="${(lx+4).toFixed(1)}" cy="${ly}" r="4" fill="${s.color}"/><text x="${(lx+13).toFixed(1)}" y="${(ly+4).toFixed(1)}" fill="#eeeef4" font-size="10" font-family="Barlow,sans-serif">${s.label}</text>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${yLines}${yLabels}${lines}${xLabels}${legend}</svg>`;
 }
 
 function compareProgressBlocks(cur, prev){
@@ -1952,12 +2052,18 @@ async function saveWorkout(){
 }
 
 // ═══════════════ HISTORY ══════════════════════════
+const HIST_PAGE_SIZE = 10;
+function resetHistLimit(){ S.histVisible = HIST_PAGE_SIZE; }
+function showMoreHist(){
+  S.histVisible = (Number(S.histVisible)||HIST_PAGE_SIZE) + HIST_PAGE_SIZE;
+  renderHist(S._hd||[]);
+}
 function populateHistFilters(){
   const bpSel=document.getElementById('f-bp');
   bpSel.innerHTML=`<option value="">ทั้งหมด</option>`+getDistinctBPs().map(b=>`<option value="${esc(b)}" ${b===bpSel.value?'selected':''}>${esc(b)}</option>`).join('');
   updateHistExSel(bpSel.value);
 }
-function onHistBP(){updateHistExSel(document.getElementById('f-bp').value);loadHist();}
+function onHistBP(){updateHistExSel(document.getElementById('f-bp').value);resetHistLimit();loadHist();}
 function updateHistExSel(bp){
   const sel=document.getElementById('f-ex'),cur=sel.value;
   const filt=bp?getAllEx().filter(e=>e.cat===bp):getAllEx();
@@ -1977,6 +2083,10 @@ async function loadHist(){
     let data=snap.docs.map(d=>({...d.data(),workoutId:d.id}));
     if(bp)data=data.filter(w=>getExCat(w.exerciseName)===bp);
     if(exFilter)data=data.filter(w=>w.exerciseName===exFilter);
+    data.sort((a,b)=>{
+      if((b.date||'') !== (a.date||'')) return (b.date||'').localeCompare(a.date||'');
+      return (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0);
+    });
     S._hd=data;renderHist(data);
   }catch(err){
     if(err.code==='failed-precondition'){
@@ -1987,8 +2097,11 @@ async function loadHist(){
 function renderHist(list){
   const el=document.getElementById('hist-list');
   if(!list.length){el.innerHTML='<p style="color:var(--ts);text-align:center;padding:40px 0;font-size:14px;line-height:2.4">ไม่มีข้อมูลในช่วงนี้</p>';return;}
+  const totalVisible=Math.max(HIST_PAGE_SIZE, Number(S.histVisible)||HIST_PAGE_SIZE);
+  const visibleList=list.slice(0,totalVisible);
+  const hasMore=list.length>visibleList.length;
   const byDate={};
-  list.forEach((w,idx)=>{if(!byDate[w.date])byDate[w.date]={};if(!byDate[w.date][w.exerciseName])byDate[w.date][w.exerciseName]=[];byDate[w.date][w.exerciseName].push({...w,_idx:idx});});
+  visibleList.forEach((w,idx)=>{if(!byDate[w.date])byDate[w.date]={};if(!byDate[w.date][w.exerciseName])byDate[w.date][w.exerciseName]=[];byDate[w.date][w.exerciseName].push({...w,_idx:idx});});
   el.innerHTML=Object.entries(byDate).sort(([a],[b])=>b.localeCompare(a)).map(([date,exercises])=>`
     <div class="day-group">
       <div class="day-lbl"><span>${formatDate(date)}</span><button class="day-del-btn" onclick="confirmDelDay('${esc(date)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14a2,2,0,0,1-2,2H8a2,2,0,0,1-2-2L5,6"/><path d="M9,6V4a1,1,0,0,1,1-1h4a1,1,0,0,1,1,1v2"/></svg>ลบทั้งวัน</button></div>
@@ -2003,7 +2116,10 @@ function renderHist(list){
             ${sets.map((s,si)=>{const isSec=s.mode==='sec';const valLbl=isSec?`${s.reps||0} วิ`:`${s.reps||0} reps`;const wDisp=toDisplay(s.weight||0);const wStr=Number(s.weight)?` × ${wDisp} ${unitLabel()}`:'';return`<div class="hist-set-row" style="justify-content:space-between"><span class="hist-set-lbl">S${si+1}</span><span class="hist-set-val">${valLbl}${wStr}</span>${s.notes?`<span style="color:var(--td);font-size:11px">· ${esc(s.notes)}</span>`:''}<button class="icon-btn" style="padding:3px 7px;font-size:10px;margin-left:auto;flex-shrink:0" onclick="openEditHist('${s.workoutId}',${s._idx})">แก้ไข</button></div>`;}).join('')}
           </div>
         </div>`).join('')}
-    </div>`).join('');
+    </div>`).join('') + (hasMore ? `
+    <div style="padding-top:4px">
+      <button class="btn btn-ghost" onclick="showMoreHist()" style="font-family:'Barlow',sans-serif;font-size:14px;font-weight:600;letter-spacing:0">เพิ่มเติม (${list.length-visibleList.length} รายการ)</button>
+    </div>` : '');
 }
 function confirmDelWOs(idxArr,exName){showConfirm(`ลบ ${esc(exName)}?`,`${idxArr.length} set จะถูกลบถาวร`,()=>deleteWOs(idxArr));}
 async function deleteWOs(idxArr){
@@ -2170,7 +2286,7 @@ function setPlanSubTab(sub){
   document.getElementById('plan-subview').classList.toggle('hidden',sub!=='plan');
   document.getElementById('hist-subview').classList.toggle('hidden',sub!=='hist');
   if(sub==='plan') renderPlans();
-  if(sub==='hist') { populateHistFilters(); loadHist(); }
+  if(sub==='hist') { resetHistLimit(); populateHistFilters(); loadHist(); }
 }
 
 // ── Render plan list ──────────────────────────────
@@ -3304,6 +3420,24 @@ init();
   };
 
   window.saveWorkout = async function(){
+    const workoutSummaryMapSafe = (rows)=>{
+      if(typeof workoutSummaryMap === 'function') return workoutSummaryMap(rows);
+      if(typeof window.workoutSummaryMap === 'function') return window.workoutSummaryMap(rows);
+      const byEx = {};
+      (rows || []).forEach(w=>{
+        const ex = w.exerciseName || '';
+        if(!ex) return;
+        const reps = Number(w.reps)||0;
+        const weight = Number(w.weight)||0;
+        const volume = reps * weight;
+        if(!byEx[ex]) byEx[ex] = { maxWeight: 0, maxReps: 0, maxVolume: 0 };
+        byEx[ex].maxWeight = Math.max(byEx[ex].maxWeight, weight);
+        byEx[ex].maxReps = Math.max(byEx[ex].maxReps, reps);
+        byEx[ex].maxVolume = Math.max(byEx[ex].maxVolume, volume);
+      });
+      return byEx;
+    };
+
     const date=document.getElementById('log-date').value;
     if(!date)return toast('กรุณาเลือกวันที่','err');
     const blocks=[...document.querySelectorAll('.ex-block')];
@@ -3333,7 +3467,7 @@ init();
 
     const prevSnap = await woCol().get();
     const prevRows = prevSnap.docs.map(d=>({...d.data(), workoutId:d.id}));
-    const prevMap = workoutSummaryMap(prevRows);
+    const prevMap = workoutSummaryMapSafe(prevRows);
 
     const btn=document.getElementById('btn-save');
     btn.disabled=true;btn.textContent='กำลังบันทึก...';
@@ -3344,7 +3478,7 @@ init();
       S._pc=null;
       await primeLastExerciseMap();
 
-      const currMap = workoutSummaryMap(docs);
+      const currMap = workoutSummaryMapSafe(docs);
       const prs = [];
       Object.entries(currMap).forEach(([name, stats])=>{
         const old = prevMap[name] || {maxWeight:0,maxReps:0,maxVolume:0};
@@ -4171,6 +4305,29 @@ init();
   };
 
   window.saveWorkout = async function(){
+    const workoutSummaryMapSafe = (rows)=>{
+      try{
+        if(typeof workoutSummaryMap === 'function') return workoutSummaryMap(rows);
+      }catch(_){ }
+      try{
+        if(typeof window.workoutSummaryMap === 'function') return window.workoutSummaryMap(rows);
+      }catch(_){ }
+      const map={};
+      (rows||[]).forEach(w=>{
+        const name=w.exerciseName;
+        if(!name) return;
+        const reps=Number(w.reps)||0;
+        const weight=Number(w.weight)||0;
+        const volume=reps*weight;
+        const cur=map[name]||{maxWeight:0,maxReps:0,maxVolume:0};
+        cur.maxWeight=Math.max(cur.maxWeight, weight);
+        cur.maxReps=Math.max(cur.maxReps, reps);
+        cur.maxVolume=Math.max(cur.maxVolume, volume);
+        map[name]=cur;
+      });
+      return map;
+    };
+
     const date=document.getElementById('log-date').value;
     if(!date)return toast('กรุณาเลือกวันที่','err');
     const blocks=[...document.querySelectorAll('.ex-block')];
@@ -4199,24 +4356,24 @@ init();
     }
     if(!docs.length)return toast('ไม่มีข้อมูล','err');
 
-    const prevSnap = await woCol().get();
-    const prevRows = prevSnap.docs.map(d=>({...d.data(), workoutId:d.id}));
-    const prevMap = workoutSummaryMap(prevRows);
-    const previousSessionRows = getPreviousSessionRows(prevRows, date);
-    const previousSummary = summarizeSession(previousSessionRows);
-    const currentSummary = summarizeCurrentWorkout(docs);
-    const deltaPercent = previousSummary.volume>0 ? ((currentSummary.volume-previousSummary.volume)/previousSummary.volume)*100 : null;
-
     const btn=document.getElementById('btn-save');
     btn.disabled=true;btn.textContent='กำลังบันทึก...';
     try{
+      const prevSnap = await woCol().get();
+      const prevRows = prevSnap.docs.map(d=>({...d.data(), workoutId:d.id}));
+      const prevMap = workoutSummaryMapSafe(prevRows);
+      const previousSessionRows = getPreviousSessionRows(prevRows, date);
+      const previousSummary = summarizeSession(previousSessionRows);
+      const currentSummary = summarizeCurrentWorkout(docs);
+      const deltaPercent = previousSummary.volume>0 ? ((currentSummary.volume-previousSummary.volume)/previousSummary.volume)*100 : null;
+
       const batch=db.batch();
       docs.forEach(d=>batch.set(woCol().doc(),d));
       await batch.commit();
       S._pc=null;
       await primeLastExerciseMap();
 
-      const currMap = workoutSummaryMap(docs);
+      const currMap = workoutSummaryMapSafe(docs);
       const prs = [];
       Object.entries(currMap).forEach(([name, stats])=>{
         const old = prevMap[name] || {maxWeight:0,maxReps:0,maxVolume:0};
@@ -4236,6 +4393,7 @@ init();
       });
       initLog();
     }catch(err){
+      console.error('saveWorkout failed:', err);
       toast(err.message||'บันทึกไม่สำเร็จ','err');
     }finally{
       btn.disabled=false;btn.textContent='บันทึก Workout 💪';
