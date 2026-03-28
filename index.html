@@ -140,18 +140,18 @@ select.input{cursor:pointer}
 .ex-block-del{background:none;border:none;color:var(--td);font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;transition:color .12s}
 .ex-block-del:active{color:var(--err)}
 .ex-sel-wrap{padding:10px 14px 0}
-.sets-table{padding:4px 14px 0}
-.sets-header{display:grid;grid-template-columns:28px 1fr 1fr 36px 28px;gap:5px;margin-bottom:4px}
-.sets-col-lbl{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--td);text-align:center}
-.set-row{display:grid;grid-template-columns:28px 1fr 1fr 36px 28px;align-items:center;gap:5px;margin-bottom:6px}
-.set-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:12px;color:var(--ts);text-align:center}
-.set-inp{background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--t);font-size:15px;font-weight:500;padding:9px 8px;text-align:center;outline:none;transition:border-color .12s;-webkit-appearance:none;width:100%}
+.sets-table{padding:2px 14px 0;max-width:392px;margin:0 auto}
+.sets-header{display:grid;grid-template-columns:24px 42px minmax(86px,1fr) 34px 26px;gap:6px;justify-content:center;margin-bottom:4px}
+.sets-col-lbl{font-size:9px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--td);text-align:center}
+.set-row{display:grid;grid-template-columns:24px 42px minmax(86px,1fr) 34px 26px;align-items:center;gap:6px;justify-content:center;margin-bottom:6px}
+.set-lbl{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:11px;color:var(--ts);text-align:center}
+.set-inp{background:var(--s3);border:1px solid var(--bd2);border-radius:8px;color:var(--t);font-size:14px;font-weight:600;padding:8px 6px;text-align:center;outline:none;transition:border-color .12s;-webkit-appearance:none;width:100%;min-width:0}
 .set-inp:focus{border-color:var(--a)}
-.set-del{width:28px;height:28px;border-radius:7px;background:none;border:none;color:var(--td);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
+.set-del{width:26px;height:26px;border-radius:7px;background:none;border:none;color:var(--td);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0}
 .set-del:active{background:var(--err2);color:var(--err)}
-.add-set-btn{display:flex;align-items:center;justify-content:center;gap:5px;width:calc(100% - 28px);margin:4px 14px 10px;padding:8px;background:var(--s3);border:1px dashed var(--bd2);border-radius:8px;color:var(--ts);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s}
+.add-set-btn{display:flex;align-items:center;justify-content:center;gap:5px;width:calc(100% - 28px);max-width:392px;margin:4px auto 10px;padding:8px;background:var(--s3);border:1px dashed var(--bd2);border-radius:8px;color:var(--ts);font-size:12px;font-weight:600;cursor:pointer;transition:all .12s}
 .add-set-btn:active{border-color:var(--a);color:var(--a);background:var(--s4)}
-.ex-notes-row{padding:0 14px 12px}
+.ex-notes-row{padding:0 14px 12px;max-width:392px;margin:0 auto}
 .day-group{margin-bottom:20px}
 .day-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--ts);padding-bottom:10px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between}
 .day-del-btn{background:none;border:none;color:var(--td);font-size:12px;font-weight:600;cursor:pointer;padding:3px 8px;border-radius:6px;transition:all .12s;display:inline-flex;align-items:center;gap:4px}
@@ -275,7 +275,7 @@ select.input{cursor:pointer}
 .unit-btn{flex:1;padding:7px 12px;border:none;background:none;color:var(--ts);font-size:13px;font-weight:600;border-radius:6px;cursor:pointer;transition:all .15s}
 .unit-btn.active{background:var(--s2);color:var(--t);box-shadow:0 1px 4px rgba(0,0,0,.3)}
 /* sec badge on set row */
-.set-mode-btn{width:36px;height:36px;border-radius:8px;background:var(--s3);border:1px solid var(--bd2);color:var(--ts);font-size:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;letter-spacing:0;line-height:1}
+.set-mode-btn{width:34px;height:34px;border-radius:8px;background:var(--s3);border:1px solid var(--bd2);color:var(--ts);font-size:9px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s;letter-spacing:0;line-height:1}
 .set-mode-btn.sec{background:rgba(56,189,248,.12);border-color:rgba(56,189,248,.3);color:#38bdf8}
 
 /* edit-hist modal */
@@ -305,6 +305,18 @@ select.input{cursor:pointer}
 .bp-item:last-child{border-bottom:none}
 .bp-item-name{flex:1;font-size:15px;font-weight:500}
 
+@media (min-width:430px){
+  .ex-block{width:100%;max-width:none;margin-left:0;margin-right:0}
+}
+@media (max-width:390px){
+  .sets-table{max-width:none}
+  .sets-header,.set-row{grid-template-columns:22px 38px minmax(78px,1fr) 32px 24px;gap:5px}
+  .set-inp{font-size:13px;padding:7px 5px}
+  .set-mode-btn{width:32px;height:32px;font-size:8px}
+  .set-del{width:24px;height:24px}
+  .set-toolbar{gap:5px}
+  .mini-chip{font-size:9px;padding:5px 8px}
+}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes tabIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes countUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -338,10 +350,10 @@ select.input{cursor:pointer}
 .pref-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .pref-item{background:var(--s3);border:1px solid var(--bd);border-radius:10px;padding:12px}
 .pref-item-k{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--ts);margin-bottom:5px}
-.set-toolbar{display:flex;gap:8px;flex-wrap:wrap;padding:0 14px 10px}
-.mini-chip{background:var(--s3);border:1px solid var(--bd2);color:var(--ts);border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer}
+.set-toolbar{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px;max-width:392px;margin:0 auto}
+.mini-chip{background:var(--s3);border:1px solid var(--bd2);color:var(--ts);border-radius:999px;padding:5px 9px;font-size:10px;font-weight:700;cursor:pointer}
 .mini-chip:active{transform:scale(.97)}
-.target-hint{padding:0 14px 10px;font-size:12px;color:var(--ts)}
+.target-hint{padding:0 14px 8px;font-size:11px;color:var(--ts);max-width:392px;margin:0 auto}
 .target-hint strong{color:var(--a);font-weight:700}
 
 /* ── Planner ── */
@@ -644,6 +656,143 @@ canvas#activity-chart,
 }
 
 </style>
+
+<style id="compact-reps-fix-v4">
+/* Clean compact REP/SEC layout — 6 columns incl. complete + delete */
+#tab-log .ex-block .sets-table{
+  padding:8px 14px 0 !important;
+}
+#tab-log .ex-block .sets-header,
+#tab-log .ex-block .set-row{
+  width:min(100%, 356px);
+  margin-left:auto;
+  margin-right:auto;
+}
+#tab-log .ex-block .sets-header{
+  display:grid !important;
+  grid-template-columns:28px 34px minmax(96px,1.18fr) minmax(64px,.82fr) 40px 22px !important;
+  gap:6px !important;
+  align-items:end !important;
+  margin-bottom:6px !important;
+}
+#tab-log .ex-block .sets-list{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+#tab-log .ex-block .set-row{
+  display:grid !important;
+  grid-template-columns:28px 34px minmax(96px,1.18fr) minmax(64px,.82fr) 40px 22px !important;
+  gap:6px !important;
+  align-items:center !important;
+  margin:0 auto !important;
+}
+#tab-log .ex-block .sets-col-lbl{
+  font-size:9px !important;
+  letter-spacing:.11em !important;
+  color:var(--td) !important;
+  text-align:center;
+  line-height:1.1;
+}
+#tab-log .ex-block .sets-col-lbl:nth-child(1),
+#tab-log .ex-block .sets-col-lbl:nth-child(2),
+#tab-log .ex-block .sets-col-lbl:nth-child(6){
+  opacity:0;
+}
+#tab-log .ex-block .set-complete-btn{
+  width:28px !important;
+  height:28px !important;
+  justify-self:center;
+}
+#tab-log .ex-block .set-lbl{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  height:30px;
+  min-width:34px;
+  padding:0 6px;
+  border-radius:999px;
+  background:rgba(255,255,255,.025);
+  border:1px solid var(--bd);
+  color:#9b9bb7;
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px !important;
+  line-height:1;
+}
+#tab-log .ex-block .set-inp{
+  width:100% !important;
+  min-width:0 !important;
+  height:30px !important;
+  padding:0 10px !important;
+  font-size:14px !important;
+  font-weight:600 !important;
+  border-radius:9px !important;
+  background:rgba(255,255,255,.035) !important;
+}
+#tab-log .ex-block .set-mode-btn{
+  width:40px !important;
+  height:30px !important;
+  border-radius:9px !important;
+  font-size:9px !important;
+  letter-spacing:.03em !important;
+  background:rgba(255,255,255,.03) !important;
+}
+#tab-log .ex-block .set-mode-btn.sec{
+  background:rgba(56,189,248,.14) !important;
+}
+#tab-log .ex-block .set-del{
+  width:22px !important;
+  height:22px !important;
+  border-radius:999px !important;
+  opacity:.72;
+  justify-self:center;
+}
+#tab-log .ex-block .target-hint{
+  max-width:356px;
+  margin:0 auto;
+  padding:4px 0 10px !important;
+  font-size:12px !important;
+}
+#tab-log .ex-block .set-toolbar{
+  max-width:356px;
+  margin:0 auto;
+  gap:7px !important;
+  padding:0 0 10px !important;
+}
+#tab-log .ex-block .mini-chip{
+  padding:6px 10px !important;
+  font-size:10px !important;
+  border-radius:999px !important;
+}
+#tab-log .ex-block .add-set-btn{
+  width:min(100%, 356px) !important;
+  margin:6px auto 10px !important;
+  height:38px;
+  border-radius:10px !important;
+}
+#tab-log .ex-block .ex-sel-wrap,
+#tab-log .ex-block .ex-notes-row{
+  max-width:396px;
+  margin-left:auto;
+  margin-right:auto;
+}
+@media (max-width:430px){
+  #tab-log .ex-block .sets-header,
+  #tab-log .ex-block .set-row{
+    width:min(100%, 348px);
+    grid-template-columns:26px 32px minmax(104px,1.22fr) minmax(56px,.78fr) 38px 20px !important;
+    gap:5px !important;
+  }
+  #tab-log .ex-block .set-complete-btn{width:26px !important;height:26px !important;}
+  #tab-log .ex-block .set-lbl{height:28px;font-size:12px !important;min-width:32px;}
+  #tab-log .ex-block .set-inp{height:28px !important;font-size:14px !important;padding:0 8px !important;}
+  #tab-log .ex-block .set-mode-btn{width:38px !important;height:28px !important;font-size:9px !important;}
+  #tab-log .ex-block .add-set-btn,
+  #tab-log .ex-block .set-toolbar,
+  #tab-log .ex-block .target-hint{max-width:348px;width:min(100%,348px) !important;}
+}
+</style>
+
 </head>
 <body>
 <div id="loader"><div style="text-align:center"><span class="loader-logo">LIFT</span><div class="loader-bar"><div class="loader-fill"></div></div></div></div>
@@ -1645,7 +1794,7 @@ function addExBlock(){
       <input type="text" class="input custom-ex" style="display:none;margin-top:8px" placeholder="พิมพ์ชื่อท่า...">
     </div></div>
     <div class="sets-table">
-      <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl" id="sh-val">REPS / SEC</div><div class="sets-col-lbl" id="sh-wt">KG</div><div style="width:40px"></div></div>
+      <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl" id="sh-val">REPS / SEC</div><div class="sets-col-lbl" id="sh-wt">KG</div><div class="sets-col-lbl">MODE</div><div class="sets-col-lbl"></div></div>
       <div class="sets-list"></div>
     </div>
     <div class="target-hint" style="display:none"></div>
@@ -3829,5 +3978,381 @@ init();
 })();
 </script>
 
+
+<script>
+/* v7.1 workout UX polish */
+(function(){
+  function ensureV71Styles(){
+    if(document.getElementById('v71-style')) return;
+    const style=document.createElement('style');
+    style.id='v71-style';
+    style.textContent=`
+      .action-card.done{background:linear-gradient(180deg,rgba(61,232,122,.11),rgba(61,232,122,.04));border-color:rgba(61,232,122,.24)}
+      .action-done-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(61,232,122,.12);border:1px solid rgba(61,232,122,.22);color:var(--ok);font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px}
+      .set-complete-btn{width:28px;height:28px;border-radius:999px;border:1px solid var(--bd2);background:var(--s3);color:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .14s}
+      .set-complete-btn svg{width:14px;height:14px;opacity:.18;transition:all .14s}
+      .set-complete-btn.active{background:rgba(61,232,122,.12);border-color:rgba(61,232,122,.32);color:var(--ok)}
+      .set-complete-btn.active svg{opacity:1}
+      .set-row.done .set-inp{border-color:rgba(61,232,122,.24);background:rgba(61,232,122,.05)}
+      .set-row.done .set-lbl{color:var(--ok)}
+      .summary-inline{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:12px 14px;margin:14px 0 4px}
+      .summary-inline-main{font-size:14px;font-weight:700;line-height:1.5}
+      .summary-inline-sub{font-size:12px;color:var(--ts);margin-top:5px}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function getTodayRowsForPlan(allWO, plan){
+    const today = todayStr();
+    return (allWO||[]).filter(w=>w.date===today && (
+      (plan?.id && w.planId===plan.id) ||
+      ((plan?.exercises||[]).some(ex=>ex.exerciseName===w.exerciseName))
+    ));
+  }
+
+  function isPlanDoneToday(allWO, plan){
+    if(!plan) return false;
+    const rows=getTodayRowsForPlan(allWO, plan);
+    if(!rows.length) return false;
+    const planExercises=[...(plan.exercises||[])].map(ex=>ex.exerciseName).filter(Boolean);
+    if(!planExercises.length) return rows.length>0;
+    const doneNames=new Set(rows.map(w=>w.exerciseName));
+    return planExercises.every(name=>doneNames.has(name));
+  }
+
+  window.renderTodayActionCard = function(allWO=[]){
+    const wrap=document.getElementById('today-action-wrap');
+    const plan=window.chooseSuggestedPlan ? chooseSuggestedPlan() : null;
+    const lastWorkoutDate=[...new Set((allWO||[]).map(w=>w.date))].sort().pop()||'';
+    const daysSince=lastWorkoutDate?Math.floor((Date.now()-new Date(lastWorkoutDate+'T00:00:00').getTime())/86400000):null;
+    const recoveryTxt=daysSince==null?'ยังไม่มีประวัติการฝึก':daysSince===0?'เล่นแล้ววันนี้':daysSince===1?'พักมา 1 วัน':`พักมา ${daysSince} วัน`;
+    if(!plan){
+      wrap.innerHTML=`<div class="action-card"><div class="action-eyebrow">Today’s Action</div><div class="action-title">เริ่มต้นด้วยแผนแรกของคุณ</div><div class="action-sub">สร้างแผนก่อน แล้วหน้า Home จะช่วยดึง workout ที่ควรทำวันนี้ขึ้นมาให้อัตโนมัติ</div><div class="action-btn-row"><button class="btn" onclick="setTab('plan')">ไปที่ Planner</button></div></div>`;
+      return;
+    }
+    const totalSets=(plan.exercises||[]).reduce((s,e)=>s+(Number(e.sets)||0),0);
+    const doneToday=isPlanDoneToday(allWO, plan);
+    const doneRows=getTodayRowsForPlan(allWO, plan);
+    const doneExercises=new Set(doneRows.map(w=>w.exerciseName)).size;
+    wrap.innerHTML=`<div class="action-card ${doneToday?'done':''}">
+      <div class="action-eyebrow">Today’s Action</div>
+      ${doneToday?`<div class="action-done-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Completed today</div>`:''}
+      <div class="action-title">${esc(plan.name)}</div>
+      <div class="action-sub">${doneToday?`ทำแผนนี้แล้ววันนี้${doneExercises?` · ${doneExercises} ท่า`:''} กดดู Progress หรือเริ่มซ้ำได้ทันที`:'แนะนำให้เล่นแผนนี้วันนี้เพื่อรักษาความต่อเนื่องและเริ่มบันทึกได้ทันที'}</div>
+      <div class="action-meta-row">
+        <div class="action-mini"><div class="action-mini-k">จำนวนท่า</div><div class="action-mini-v">${(plan.exercises||[]).length} ท่า</div></div>
+        <div class="action-mini"><div class="action-mini-k">เวลาประมาณ</div><div class="action-mini-v">${estimatePlanMinutes(plan)} นาที</div></div>
+        <div class="action-mini"><div class="action-mini-k">จำนวนเซต</div><div class="action-mini-v">${totalSets} เซต</div></div>
+        <div class="action-mini"><div class="action-mini-k">Recovery</div><div class="action-mini-v">${doneToday?'สำเร็จแล้ว ✓':recoveryTxt}</div></div>
+      </div>
+      <div class="action-btn-row">
+        <button class="btn" onclick="${doneToday?"setTab('prog')":"startFromPlan('"+esc(plan.id)+"')"}">${doneToday?'ดู Progress':'เริ่ม Workout'}</button>
+        <button class="btn btn-ghost" onclick="setTab('plan')">ดูรายละเอียดแผน</button>
+      </div>
+    </div>`;
+  };
+
+  window.toggleSetComplete = function(btn){
+    const row=btn.closest('.set-row');
+    const active=!btn.classList.contains('active');
+    btn.classList.toggle('active', active);
+    row.classList.toggle('done', active);
+    row.dataset.completed = active ? '1' : '0';
+  };
+
+  function attachV71RowEvents(row){
+    const reps=row.querySelector('[name=reps]');
+    const weight=row.querySelector('[name=weight]');
+    [reps, weight].forEach(inp=>{
+      if(!inp) return;
+      inp.addEventListener('focus', ()=>window.setRestTimerFromBlock?.(row.closest('.ex-block')));
+      inp.addEventListener('change', ()=>{
+        if(typeof applyRepRangeState==='function') applyRepRangeState(row);
+        window.setRestTimerFromBlock?.(row.closest('.ex-block'));
+        if((Number(reps?.value)||0) > 0) window.autoStartRestTimer?.(row);
+        refreshLogSummary();
+      });
+      inp.addEventListener('input', ()=>refreshLogSummary());
+    });
+  }
+
+  window.addSetRow = function(sl,n,prefill=null){
+    const prev=sl.lastElementChild;
+    const prevMode=prev?prev.dataset.mode:'reps';
+    const mode=prefill?.mode||prevMode||'reps';
+    const pR=prefill!=null?prefill.reps:(prev?prev.querySelector('[name=reps]').value:'10');
+    const pW=prefill!=null?(prefill.weight?toDisplay(prefill.weight):''):(prev?prev.querySelector('[name=weight]').value:'');
+    const done=!!prefill?.completed;
+    const row=document.createElement('div');row.className='set-row'+(done?' done':'');row.dataset.mode=mode;row.dataset.completed=done?'1':'0';
+    const isSec=mode==='sec';
+    row.innerHTML=`<button type="button" class="set-complete-btn ${done?'active':''}" onclick="toggleSetComplete(this)" title="ทำ set นี้แล้ว"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+      <span class="set-lbl">S${n}</span>
+      <input class="set-inp" type="number" name="reps" min="0" inputmode="numeric" placeholder="${isSec?'วิ':'Reps'}" value="${pR}">
+      <input class="set-inp" type="number" name="weight" min="0" step="0.5" inputmode="decimal" placeholder="${unitLabel()}" value="${pW}">
+      <button type="button" class="set-mode-btn${isSec?' sec':''}" onclick="toggleSetMode(this)" title="สลับ Reps/Sec">${isSec?'SEC':'REP'}</button>
+      <button type="button" class="set-del" onclick="delSetRow(this)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+    sl.appendChild(row);
+    row.style.cssText='opacity:0;transform:translateX(-6px)';
+    requestAnimationFrame(()=>{row.style.cssText='transition:opacity .14s,transform .14s;opacity:1;transform:translateX(0)';});
+    attachV71RowEvents(row);
+  };
+
+  window.addExBlock = function(){
+    const container=document.getElementById('log-exercises'),idx=container.children.length;
+    const div=document.createElement('div');div.className='ex-block';
+    div.innerHTML=`
+      <div class="ex-block-head">
+        <span class="ex-block-num">EXERCISE ${idx+1}</span>
+        <button type="button" class="ex-block-del" onclick="delExBlock(this)" aria-label="ลบท่า">×</button>
+      </div>
+      <div class="ex-sel-wrap"><div class="field" style="margin-bottom:0">
+        <label>ท่าออกกำลังกาย</label>
+        <select class="input ex-sel" onchange="onExSel(this)"><option value="">— เลือกท่า —</option></select>
+        <input type="text" class="input custom-ex" style="display:none;margin-top:8px" placeholder="พิมพ์ชื่อท่า...">
+      </div></div>
+      <div class="sets-table">
+        <div class="sets-header"><div class="sets-col-lbl"></div><div class="sets-col-lbl"></div><div class="sets-col-lbl">REPS / SEC</div><div class="sets-col-lbl">${unitLabel().toUpperCase()}</div><div class="sets-col-lbl">TYPE</div><div class="sets-col-lbl"></div></div>
+        <div class="sets-list"></div>
+      </div>
+      <div class="target-hint" style="display:none"></div>
+      <div class="set-toolbar" style="display:none">
+        <button type="button" class="mini-chip" onclick="copyLastSet(this)">ใช้ค่าครั้งก่อน</button>
+        <button type="button" class="mini-chip" onclick="copyPreviousSet(this)">เหมือนเซตก่อน</button>
+        <button type="button" class="mini-chip" onclick="addSuggestedWeight(this)">+${S.prefs.defaultIncrement||2.5}${unitLabel()}</button>
+        <button type="button" class="mini-chip" onclick="decRep(this)">-1 rep</button>
+      </div>
+      <button type="button" class="add-set-btn" onclick="addSetToBlock(this)">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>เพิ่ม Set
+      </button>
+      <div class="ex-notes-row"><input type="text" class="input" name="notes" placeholder="หมายเหตุ (ไม่บังคับ)" style="font-size:13px;padding:8px 12px"></div>`;
+    container.appendChild(div);
+    div.addEventListener('click', ()=>window.setRestTimerFromBlock?.(div));
+    populateSel(div.querySelector('.ex-sel'));
+    addSetRow(div.querySelector('.sets-list'),1);
+    window.setRestTimerFromBlock?.(div, idx===0);
+    refreshLogEditor();
+    if(idx>0)div.scrollIntoView({behavior:'smooth',block:'nearest'});
+  };
+
+  function summarizeCurrentWorkout(docs){
+    const exercises = new Set(docs.map(d=>d.exerciseName)).size;
+    const sets = docs.length;
+    const volume = docs.reduce((s,d)=>s+((Number(d.reps)||0)*(Number(d.weight)||0)),0);
+    return { exercises, sets, volume };
+  }
+
+  function summarizeSession(rows){
+    const exercises = new Set((rows||[]).map(d=>d.exerciseName)).size;
+    const sets = (rows||[]).length;
+    const volume = (rows||[]).reduce((s,d)=>s+((Number(d.reps)||0)*(Number(d.weight)||0)),0);
+    return { exercises, sets, volume };
+  }
+
+  function getPreviousSessionRows(prevRows, date){
+    const priorDates=[...new Set((prevRows||[]).map(r=>r.date).filter(d=>d<date))].sort();
+    const prevDate=priorDates[priorDates.length-1];
+    return prevDate ? prevRows.filter(r=>r.date===prevDate) : [];
+  }
+
+  const originalOpenWorkoutSummary = window.openWorkoutSummary;
+  window.openWorkoutSummary = function(data){
+    if(originalOpenWorkoutSummary) originalOpenWorkoutSummary(data);
+    const modal=document.getElementById('workout-summary-modal');
+    if(!modal) return;
+    let inline=modal.querySelector('.summary-inline');
+    if(!inline){
+      inline=document.createElement('div');
+      inline.className='summary-inline';
+      const grid=modal.querySelector('.summary-grid');
+      grid?.insertAdjacentElement('afterend', inline);
+    }
+    const deltaTxt = data.deltaPercent==null ? 'ยังไม่มี session ก่อนหน้าให้เทียบ' : `${data.deltaPercent>=0?'มากกว่าครั้งก่อน':'น้อยกว่าครั้งก่อน'} ${data.deltaPercent>=0?'+':''}${data.deltaPercent.toFixed(0)}%`;
+    inline.innerHTML=`<div class="summary-inline-main">วันนี้เล่น ${data.exercises} ท่า / ${data.sets} เซต / volume ${Math.round(toDisplayVolume(data.volume)).toLocaleString()} ${unitLabel()}</div><div class="summary-inline-sub">${deltaTxt}</div>`;
+  };
+
+  window.saveWorkout = async function(){
+    const date=document.getElementById('log-date').value;
+    if(!date)return toast('กรุณาเลือกวันที่','err');
+    const blocks=[...document.querySelectorAll('.ex-block')];
+    const docs=[];
+    const activePlan = S.plans.find(p=>p.id===S.activePlanId);
+    for(let i=0;i<blocks.length;i++){
+      const block=blocks[i],sel=block.querySelector('.ex-sel'),cust=block.querySelector('.custom-ex');
+      const exName=sel.value==='__custom'?cust.value.trim():sel.value;
+      if(!exName)return toast(`กรุณาเลือกท่า ${i+1}`,'err');
+      const notes=block.querySelector('[name=notes]').value||'';
+      const min = Number(block.dataset.targetMin || 0);
+      const max = Number(block.dataset.targetMax || 0);
+      const restSec = Number(block.dataset.restSec || S.prefs.defaultRest || 90);
+      [...block.querySelectorAll('.sets-list .set-row')].forEach((row,j)=>{
+        const repsVal=Number(row.querySelector('[name=reps]').value)||0;
+        const wVal=fromDisplay(row.querySelector('[name=weight]').value);
+        const mode=row.dataset.mode||'reps';
+        docs.push({
+          date, exerciseName:exName, sets:1, reps:repsVal, weight:wVal,
+          duration:mode==='sec'?repsVal:0, notes:j===0?notes:'', mode, unit:S.unit,
+          targetMinReps:min || null, targetMaxReps:max || null, restSec,
+          completed: row.dataset.completed==='1',
+          planId: activePlan?.id || null, createdAt:TS()
+        });
+      });
+    }
+    if(!docs.length)return toast('ไม่มีข้อมูล','err');
+
+    const prevSnap = await woCol().get();
+    const prevRows = prevSnap.docs.map(d=>({...d.data(), workoutId:d.id}));
+    const prevMap = workoutSummaryMap(prevRows);
+    const previousSessionRows = getPreviousSessionRows(prevRows, date);
+    const previousSummary = summarizeSession(previousSessionRows);
+    const currentSummary = summarizeCurrentWorkout(docs);
+    const deltaPercent = previousSummary.volume>0 ? ((currentSummary.volume-previousSummary.volume)/previousSummary.volume)*100 : null;
+
+    const btn=document.getElementById('btn-save');
+    btn.disabled=true;btn.textContent='กำลังบันทึก...';
+    try{
+      const batch=db.batch();
+      docs.forEach(d=>batch.set(woCol().doc(),d));
+      await batch.commit();
+      S._pc=null;
+      await primeLastExerciseMap();
+
+      const currMap = workoutSummaryMap(docs);
+      const prs = [];
+      Object.entries(currMap).forEach(([name, stats])=>{
+        const old = prevMap[name] || {maxWeight:0,maxReps:0,maxVolume:0};
+        if(stats.maxWeight > old.maxWeight) prs.push(`${name} · น้ำหนักสูงสุด ${fmt(toDisplay(stats.maxWeight))} ${unitLabel()}`);
+        else if(stats.maxVolume > old.maxVolume) prs.push(`${name} · volume ดีสุด ${Math.round(toDisplayVolume(stats.maxVolume)).toLocaleString()} ${unitLabel()}`);
+      });
+
+      const minutes = Math.max(1, Math.round(((Date.now() - (S.logStartedAt || Date.now()))/60000)));
+      toast(`วันนี้เล่น ${currentSummary.exercises} ท่า / ${currentSummary.sets} เซต`, 'ok');
+      openWorkoutSummary({
+        exercises: currentSummary.exercises,
+        sets: currentSummary.sets,
+        volume: currentSummary.volume,
+        minutes,
+        prs,
+        deltaPercent
+      });
+      initLog();
+    }catch(err){
+      toast(err.message||'บันทึกไม่สำเร็จ','err');
+    }finally{
+      btn.disabled=false;btn.textContent='บันทึก Workout 💪';
+    }
+  };
+
+  function initV71(){
+    ensureV71Styles();
+  }
+  document.addEventListener('DOMContentLoaded', initV71);
+  setTimeout(initV71, 50);
+})();
+</script>
+
+
+<script>
+/* v7.2 compact UI polish */
+(function(){
+  function applyCompactStyles(){
+    if(document.getElementById('v72-style')) return;
+    const style=document.createElement('style');
+    style.id='v72-style';
+    style.textContent=`
+      .action-card,.insight-card,.prefs-card{padding:12px}
+      .action-eyebrow,.insight-eyebrow,.prefs-eyebrow{margin-bottom:6px}
+      .action-title{font-size:18px;line-height:1.12;margin-bottom:2px}
+      .action-sub{font-size:12px;line-height:1.4;margin-bottom:10px}
+      .action-meta-row{gap:6px;margin:10px 0}
+      .action-mini{padding:8px;border-radius:9px}
+      .action-mini-k{font-size:9px;margin-bottom:2px}
+      .action-mini-v{font-size:13px;line-height:1.2}
+      .action-btn-row{gap:8px}
+      .action-btn-row .btn{padding:12px;font-size:17px}
+      .action-done-badge{padding:5px 9px;font-size:10px;margin-bottom:8px}
+      .action-done-badge svg{width:14px;height:14px}
+
+      .ex-block{margin-bottom:10px}
+      .ex-block-head{padding:10px 12px 0}
+      .ex-sel-wrap{padding:8px 12px 0}
+      .sets-table{padding:2px 12px 0}
+      .sets-header{grid-template-columns:24px 1fr 1fr 34px 24px;gap:4px;margin-bottom:2px}
+      .sets-col-lbl{font-size:9px}
+      .set-row{grid-template-columns:24px 1fr 1fr 34px 24px;gap:4px;margin-bottom:4px}
+      .set-lbl{font-size:11px}
+      .set-inp{padding:7px 6px;font-size:14px;border-radius:7px}
+      .set-mode-btn{width:34px;height:34px;font-size:9px;border-radius:7px}
+      .set-del{width:24px;height:24px}
+      .set-complete-btn{width:24px;height:24px}
+      .set-complete-btn svg{width:12px;height:12px}
+      .set-toolbar{gap:6px;padding:0 12px 8px}
+      .mini-chip{padding:5px 9px;font-size:10px}
+      .target-hint{padding:0 12px 8px;font-size:11px}
+      .add-set-btn{width:calc(100% - 24px);margin:2px 12px 8px;padding:7px;font-size:11px}
+      .ex-notes-row{padding:0 12px 10px}
+      .log-summary{gap:8px;margin:-2px 0 14px}
+      .log-summary-card{padding:10px 12px}
+      .log-summary-val{font-size:24px}
+
+      @media (max-width:380px){
+        .action-title{font-size:17px}
+        .action-btn-row .btn{font-size:16px}
+        .set-inp{font-size:13px}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', applyCompactStyles);
+  else applyCompactStyles();
+})();
+</script>
+
+
+<script>
+/* v7.2 compact REP/SEC layout */
+(function(){
+  function ensureV72Styles(){
+    if(document.getElementById('v72-style')) return;
+    const style=document.createElement('style');
+    style.id='v72-style';
+    style.textContent=`
+      .sets-table{padding:2px 14px 0}
+      .sets-header{grid-template-columns:26px 24px minmax(84px,1fr) 92px 42px 24px !important;gap:6px;margin-bottom:6px;align-items:end}
+      .set-row{grid-template-columns:26px 24px minmax(84px,1fr) 92px 42px 24px !important;gap:6px;margin-bottom:8px;align-items:center}
+      .sets-col-lbl{font-size:9px;letter-spacing:.09em;white-space:nowrap}
+      .set-complete-btn{width:26px;height:26px}
+      .set-lbl{font-size:11px}
+      .set-inp{height:36px;padding:7px 8px;font-size:14px;border-radius:9px}
+      .set-mode-btn{width:42px;height:36px;border-radius:9px;font-size:9px;letter-spacing:.08em}
+      .set-del{width:24px;height:24px}
+      .set-toolbar{gap:6px;padding:0 14px 8px}
+      .mini-chip{padding:5px 9px;font-size:10px}
+      .target-hint{padding:0 14px 8px;font-size:11px}
+      @media (max-width:390px){
+        .sets-header{grid-template-columns:24px 22px minmax(76px,1fr) 84px 40px 22px !important;gap:5px}
+        .set-row{grid-template-columns:24px 22px minmax(76px,1fr) 84px 40px 22px !important;gap:5px}
+        .set-inp{font-size:13px;padding:7px 6px}
+        .set-mode-btn{width:40px}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const _origInit = window.initLog;
+  window.initLog = function(...args){
+    ensureV72Styles();
+    return _origInit ? _origInit.apply(this,args) : undefined;
+  };
+
+  const _origSetTab = window.setTab;
+  window.setTab = function(tab, ...rest){
+    if(tab==='log') ensureV72Styles();
+    return _origSetTab ? _origSetTab.call(this, tab, ...rest) : undefined;
+  };
+
+  if(document.readyState !== 'loading') ensureV72Styles();
+  else document.addEventListener('DOMContentLoaded', ensureV72Styles, {once:true});
+})();
+</script>
 </body>
 </html>
