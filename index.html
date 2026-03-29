@@ -2581,10 +2581,26 @@ async function saveEditHist(){
 }
 
 // ── Helpers ────────────────────────────────────────
-const todayStr  =()=>new Date().toISOString().slice(0,10);
+function pad2(n){return String(n).padStart(2,'0');}
+function localDateKey(input=new Date()){
+  const d = input instanceof Date ? new Date(input) : new Date(input);
+  if(isNaN(d.getTime())) return '';
+  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
+}
+function parseDateKeyLocal(value){
+  if(!value) return null;
+  if(value instanceof Date) return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  if(typeof value === 'string'){
+    const m = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  }
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+const todayStr  =()=>localDateKey();
 function metaStr(w){const p=[];if(w.reps)p.push(`${w.reps} reps`);if(Number(w.weight))p.push(`${toDisplay(w.weight)} ${unitLabel()}`);return p.join(' × ')||'—';}
-function relDate(d){const diff=Math.floor((Date.now()-new Date(d+'T00:00:00'))/864e5);if(diff===0)return'วันนี้';if(diff===1)return'เมื่อวาน';if(diff<7)return`${diff} วันก่อน`;return formatDate(d);}
-function formatDate(d){if(!d)return'';const dt=new Date(d+'T00:00:00');return`${DAYS_TH[dt.getDay()]} ${dt.getDate()} ${MONTHS_TH[dt.getMonth()]} ${dt.getFullYear()+543}`;}
+function relDate(d){const dt=parseDateKeyLocal(d);if(!dt)return'';const today=parseDateKeyLocal(todayStr());const diff=Math.floor((today-dt)/864e5);if(diff===0)return'วันนี้';if(diff===1)return'เมื่อวาน';if(diff<7)return`${diff} วันก่อน`;return formatDate(d);}
+function formatDate(d){const dt=parseDateKeyLocal(d);if(!dt)return'';return`${DAYS_TH[dt.getDay()]} ${dt.getDate()} ${MONTHS_TH[dt.getMonth()]} ${dt.getFullYear()+543}`;}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // ── Unit helpers ───────────────────────────────────
@@ -3346,7 +3362,7 @@ init();
       }).join(' · ');
       const isToday = (p.scheduleDays||[]).includes(today);
       return `
-        <div class="plan-card ${idx===0?'open':''}" id="pc-${esc(p.id)}" style="margin-bottom:12px">
+        <div class="plan-card" id="pc-${esc(p.id)}" style="margin-bottom:12px">
           <div class="plan-head" onclick="togglePlanCard('${esc(p.id)}')">
             <div>
               <div class="plan-title">${esc(p.name||'ไม่มีชื่อแผน')}</div>
@@ -3588,8 +3604,8 @@ init();
     const now = new Date();
     const end = new Date(now); end.setHours(23,59,59,999);
     const start = new Date(now); start.setDate(now.getDate()-6); start.setHours(0,0,0,0);
-    const startStr = start.toISOString().slice(0,10);
-    const endStr = end.toISOString().slice(0,10);
+    const startStr = localDateKey(start);
+    const endStr = localDateKey(end);
     const recent = (rows || []).filter(w => w.date >= startStr && w.date <= endStr);
     const sessions = [...new Set(recent.map(w => w.date))].length;
     const sets = recent.length;
@@ -3679,8 +3695,8 @@ init();
     const now = new Date();
     const end = new Date(now); end.setHours(23,59,59,999);
     const start = new Date(now); start.setDate(now.getDate()-6); start.setHours(0,0,0,0);
-    const startStr = start.toISOString().slice(0,10);
-    const endStr = end.toISOString().slice(0,10);
+    const startStr = localDateKey(start);
+    const endStr = localDateKey(end);
     const recent = (rows || []).filter(w => w.date >= startStr && w.date <= endStr);
     const sessions = [...new Set(recent.map(w => w.date))].length;
     const sets = recent.length;
@@ -3832,7 +3848,7 @@ init();
     for(let i=29;i>=0;i--){
       const d = new Date(now);
       d.setDate(now.getDate()-i);
-      const key = d.toISOString().slice(0,10);
+      const key = localDateKey(d);
       days.push({ key, date: d, volume: 0, sets: 0 });
     }
     const map = Object.fromEntries(days.map(d => [d.key, d]));
@@ -3951,22 +3967,22 @@ init();
       const m = value.match(/^\d{4}-\d{2}-\d{2}/);
       if(m) return m[0];
       const t = new Date(value);
-      return isNaN(t.getTime()) ? '' : t.toISOString().slice(0,10);
+      return isNaN(t.getTime()) ? '' : localDateKey(t);
     }
     if(typeof value === 'number'){
       const t = new Date(value);
-      return isNaN(t.getTime()) ? '' : t.toISOString().slice(0,10);
+      return isNaN(t.getTime()) ? '' : localDateKey(t);
     }
     if(value && typeof value.toDate === 'function'){
       const d = value.toDate();
-      return d ? d.toISOString().slice(0,10) : '';
+      return d ? localDateKey(d) : '';
     }
     if(value && typeof value.seconds === 'number'){
-      return new Date(value.seconds * 1000).toISOString().slice(0,10);
+      return localDateKey(new Date(value.seconds * 1000));
     }
     try{
       const t = new Date(value);
-      return isNaN(t.getTime()) ? '' : t.toISOString().slice(0,10);
+      return isNaN(t.getTime()) ? '' : localDateKey(t);
     }catch(e){
       return '';
     }
@@ -3983,8 +3999,8 @@ init();
       const now = new Date();
       const end = new Date(now); end.setHours(23,59,59,999);
       const start = new Date(now); start.setDate(now.getDate()-6); start.setHours(0,0,0,0);
-      const startStr = start.toISOString().slice(0,10);
-      const endStr = end.toISOString().slice(0,10);
+      const startStr = localDateKey(start);
+      const endStr = localDateKey(end);
 
       const recent = normalized.filter(w => w._normDate && w._normDate >= startStr && w._normDate <= endStr);
       const sessions = [...new Set(recent.map(w => w._normDate))].length;
@@ -4043,7 +4059,7 @@ init();
       for(let i=29;i>=0;i--){
         const d = new Date(now);
         d.setDate(now.getDate()-i);
-        const key = d.toISOString().slice(0,10);
+        const key = localDateKey(d);
         days.push({ key, date: d, volume: 0, sets: 0 });
       }
       const map = Object.fromEntries(days.map(d => [d.key, d]));
@@ -4055,7 +4071,7 @@ init();
       });
 
       const maxSets = Math.max(0, ...days.map(d=>d.sets));
-      const todayKey = now.toISOString().slice(0,10);
+      const todayKey = localDateKey(now);
 
       grid.innerHTML = days.map(d=>{
         let level = 0;
